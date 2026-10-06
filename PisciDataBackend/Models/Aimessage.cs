@@ -11,7 +11,9 @@ public partial class Aimessage
 
     public string Role { get; set; } = null!;
 
-    public string Content { get; set; } = null!;
+    public string? Content { get; set; }
+
+    public string? Transcription { get; set; }
 
     public string MessageType { get; set; } = null!;
 

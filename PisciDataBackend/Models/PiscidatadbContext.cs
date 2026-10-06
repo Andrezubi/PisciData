@@ -125,6 +125,7 @@ public partial class PiscidatadbContext : DbContext
                 .HasMaxLength(30)
                 .HasDefaultValueSql("'TEXT'");
             entity.Property(e => e.Role).HasMaxLength(30);
+            entity.Property(e => e.Transcription).HasColumnType("text");
             entity.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasColumnType("datetime");
