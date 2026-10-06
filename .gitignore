@@ -453,3 +453,6 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# Personal manual
+docs/00-my-technical-defense-guide-es.md
