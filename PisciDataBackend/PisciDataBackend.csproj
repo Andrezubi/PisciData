@@ -15,4 +15,11 @@
     <PackageReference Include="Microting.EntityFrameworkCore.MySql" Version="10.0.12" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Application\DTOs\" />
+    <Folder Include="Application\Services\" />
+    <Folder Include="Domain\Validators\" />
+    <Folder Include="Infraestructure\Repositories\" />
+  </ItemGroup>
+
 </Project>
