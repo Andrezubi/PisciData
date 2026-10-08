@@ -20,6 +20,8 @@ import org.koin.compose.viewmodel.koinViewModel
 import ucb.piscidata.chat.domain.model.MessageSender
 import ucb.piscidata.chat.presentation.viewmodel.ChatEvent
 import ucb.piscidata.chat.presentation.viewmodel.ChatViewModel
+import ucb.piscidata.ui.components.MicIcon
+import ucb.piscidata.ui.components.SendIcon
 
 @Composable
 fun ChatScreen(
@@ -269,7 +271,7 @@ fun ChatScreen(
                             .size(44.dp)
                             .background(Color(0xFFE8F4FC), CircleShape)
                     ) {
-                        Text("🎤", fontSize = 18.sp)
+                        MicIcon(Color(0xFF1577C8))
                     }
                 } else {
                     IconButton(
@@ -278,7 +280,7 @@ fun ChatScreen(
                             .size(44.dp)
                             .background(Color(0xFF1577C8), CircleShape)
                     ) {
-                        Text("➤", color = Color.White, fontSize = 16.sp)
+                        SendIcon(Color.White)
                     }
                 }
             }

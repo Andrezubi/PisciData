@@ -4,7 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +18,8 @@ import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
 import ucb.piscidata.database.domain.model.*
 import ucb.piscidata.database.presentation.viewmodel.*
+import ucb.piscidata.ui.components.DeleteIcon
+import ucb.piscidata.ui.components.EditIcon
 
 @Composable
 fun DatabaseScreen(
@@ -188,10 +192,10 @@ fun CiclosTab(state: DatabaseState, viewModel: DatabaseViewModel) {
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.Editar(ciclo))) }) {
-                            Text("✏️")
+                            EditIcon(Color(0xFF1577C8))
                         }
                         IconButton(onClick = { viewModel.emitEvent(DatabaseEvent.DeleteCiclo(ciclo.id)) }) {
-                            Text("🗑️")
+                            DeleteIcon(Color(0xFFE05A5A))
                         }
                     }
                 }
@@ -321,6 +325,7 @@ fun CicloFormScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F8FA))
+            .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {

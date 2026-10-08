@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import ucb.piscidata.ui.components.ReportsIcon
 
 @Composable
 fun ReportsScreen() {
@@ -60,7 +61,7 @@ fun ReportsScreen() {
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("💡", fontSize = 20.sp)
+                ReportsIcon(Color(0xFF1577C8), modifier = Modifier.size(20.dp))
                 Text(
                     text = "La mortalidad se mantiene por debajo del umbral objetivo. El FCR mejoró 0,18 puntos.",
                     fontSize = 12.sp,

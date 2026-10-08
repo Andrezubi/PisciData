@@ -1,18 +1,24 @@
 package ucb.piscidata.auth.presentation.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
+import piscidatafrontend.shared.generated.resources.Res
+import piscidatafrontend.shared.generated.resources.img_login_bg
 import ucb.piscidata.auth.presentation.viewmodel.AuthEvent
 import ucb.piscidata.auth.presentation.viewmodel.AuthViewModel
 
@@ -47,14 +53,23 @@ fun LoginScreen(
                     .fillMaxSize()
                     .safeContentPadding()
             ) {
-                // Login Hero Section
+                // Login Hero Section with background image and overlay
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(260.dp)
-                        .background(Color(0xFF0B2B3B)),
-                    contentAlignment = Alignment.BottomStart
                 ) {
+                    Image(
+                        painter = painterResource(Res.drawable.img_login_bg),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color(0xFF0B2B3B).copy(alpha = 0.5f))
+                    )
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -65,6 +80,15 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
+                            Surface(
+                                modifier = Modifier.size(36.dp),
+                                shape = CircleShape,
+                                color = Color(0xFF4EC5C1)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🐟", fontSize = 18.sp)
+                                }
+                            }
                             Text(
                                 text = "Piscidata",
                                 fontSize = 20.sp,
