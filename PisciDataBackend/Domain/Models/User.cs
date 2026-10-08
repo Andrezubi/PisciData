@@ -70,4 +70,6 @@ public partial class User
     public virtual User? UserNavigation { get; set; }
 
     public virtual ICollection<Waterquality> Waterqualities { get; set; } = new List<Waterquality>();
+
+    public virtual ICollection<Waterqualityreference> Waterqualityreferences { get; set; } = new List<Waterqualityreference>();
 }

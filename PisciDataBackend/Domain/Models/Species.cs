@@ -27,5 +27,7 @@ public partial class Species
 
     public virtual ICollection<Productioncycle> Productioncycles { get; set; } = new List<Productioncycle>();
 
+    public virtual ICollection<Waterqualityreference> Waterqualityreferences { get; set; } = new List<Waterqualityreference>();
+
     public virtual User? User { get; set; }
 }

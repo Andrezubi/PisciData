@@ -4,6 +4,8 @@ using PisciDataBackend.Domain.Models;
 using PisciDataBackend.Domain.Validators;
 using PisciDataBackend.Infraestructure.Persistence;
 using PisciDataBackend.Infraestructure.Repositories;
+using PisciDataBackend.Domain.Models;
+using System;
 
 namespace PisciDataBackend.Application.Services
 {
@@ -39,7 +41,7 @@ namespace PisciDataBackend.Application.Services
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
                 Phone = dto.Phone,
-                PasswordHash = dto.Password,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
                 Role = dto.Role,
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
@@ -47,6 +49,17 @@ namespace PisciDataBackend.Application.Services
 
             await _userRepository.AddAsync(user);
             return (MapToDto(user), errors);
+        }
+
+        public async Task<User?> GetEntityByPhoneAsync(string phone)
+        {
+            return await _userRepository.GetByPhoneAsync(phone);
+        }
+
+        public async Task UpdateLastLoginAsync(User user)
+        {
+            user.LastLoginAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
         }
 
         public async Task<(UserDto? Dto, List<string> Errors)> UpdateAsync(int id, UpdateUserDto dto)
