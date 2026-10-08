@@ -100,13 +100,17 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "PisciData API V1");
     });
 }
+// Solo redirigir a HTTPS si no estamos en entorno de desarrollo
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
+app.UseCors("DevelopmentCors");
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-app.UseCors("DevelopmentCors");
 
 app.Run();

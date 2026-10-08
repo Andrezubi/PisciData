@@ -52,7 +52,7 @@ fun LoginScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .safeContentPadding()
+                    .statusBarsPadding()
             ) {
                 // Login Hero Section with background image and overlay
                 Box(
