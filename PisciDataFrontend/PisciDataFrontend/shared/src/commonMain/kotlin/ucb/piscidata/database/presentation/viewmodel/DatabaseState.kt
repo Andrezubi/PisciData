@@ -1,10 +1,6 @@
 package ucb.piscidata.database.presentation.viewmodel
 
-import ucb.piscidata.database.domain.model.BadgeVariant
-import ucb.piscidata.database.domain.model.CicloRecord
-import ucb.piscidata.database.domain.model.InvCategory
-import ucb.piscidata.database.domain.model.InvItem
-import ucb.piscidata.database.domain.model.Pond
+import ucb.piscidata.database.domain.model.*
 
 enum class DbTab {
     CICLOS, ESTANQUES, INVENTARIO
@@ -19,6 +15,8 @@ sealed interface DbView {
 data class DatabaseState(
     val tab: DbTab = DbTab.CICLOS,
     val view: DbView = DbView.List,
+    val farms: List<FarmModel> = emptyList(),
+    val selectedFarmId: Int = 1,
     val ciclos: List<CicloRecord> = emptyList(),
     val ponds: List<Pond> = emptyList(),
     val inventory: List<InvItem> = emptyList(),

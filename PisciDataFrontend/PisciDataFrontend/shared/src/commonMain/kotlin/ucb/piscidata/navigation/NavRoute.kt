@@ -8,5 +8,8 @@ sealed class NavRoute {
     object Login : NavRoute()
 
     @Serializable
+    object Register : NavRoute()
+
+    @Serializable
     object Main : NavRoute()
 }

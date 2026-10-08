@@ -12,6 +12,7 @@ import ucb.piscidata.chat.domain.repository.ChatRepository
 import ucb.piscidata.database.data.repository.DatabaseRepositoryImpl
 import ucb.piscidata.database.data.service.DatabaseService
 import ucb.piscidata.database.domain.repository.DatabaseRepository
+import ucb.piscidata.session.SessionManager
 import ucb.piscidata.tasks.data.repository.TaskRepositoryImpl
 import ucb.piscidata.tasks.data.service.TaskService
 import ucb.piscidata.tasks.domain.repository.TaskRepository
@@ -28,4 +29,6 @@ val dataModule = module {
 
     single { TaskService() }
     single<TaskRepository> { TaskRepositoryImpl(get()) }
+
+    single { SessionManager() }
 }

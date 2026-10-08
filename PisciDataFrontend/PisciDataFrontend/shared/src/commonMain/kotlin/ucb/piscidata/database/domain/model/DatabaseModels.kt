@@ -1,5 +1,10 @@
 package ucb.piscidata.database.domain.model
 
+data class FarmModel(
+    val id: Int,
+    val name: String
+)
+
 enum class BadgeVariant {
     ACTIVO, EN_SEGUIMIENTO, FINALIZADO;
 
@@ -11,16 +16,20 @@ enum class BadgeVariant {
 }
 
 data class CicloRecord(
-    val id: String,
+    val id: String, // Codigo CicloProductivo
     val status: BadgeVariant,
     val estanque: String,
     val especie: String,
-    val peces: String,
-    val inicio: String,
-    val pesoInicial: String,
-    val densidad: String,
-    val alimento: String,
-    val observaciones: String
+    val peces: String, // Cantidad Peces Actual
+    val pesoActual: String, // Peso Promedio Actual
+    val edadDias: Int, // Edad en Dias
+    val startDate: String, // Fecha Inicio
+    val endDate: String?, // Fecha Fin
+    val initialAgeDays: Int, // Edad Inicial
+    val initialWeightGrams: String, // Peso Inicial
+    val initialFishCount: String, // Cantidad Inicial
+    val observations: String, // Observaciones
+    val isExpanded: Boolean = false // Desplegable
 )
 
 enum class PondShape {
@@ -29,6 +38,7 @@ enum class PondShape {
 
 data class Pond(
     val id: Int,
+    val code: String, // Codigo de estanque
     val nombre: String,
     val forma: PondShape,
     val largo: Double? = null,
@@ -36,6 +46,7 @@ data class Pond(
     val diametro: Double? = null,
     val area: Double,
     val profundidad: Double,
+    val transparenciaCm: Double?, // Transparencia en cm
     val ph: Double,
     val claridad: String,
     val temperatura: Double,
@@ -62,5 +73,6 @@ data class InvItem(
     val qty: Int,
     val unit: String,
     val minQty: Int,
-    val location: String
+    val proteinPercentage: Double? = null, // Porcentaje de proteina para alimento
+    val pelletSizeMm: Double? = null // Tamaño de pellet para alimento
 )

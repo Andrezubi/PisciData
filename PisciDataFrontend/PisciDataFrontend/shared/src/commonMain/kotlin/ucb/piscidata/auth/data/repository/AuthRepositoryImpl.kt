@@ -10,4 +10,8 @@ class AuthRepositoryImpl(
     override suspend fun login(phone: String, pass: String): Result<UserModel> {
         return dataSource.login(phone, pass)
     }
+
+    override suspend fun register(firstName: String, lastName: String, phone: String, pass: String, role: String): Result<UserModel> {
+        return dataSource.register(firstName, lastName, phone, pass, role)
+    }
 }

@@ -8,9 +8,11 @@ import ucb.piscidata.database.domain.model.CicloRecord
 import ucb.piscidata.database.domain.usecase.*
 
 class DatabaseViewModel(
+    private val getFarmsUseCase: GetFarmsUseCase,
     private val getCiclosUseCase: GetCiclosUseCase,
     private val saveCicloUseCase: SaveCicloUseCase,
     private val deleteCicloUseCase: DeleteCicloUseCase,
+    private val toggleCicloExpandUseCase: ToggleCicloExpandUseCase,
     private val getPondsUseCase: GetPondsUseCase,
     private val getInventoryUseCase: GetInventoryUseCase,
     private val updateInventoryQtyUseCase: UpdateInventoryQtyUseCase
@@ -29,12 +31,14 @@ class DatabaseViewModel(
     fun emitEvent(event: DatabaseEvent) {
         when (event) {
             DatabaseEvent.LoadData -> loadData()
+            is DatabaseEvent.ChangeFarm -> _state.update { it.copy(selectedFarmId = event.farmId) }
             is DatabaseEvent.ChangeTab -> _state.update { it.copy(tab = event.tab, searchQuery = "") }
             is DatabaseEvent.ChangeView -> _state.update { it.copy(view = event.view) }
             is DatabaseEvent.Search -> _state.update { it.copy(searchQuery = event.query) }
             is DatabaseEvent.FilterInventory -> _state.update { it.copy(inventoryFilter = event.category) }
             is DatabaseEvent.SaveCiclo -> saveCiclo(event.ciclo)
             is DatabaseEvent.DeleteCiclo -> deleteCiclo(event.id)
+            is DatabaseEvent.ToggleCicloExpand -> toggleExpand(event.id)
             is DatabaseEvent.UpdateInventoryQty -> updateInventoryQty(event.id, event.newQty)
         }
     }
@@ -42,6 +46,9 @@ class DatabaseViewModel(
     private fun loadData() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
+            getFarmsUseCase().onSuccess { farms ->
+                _state.update { it.copy(farms = farms) }
+            }
             getCiclosUseCase().onSuccess { ciclos ->
                 _state.update { it.copy(ciclos = ciclos) }
             }
@@ -69,6 +76,14 @@ class DatabaseViewModel(
             deleteCicloUseCase(id).onSuccess {
                 loadData()
                 _effect.emit(DatabaseEffect.ShowToast("Ciclo eliminado"))
+            }
+        }
+    }
+
+    private fun toggleExpand(id: String) {
+        viewModelScope.launch {
+            toggleCicloExpandUseCase(id).onSuccess { ciclos ->
+                _state.update { it.copy(ciclos = ciclos) }
             }
         }
     }

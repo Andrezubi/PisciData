@@ -25,7 +25,8 @@ import ucb.piscidata.auth.presentation.viewmodel.AuthViewModel
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = koinViewModel(),
-    onLoginSuccess: () -> Unit
+    onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
@@ -188,23 +189,40 @@ fun LoginScreen(
                             )
                         }
 
-                        Button(
-                            onClick = { viewModel.emitEvent(AuthEvent.OnLoginClicked) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
-                            enabled = !state.isLoading
-                        ) {
-                            if (state.isLoading) {
-                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
-                            } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(
+                                onClick = { viewModel.emitEvent(AuthEvent.OnLoginClicked) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
+                                enabled = !state.isLoading
+                            ) {
+                                if (state.isLoading) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                                } else {
+                                    Text(
+                                        text = "Iniciar sesión",
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+
+                            OutlinedButton(
+                                onClick = onNavigateToRegister,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(48.dp),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
                                 Text(
-                                    text = "Iniciar sesión",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    text = "¿No tienes cuenta? Regístrate",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF1577C8)
                                 )
                             }
                         }

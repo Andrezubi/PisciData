@@ -16,18 +16,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import ucb.piscidata.chat.domain.model.MessageSender
 import ucb.piscidata.chat.presentation.viewmodel.ChatEvent
 import ucb.piscidata.chat.presentation.viewmodel.ChatViewModel
+import ucb.piscidata.session.SessionManager
+import ucb.piscidata.ui.components.FarmSelectorHeader
 import ucb.piscidata.ui.components.MicIcon
 import ucb.piscidata.ui.components.SendIcon
 
 @Composable
 fun ChatScreen(
-    viewModel: ChatViewModel = koinViewModel()
+    viewModel: ChatViewModel = koinViewModel(),
+    sessionManager: SessionManager = koinInject()
 ) {
     val state by viewModel.state.collectAsState()
+    val farms by sessionManager.farms.collectAsState()
+    val selectedFarmId by sessionManager.selectedFarmId.collectAsState()
     val listState = rememberLazyListState()
 
     LaunchedEffect(state.messages.size) {
@@ -51,6 +57,13 @@ fun ChatScreen(
             .fillMaxSize()
             .background(Color.White)
     ) {
+        // Farm Selector Header
+        FarmSelectorHeader(
+            farms = farms,
+            selectedFarmId = selectedFarmId,
+            onSelectFarm = { sessionManager.selectFarm(it) }
+        )
+
         // Header
         Row(
             modifier = Modifier
