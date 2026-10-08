@@ -1,6 +1,6 @@
 # Documentación y Especificación del Sistema PisciData
 
-Bienvenido a la suite de documentación técnica y funcional de **PisciData**, desarrollada bajo el enfoque de **Spec-Driven Development (SDD)** asistido por IA.
+Suite de documentación técnica y funcional de **PisciData**, desarrollada bajo el enfoque de **Spec-Driven Development (SDD)** asistido por IA.
 
 Esta carpeta es la **fuente autoritativa de verdad** sobre el diseño, arquitectura, contratos de datos, requerimientos y estado real del proyecto.
 

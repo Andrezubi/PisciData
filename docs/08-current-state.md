@@ -127,11 +127,16 @@ PisciDataFrontend/
 
 ## 5. Estado del Servidor MCP (`PisciDataMCP`)
 
-* **Framework:** .NET 10 (`net10.0`), paquete NuGet `ModelContextProtocol 2.1.0`.
-* **Transporte:** `stdio` configurado en `Program.cs`.
-* **Herramientas registradas:** Solo [`RandomNumberTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/RandomNumberTools.cs) con el método `get_random_number`.
-* **Metadatos en csproj:** Identificador de paquete sin personalizar (`SampleMcpServer`, versión `0.1.0-beta`).
-* **Estado SDD:** **SPECIFIED → PARTIAL**. No expone herramientas relacionadas con el dominio de piscigranjas ni se comunica con `PiscidatadbContext`.
+* **Framework:** .NET 10 (`net10.0`), SDK oficial `ModelContextProtocol 2.1.0`, `Microsoft.Extensions.Hosting 10.0.12`, `Microsoft.Extensions.Http 10.0.12`.
+* **Transporte:** `stdio` configurado en `Program.cs` con redirección de logs a `stderr` (`LogLevel.Trace`).
+* **Arquitectura de Conectividad:** Cliente HTTP tipado (`PisciDataApiClient`) hacia la API REST de `PisciDataBackend` (`http://localhost:5007/api`) con configuración desacoplada en `appsettings.json`.
+* **Herramientas de Dominio Implementadas (10 herramientas activas):**
+  * [`FarmTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/FarmTools.cs): `GetFarms`, `GetFarmById`.
+  * [`PondTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/PondTools.cs): `GetPonds`, `GetPondById`.
+  * [`ProductionCycleTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/ProductionCycleTools.cs): `GetProductionCycles`, `GetProductionCycleById`.
+  * [`BiometricTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/BiometricTools.cs): `GetBiometrics`, `GetBiometricById`.
+  * [`FeedingTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/FeedingTools.cs): `GetFeedings`, `GetFeedingById`.
+* **Estado SDD:** **IMPLEMENTED**. Componente completamente operativo y listo para consumo por agentes u orquestadores locales de LLM.
 
 ---
 
