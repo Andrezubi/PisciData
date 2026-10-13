@@ -17,11 +17,19 @@ public partial class Feedingbyweight
 
     public string? FeedPhase { get; set; }
 
-    public decimal? ProteinPercentage { get; set; }
+    public string? FeedForm { get; set; }
 
-    public decimal? PelletSizeMm { get; set; }
+    public decimal? ProteinMinPercentage { get; set; }
+
+    public decimal? ProteinMaxPercentage { get; set; }
+
+    public decimal? PelletSizeMinMm { get; set; }
+
+    public decimal? PelletSizeMaxMm { get; set; }
 
     public int? DailyMeals { get; set; }
+
+    public string? Source { get; set; }
 
     public DateTime CreatedAt { get; set; }
 

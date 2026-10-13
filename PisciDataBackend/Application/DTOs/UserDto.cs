@@ -29,4 +29,10 @@ namespace PisciDataBackend.Application.DTOs
         public string Phone { get; set; } = null!;
         public string Role { get; set; } = null!;
     }
+
+    public class LoginDto
+    {
+        public string Phone { get; set; } = null!;
+        public string Password { get; set; } = null!;
+    }
 }

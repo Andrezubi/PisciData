@@ -34,6 +34,8 @@ public partial class PiscidatadbContext : DbContext
 
     public virtual DbSet<Feedingbyweight> Feedingbyweights { get; set; }
 
+    public virtual DbSet<Waterqualityreference> Waterqualityreferences { get; set; }
+
     public virtual DbSet<Harvest> Harvests { get; set; }
 
     public virtual DbSet<Mortality> Mortalities { get; set; }
@@ -340,16 +342,28 @@ public partial class PiscidatadbContext : DbContext
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime");
-            entity.Property(e => e.DailyAmountKilo).HasPrecision(5, 2);
+            entity.Property(e => e.DailyAmountKilo).HasPrecision(6, 2);
+            entity.Property(e => e.FeedPhase).HasMaxLength(10);
+            entity.Property(e => e.FeedForm).HasMaxLength(20);
+            entity.Property(e => e.ProteinMinPercentage).HasPrecision(5, 2);
+            entity.Property(e => e.ProteinMaxPercentage).HasPrecision(5, 2);
+            entity.Property(e => e.PelletSizeMinMm).HasPrecision(6, 2);
+            entity.Property(e => e.PelletSizeMaxMm).HasPrecision(6, 2);
+            entity.Property(e => e.ReferenceFishCount).HasDefaultValue(1000);
+            entity.Property(e => e.Source).HasMaxLength(255);
             entity.Property(e => e.FeedingRatePercentage).HasPrecision(6, 3);
             entity.Property(e => e.IsActive)
                 .IsRequired()
                 .HasDefaultValueSql("'1'");
-            entity.Property(e => e.PelletSizeMm).HasPrecision(6, 2);
-            entity.Property(e => e.ProteinPercentage).HasPrecision(5, 2);
             entity.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasColumnType("datetime");
+
+            entity.HasCheckConstraint("CK_FeedingByAge_AgeRange", "MaximumAgeDays >= MinimumAgeDays");
+            entity.HasCheckConstraint("CK_FeedingByAge_ReferenceFish", "ReferenceFishCount > 0");
+            entity.HasCheckConstraint("CK_FeedingByAge_Protein", "(ProteinMaxPercentage IS NULL OR ProteinMinPercentage IS NULL OR ProteinMaxPercentage >= ProteinMinPercentage)");
+            entity.HasCheckConstraint("CK_FeedingByAge_Pellet", "(PelletSizeMaxMm IS NULL OR PelletSizeMinMm IS NULL OR PelletSizeMaxMm >= PelletSizeMinMm)");
+            entity.HasCheckConstraint("CK_FeedingByAge_Form", "(FeedForm IS NULL OR FeedForm IN ('POWDER','PELLET','EXTRUDED'))");
 
             entity.HasOne(d => d.Species).WithMany(p => p.Feedingbyages)
                 .HasForeignKey(d => d.SpeciesId)
@@ -376,17 +390,27 @@ public partial class PiscidatadbContext : DbContext
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime");
             entity.Property(e => e.FeedPhase).HasMaxLength(10);
+            entity.Property(e => e.FeedForm).HasMaxLength(20);
             entity.Property(e => e.FeedingRatePercentage).HasPrecision(6, 3);
             entity.Property(e => e.IsActive)
                 .IsRequired()
                 .HasDefaultValueSql("'1'");
             entity.Property(e => e.MaximumWeightGrams).HasPrecision(10, 2);
             entity.Property(e => e.MinimumWeightGrams).HasPrecision(10, 2);
-            entity.Property(e => e.PelletSizeMm).HasPrecision(6, 2);
-            entity.Property(e => e.ProteinPercentage).HasPrecision(5, 2);
+            entity.Property(e => e.PelletSizeMinMm).HasPrecision(6, 2);
+            entity.Property(e => e.PelletSizeMaxMm).HasPrecision(6, 2);
+            entity.Property(e => e.ProteinMinPercentage).HasPrecision(5, 2);
+            entity.Property(e => e.ProteinMaxPercentage).HasPrecision(5, 2);
+            entity.Property(e => e.DailyMeals);
+            entity.Property(e => e.Source).HasMaxLength(255);
             entity.Property(e => e.UpdatedAt)
                 .ValueGeneratedOnAddOrUpdate()
                 .HasColumnType("datetime");
+
+            entity.HasCheckConstraint("CK_FeedingByWeight_WeightRange", "MaximumWeightGrams > MinimumWeightGrams");
+            entity.HasCheckConstraint("CK_FeedingByWeight_Protein", "(ProteinMaxPercentage IS NULL OR ProteinMinPercentage IS NULL OR ProteinMaxPercentage >= ProteinMinPercentage)");
+            entity.HasCheckConstraint("CK_FeedingByWeight_Pellet", "(PelletSizeMaxMm IS NULL OR PelletSizeMinMm IS NULL OR PelletSizeMaxMm >= PelletSizeMinMm)");
+            entity.HasCheckConstraint("CK_FeedingByWeight_Form", "(FeedForm IS NULL OR FeedForm IN ('POWDER','PELLET','EXTRUDED'))");
 
             entity.HasOne(d => d.Species).WithMany(p => p.Feedingbyweights)
                 .HasForeignKey(d => d.SpeciesId)
@@ -397,6 +421,50 @@ public partial class PiscidatadbContext : DbContext
                 .HasForeignKey(d => d.UserId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("FK_FeedingByWeight_User");
+        });
+
+        modelBuilder.Entity<Waterqualityreference>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("waterqualityreference");
+
+            entity.HasIndex(e => e.SpeciesId, "FK_WaterQualityReference_Species");
+
+            entity.HasIndex(e => new { e.Parameter, e.SpeciesId }, "IX_WaterQualityReference_Parameter");
+
+            entity.Property(e => e.Parameter).HasMaxLength(30).IsRequired();
+            entity.Property(e => e.Unit).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.OptimalMin).HasPrecision(8, 2);
+            entity.Property(e => e.OptimalMax).HasPrecision(8, 2);
+            entity.Property(e => e.WarningMin).HasPrecision(8, 2);
+            entity.Property(e => e.WarningMax).HasPrecision(8, 2);
+            entity.Property(e => e.CriticalMin).HasPrecision(8, 2);
+            entity.Property(e => e.CriticalMax).HasPrecision(8, 2);
+            entity.Property(e => e.RecommendedAction).HasMaxLength(500);
+            entity.Property(e => e.Source).HasMaxLength(255);
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("datetime");
+            entity.Property(e => e.UpdatedAt)
+                .ValueGeneratedOnAddOrUpdate()
+                .HasColumnType("datetime");
+            entity.Property(e => e.IsActive)
+                .IsRequired()
+                .HasDefaultValueSql("'1'");
+
+            entity.HasOne(d => d.Species).WithMany(p => p.Waterqualityreferences)
+                .HasForeignKey(d => d.SpeciesId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_WaterQualityReference_Species");
+
+            entity.HasOne(d => d.User).WithMany(p => p.Waterqualityreferences)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_WaterQualityReference_User");
+
+            entity.HasCheckConstraint("CK_WaterQualityReference_Parameter", "Parameter IN ('DISSOLVED_OXYGEN','PH','TEMPERATURE','TRANSPARENCY')");
+            entity.HasCheckConstraint("CK_WaterQualityReference_Optimal", "(OptimalMin IS NULL OR OptimalMax IS NULL OR OptimalMax >= OptimalMin)");
         });
 
         modelBuilder.Entity<Harvest>(entity =>

@@ -45,8 +45,8 @@ namespace PisciDataBackend.Domain.Validators
 
             if (string.IsNullOrWhiteSpace(dto.Role))
                 errors.Add("Role is required.");
-            else if (!AllowedRoles.Contains(dto.Role))
-                errors.Add($"Role must be one of: {string.Join(", ", AllowedRoles)}.");
+            //else if (!AllowedRoles.Contains(dto.Role))
+            //    errors.Add($"Role must be one of: {string.Join(", ", AllowedRoles)}.");
 
             return errors;
         }
