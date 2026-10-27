@@ -12,13 +12,13 @@ class DatabaseService {
     private val client = ApiClient.client
 
     private val farmUrls = listOf(
-        "https://10.0.2.2:7190/api/farms",
-        "http://10.0.2.2:5007/api/farms"
+        "https://127.0.0.1:7190/api/farms",
+        "http://127.0.0.1:5007/api/farms"
     )
 
     private fun cyclesUrls(farmId: Int) = listOf(
-        "https://10.0.2.2:7190/api/productioncycles/farm/$farmId",
-        "http://10.0.2.2:5007/api/productioncycles/farm/$farmId"
+        "https://127.0.0.1:7190/api/productioncycles/farm/$farmId",
+        "http://127.0.0.1:5007/api/productioncycles/farm/$farmId"
     )
 
     suspend fun getFarms(): Result<List<FarmModel>> {
