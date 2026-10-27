@@ -13,7 +13,7 @@ namespace PisciDataBackend.Infraestructure.Clients
         public OllamaApiClient(HttpClient httpClient, IConfiguration config)
         {
             _httpClient = httpClient;
-            _model = config["Ollama:Model"] ?? "qwen3.5:4b";
+            _model = config["Ollama:Model"] ?? "piscidata-ai";
         }
 
         // envia el historial de mensajes a ollama y retorna la respuesta o el error
