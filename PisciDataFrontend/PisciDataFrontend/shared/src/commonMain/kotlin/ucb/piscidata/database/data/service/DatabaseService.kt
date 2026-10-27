@@ -10,15 +10,16 @@ import ucb.piscidata.database.domain.model.*
 
 class DatabaseService {
     private val client = ApiClient.client
+    private val loadedCiclos = mutableListOf<CicloRecord>()
 
     private val farmUrls = listOf(
-        "https://127.0.0.1:7190/api/farms",
-        "http://127.0.0.1:5007/api/farms"
+        "https://10.0.2.2:7190/api/farms",
+        "http://10.0.2.2:5007/api/farms"
     )
 
     private fun cyclesUrls(farmId: Int) = listOf(
-        "https://127.0.0.1:7190/api/productioncycles/farm/$farmId",
-        "http://127.0.0.1:5007/api/productioncycles/farm/$farmId"
+        "https://10.0.2.2:7190/api/productioncycles/farm/$farmId",
+        "http://10.0.2.2:5007/api/productioncycles/farm/$farmId"
     )
 
     suspend fun getFarms(): Result<List<FarmModel>> {
@@ -46,31 +47,39 @@ class DatabaseService {
                 val response = client.get(url)
                 if (response.status.value in 200..299) {
                     val dtos: List<ProductionCycleResponseDto> = response.body()
-                    val records = dtos.map { it.toRecord() }
-                    return Result.success(records)
+                    val records = dtos.map { dto ->
+                        val existing = loadedCiclos.find { it.id == "CP-2026-${dto.id.toString().padStart(3, '0')}" }
+                        dto.toRecord().copy(isExpanded = existing?.isExpanded ?: false)
+                    }
+                    loadedCiclos.clear()
+                    loadedCiclos.addAll(records)
+                    return Result.success(loadedCiclos.toList())
                 }
             } catch (_: Exception) {}
         }
-        return Result.success(
-            listOf(
-                CicloRecord(
-                    id = "CP-2026-018",
-                    status = BadgeVariant.ACTIVO,
-                    estanque = "EST-03 - Estanque 3",
-                    especie = "Tilapia nilótica",
-                    peces = "15.400",
-                    pesoActual = "145.2 g",
-                    edadDias = 56,
-                    startDate = "2026-08-12",
-                    endDate = null,
-                    initialAgeDays = 15,
-                    initialWeightGrams = "12 g",
-                    initialFishCount = "16.000",
-                    observations = "Crecimiento óptimo, consumo estable.",
-                    isExpanded = false
+        if (loadedCiclos.isEmpty()) {
+            loadedCiclos.addAll(
+                listOf(
+                    CicloRecord(
+                        id = "CP-2026-018",
+                        status = BadgeVariant.ACTIVO,
+                        estanque = "EST-03 - Estanque 3",
+                        especie = "Tilapia nilótica",
+                        peces = "15.400",
+                        pesoActual = "145.2 g",
+                        edadDias = 56,
+                        startDate = "2026-08-12",
+                        endDate = null,
+                        initialAgeDays = 15,
+                        initialWeightGrams = "12 g",
+                        initialFishCount = "16.000",
+                        observations = "Crecimiento óptimo, consumo estable.",
+                        isExpanded = false
+                    )
                 )
             )
-        )
+        }
+        return Result.success(loadedCiclos.toList())
     }
 
     suspend fun saveCiclo(ciclo: CicloRecord): Result<Unit> {
@@ -78,11 +87,16 @@ class DatabaseService {
     }
 
     suspend fun deleteCiclo(id: String): Result<Unit> {
+        loadedCiclos.removeAll { it.id == id }
         return Result.success(Unit)
     }
 
     suspend fun toggleCicloExpand(id: String): Result<List<CicloRecord>> {
-        return getCiclos(1)
+        val idx = loadedCiclos.indexOfFirst { it.id == id }
+        if (idx >= 0) {
+            loadedCiclos[idx] = loadedCiclos[idx].copy(isExpanded = !loadedCiclos[idx].isExpanded)
+        }
+        return Result.success(loadedCiclos.toList())
     }
 
     suspend fun getPonds(): Result<List<Pond>> {
