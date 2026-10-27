@@ -7,7 +7,7 @@ import ucb.piscidata.database.domain.model.Pond
 
 interface DatabaseRepository {
     suspend fun getFarms(): Result<List<FarmModel>>
-    suspend fun getCiclos(): Result<List<CicloRecord>>
+    suspend fun getCiclos(farmId: Int): Result<List<CicloRecord>>
     suspend fun saveCiclo(ciclo: CicloRecord): Result<Unit>
     suspend fun deleteCiclo(id: String): Result<Unit>
     suspend fun toggleCicloExpand(id: String): Result<List<CicloRecord>>

@@ -31,7 +31,10 @@ class DatabaseViewModel(
     fun emitEvent(event: DatabaseEvent) {
         when (event) {
             DatabaseEvent.LoadData -> loadData()
-            is DatabaseEvent.ChangeFarm -> _state.update { it.copy(selectedFarmId = event.farmId) }
+            is DatabaseEvent.ChangeFarm -> {
+                _state.update { it.copy(selectedFarmId = event.farmId) }
+                loadCiclosForFarm(event.farmId)
+            }
             is DatabaseEvent.ChangeTab -> _state.update { it.copy(tab = event.tab, searchQuery = "") }
             is DatabaseEvent.ChangeView -> _state.update { it.copy(view = event.view) }
             is DatabaseEvent.Search -> _state.update { it.copy(searchQuery = event.query) }
@@ -48,15 +51,22 @@ class DatabaseViewModel(
             _state.update { it.copy(isLoading = true) }
             getFarmsUseCase().onSuccess { farms ->
                 _state.update { it.copy(farms = farms) }
-            }
-            getCiclosUseCase().onSuccess { ciclos ->
-                _state.update { it.copy(ciclos = ciclos) }
+                val initialFarmId = farms.firstOrNull()?.id ?: 1
+                loadCiclosForFarm(initialFarmId)
             }
             getPondsUseCase().onSuccess { ponds ->
                 _state.update { it.copy(ponds = ponds) }
             }
             getInventoryUseCase().onSuccess { inv ->
                 _state.update { it.copy(inventory = inv, isLoading = false) }
+            }
+        }
+    }
+
+    private fun loadCiclosForFarm(farmId: Int) {
+        viewModelScope.launch {
+            getCiclosUseCase(farmId).onSuccess { ciclos ->
+                _state.update { it.copy(ciclos = ciclos) }
             }
         }
     }

@@ -11,7 +11,7 @@ class DatabaseRepositoryImpl(
     private val service: DatabaseService
 ) : DatabaseRepository {
     override suspend fun getFarms(): Result<List<FarmModel>> = service.getFarms()
-    override suspend fun getCiclos(): Result<List<CicloRecord>> = service.getCiclos()
+    override suspend fun getCiclos(farmId: Int): Result<List<CicloRecord>> = service.getCiclos(farmId)
     override suspend fun saveCiclo(ciclo: CicloRecord): Result<Unit> = service.saveCiclo(ciclo)
     override suspend fun deleteCiclo(id: String): Result<Unit> = service.deleteCiclo(id)
     override suspend fun toggleCicloExpand(id: String): Result<List<CicloRecord>> = service.toggleCicloExpand(id)

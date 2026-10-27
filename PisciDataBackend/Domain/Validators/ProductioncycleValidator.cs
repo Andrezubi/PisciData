@@ -9,25 +9,25 @@ namespace PisciDataBackend.Domain.Validators
             var errors = new List<string>();
 
             if (dto.PondId <= 0)
-                errors.Add("PondId is required and must be greater than 0.");
+                errors.Add("El estanque es obligatorio y debe ser mayor que cero.");
 
             if (dto.SpeciesId <= 0)
-                errors.Add("SpeciesId is required and must be greater than 0.");
+                errors.Add("La especie es obligatoria y debe ser mayor que cero.");
 
             if (dto.StartDate == default)
-                errors.Add("StartDate is required.");
+                errors.Add("La fecha de inicio es obligatoria.");
 
             if (dto.EndDate.HasValue && dto.EndDate < dto.StartDate)
-                errors.Add("EndDate must be greater than or equal to StartDate.");
+                errors.Add("La fecha de finalización debe ser igual o posterior a la fecha de inicio.");
 
             if (dto.InitialFishCount.HasValue && dto.InitialFishCount < 0)
-                errors.Add("InitialFishCount must be greater than or equal to 0.");
+                errors.Add("La cantidad inicial de peces no puede ser negativa.");
 
             if (dto.InitialAverageWeightGrams.HasValue && dto.InitialAverageWeightGrams < 0)
-                errors.Add("InitialAverageWeightGrams must be greater than or equal to 0.");
+                errors.Add("El peso promedio inicial no puede ser negativo.");
 
             if (dto.InitialAgeDays.HasValue && dto.InitialAgeDays < 0)
-                errors.Add("InitialAgeDays must be greater than or equal to 0.");
+                errors.Add("La edad inicial no puede ser negativa.");
 
             return errors;
         }
@@ -37,25 +37,25 @@ namespace PisciDataBackend.Domain.Validators
             var errors = new List<string>();
 
             if (dto.PondId <= 0)
-                errors.Add("PondId is required and must be greater than 0.");
+                errors.Add("El estanque es obligatorio y debe ser mayor que cero.");
 
             if (dto.SpeciesId <= 0)
-                errors.Add("SpeciesId is required and must be greater than 0.");
+                errors.Add("La especie es obligatoria y debe ser mayor que cero.");
 
             if (dto.StartDate == default)
-                errors.Add("StartDate is required.");
+                errors.Add("La fecha de inicio es obligatoria.");
 
             if (dto.EndDate.HasValue && dto.EndDate < dto.StartDate)
-                errors.Add("EndDate must be greater than or equal to StartDate.");
+                errors.Add("La fecha de finalización debe ser igual o posterior a la fecha de inicio.");
 
             if (dto.InitialFishCount.HasValue && dto.InitialFishCount < 0)
-                errors.Add("InitialFishCount must be greater than or equal to 0.");
+                errors.Add("La cantidad inicial de peces no puede ser negativa.");
 
             if (dto.InitialAverageWeightGrams.HasValue && dto.InitialAverageWeightGrams < 0)
-                errors.Add("InitialAverageWeightGrams must be greater than or equal to 0.");
+                errors.Add("El peso promedio inicial no puede ser negativo.");
 
             if (dto.InitialAgeDays.HasValue && dto.InitialAgeDays < 0)
-                errors.Add("InitialAgeDays must be greater than or equal to 0.");
+                errors.Add("La edad inicial no puede ser negativa.");
 
             return errors;
         }

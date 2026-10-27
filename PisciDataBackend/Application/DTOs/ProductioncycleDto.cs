@@ -14,6 +14,16 @@ namespace PisciDataBackend.Application.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
         public bool? IsActive { get; set; }
+        public int FarmId { get; set; }
+        public string FarmName { get; set; } = null!;
+        public bool? FarmIsActive { get; set; }
+        public string PondCode { get; set; } = null!;
+        public string? PondName { get; set; }
+        public string SpeciesName { get; set; } = null!;
+        public int? CurrentFishCount { get; set; }
+        public decimal? CurrentAverageWeightGrams { get; set; }
+        public int? CurrentAgeDays { get; set; }
+        public string Status { get; set; } = null!;
     }
 
     public class CreateProductioncycleDto

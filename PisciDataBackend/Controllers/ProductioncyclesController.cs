@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PisciDataBackend.Application.DTOs;
 using PisciDataBackend.Application.Services;
@@ -5,6 +7,7 @@ using PisciDataBackend.Application.Services;
 namespace PisciDataBackend.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class ProductioncyclesController : ControllerBase
     {
@@ -15,54 +18,74 @@ namespace PisciDataBackend.Controllers
             _productioncycleService = productioncycleService;
         }
 
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductioncycleDto>>> GetAll()
+        [HttpGet("farm/{farmId:int}")]
+        public async Task<ActionResult<IEnumerable<ProductioncycleDto>>> GetByFarm(int farmId)
         {
-            var productioncycles = await _productioncycleService.GetAllAsync();
-            return Ok(productioncycles);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var cycles = await _productioncycleService.GetByFarmAsync(farmId, userId);
+            return Ok(cycles);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<ProductioncycleDto>> GetById(int id)
         {
-            var productioncycle = await _productioncycleService.GetByIdAsync(id);
-            if (productioncycle == null)
-                return NotFound();
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
 
-            return Ok(productioncycle);
+            var cycle = await _productioncycleService.GetByIdAsync(id, userId);
+            return cycle == null ? NotFound() : Ok(cycle);
         }
 
         [HttpPost]
         public async Task<ActionResult<ProductioncycleDto>> Create([FromBody] CreateProductioncycleDto dto)
         {
-            var (created, errors) = await _productioncycleService.CreateAsync(dto);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var (created, errors) = await _productioncycleService.CreateAsync(dto, userId);
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-            return CreatedAtAction(nameof(GetById), new { id = created!.Id }, created);
+            return created == null
+                ? NotFound()
+                : CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<ProductioncycleDto>> Update(int id, [FromBody] UpdateProductioncycleDto dto)
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<ProductioncycleDto>> Update(
+            int id, [FromBody] UpdateProductioncycleDto dto)
         {
-            var (updated, errors) = await _productioncycleService.UpdateAsync(id, dto);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var (updated, errors) = await _productioncycleService.UpdateAsync(id, dto, userId);
             if (errors.Count > 0)
                 return BadRequest(errors);
 
-            if (updated == null)
-                return NotFound();
-
-            return Ok(updated);
+            return updated == null ? NotFound() : Ok(updated);
         }
 
-        [HttpDelete("{id}")]
+        [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _productioncycleService.DeleteAsync(id);
-            if (!deleted)
-                return NotFound();
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
 
-            return NoContent();
+            return await _productioncycleService.DeleteAsync(id, userId)
+                ? NoContent()
+                : NotFound();
+        }
+
+        private bool TryGetUserId(out int userId)
+        {
+            userId = 0;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)
+                ?? User.FindFirst("UserId")
+                ?? User.FindFirst("sub");
+
+            return userIdClaim != null && int.TryParse(userIdClaim.Value, out userId);
         }
     }
 }

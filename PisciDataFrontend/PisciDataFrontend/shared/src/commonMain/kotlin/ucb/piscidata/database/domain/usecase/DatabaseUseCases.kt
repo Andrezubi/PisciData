@@ -11,7 +11,7 @@ class GetFarmsUseCase(private val repository: DatabaseRepository) {
 }
 
 class GetCiclosUseCase(private val repository: DatabaseRepository) {
-    suspend operator fun invoke(): Result<List<CicloRecord>> = repository.getCiclos()
+    suspend operator fun invoke(farmId: Int): Result<List<CicloRecord>> = repository.getCiclos(farmId)
 }
 
 class SaveCicloUseCase(private val repository: DatabaseRepository) {
