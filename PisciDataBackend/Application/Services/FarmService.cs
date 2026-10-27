@@ -22,6 +22,20 @@ namespace PisciDataBackend.Application.Services
             return farms.Select(MapToDto);
         }
 
+        public async Task<IEnumerable<FarmResponseDto>> GetFarmsByUserIdAsync(int userId)
+        {
+            var farms = await _farmRepository.GetFarmsByOwnerUserIdAsync(userId);
+            return farms.Select(f => new FarmResponseDto
+            {
+                Id = f.Id,
+                Name = f.Name,
+                Description = f.Description,
+                Address = f.Address,
+                Latitude = f.Latitude,
+                Longitude = f.Longitude
+            });
+        }
+
         public async Task<FarmDto?> GetByIdAsync(int id)
         {
             var farm = await _farmRepository.GetByIdAsync(id);

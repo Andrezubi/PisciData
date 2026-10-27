@@ -23,6 +23,7 @@ Motivo:
 
 Conectar el frontend (Kotlin Multiplatform) con el backend (.NET) mediante peticiones HTTP, de modo que el usuario autenticado vea los datos reales de su piscigranja actual.
 
+Utiliza el httpclient creado para la pagina de auth para hacer el resto de httpclients en el frontend
 ---
 
 ## 2. Tareas

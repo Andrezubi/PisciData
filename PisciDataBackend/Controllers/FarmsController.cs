@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PisciDataBackend.Application.DTOs;
 using PisciDataBackend.Application.Services;
+using System.Security.Claims;
 
 namespace PisciDataBackend.Controllers
 {
@@ -19,6 +21,20 @@ namespace PisciDataBackend.Controllers
         public async Task<ActionResult<IEnumerable<FarmDto>>> GetAll()
         {
             var farms = await _farmService.GetAllAsync();
+            return Ok(farms);
+        }
+
+        [Authorize]
+        [HttpGet("my")]
+        public async Task<ActionResult<IEnumerable<FarmResponseDto>>> GetMyFarms()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("UserId") ?? User.FindFirst("sub");
+            if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+            }
+
+            var farms = await _farmService.GetFarmsByUserIdAsync(userId);
             return Ok(farms);
         }
 

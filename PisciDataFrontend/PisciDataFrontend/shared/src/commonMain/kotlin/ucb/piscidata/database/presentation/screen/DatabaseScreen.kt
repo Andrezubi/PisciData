@@ -75,7 +75,7 @@ fun DatabaseScreen(
                 // Unified Farm Selector Header
                 FarmSelectorHeader(
                     farms = farms,
-                    selectedFarmId = selectedFarmId,
+                    selectedFarmId = selectedFarmId ?: 0,
                     onSelectFarm = { sessionManager.selectFarm(it) }
                 )
 

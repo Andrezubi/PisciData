@@ -16,9 +16,14 @@ import ucb.piscidata.session.SessionManager
 import ucb.piscidata.tasks.data.repository.TaskRepositoryImpl
 import ucb.piscidata.tasks.data.service.TaskService
 import ucb.piscidata.tasks.domain.repository.TaskRepository
+import ucb.piscidata.farm.data.datasource.FarmRemoteDataSource
+import ucb.piscidata.farm.data.repository.FarmRepositoryImpl
+import ucb.piscidata.farm.data.service.FarmService
+import ucb.piscidata.farm.domain.repository.FarmRepository
 
 val dataModule = module {
-    single<AuthRemoteDataSource> { AuthService() }
+    single { SessionManager() }
+    single<AuthRemoteDataSource> { AuthService(get()) }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
 
     single<ChatRemoteDataSource> { ChatService() }
@@ -30,5 +35,6 @@ val dataModule = module {
     single { TaskService() }
     single<TaskRepository> { TaskRepositoryImpl(get()) }
 
-    single { SessionManager() }
+    single<FarmRemoteDataSource> { FarmService() }
+    single<FarmRepository> { FarmRepositoryImpl(get()) }
 }
