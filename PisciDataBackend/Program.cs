@@ -94,6 +94,8 @@ builder.Services.AddScoped<FeedRepository>();
 builder.Services.AddScoped<SupplyRepository>();
 builder.Services.AddScoped<BiometricRepository>();
 builder.Services.AddScoped<BiometricssampleRepository>();
+builder.Services.AddScoped<AiconversationRepository>();
+builder.Services.AddScoped<AimessageRepository>();
 
 // Services
 builder.Services.AddScoped<FarmService>();
@@ -105,6 +107,16 @@ builder.Services.AddScoped<FeedService>();
 builder.Services.AddScoped<SupplyService>();
 builder.Services.AddScoped<BiometricService>();
 builder.Services.AddScoped<BiometricssampleService>();
+builder.Services.AddScoped<AiChatService>();
+
+// HTTP Clients
+builder.Services.AddHttpClient<PisciDataBackend.Infraestructure.Clients.OllamaApiClient>((serviceProvider, client) =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var baseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
+    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
+    client.Timeout = TimeSpan.FromSeconds(120);
+});
 
 var app = builder.Build();
 
