@@ -16,6 +16,13 @@ namespace PisciDataBackend.Infraestructure.Repositories
             return await _dbSet.Where(f => f.IsActive != false).ToListAsync();
         }
 
+        public async Task<IEnumerable<Farm>> GetFarmsByOwnerUserIdAsync(int userId)
+        {
+            return await _dbSet
+                .Where(f => f.IsActive != false && f.OwnerUserId == userId)
+                .ToListAsync();
+        }
+
         public override async Task DeleteAsync(Farm entity)
         {
             entity.IsActive = false;

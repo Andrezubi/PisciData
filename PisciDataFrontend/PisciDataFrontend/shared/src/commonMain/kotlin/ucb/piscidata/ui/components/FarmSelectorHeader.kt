@@ -19,7 +19,7 @@ fun FarmSelectorHeader(
     selectedFarmId: Int,
     onSelectFarm: (Int) -> Unit
 ) {
-    val currentFarmName = farms.find { it.id == selectedFarmId }?.name ?: "Piscigranja El Manantial"
+    val currentFarmName = farms.find { it.id == selectedFarmId }?.name ?: "Piscigranja Default"
     var expanded by remember { mutableStateOf(false) }
 
     Surface(

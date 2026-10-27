@@ -7,7 +7,10 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import org.koin.compose.koinInject
+import ucb.piscidata.data.remote.ApiClient
 import ucb.piscidata.navigation.AppNavHost
+import ucb.piscidata.session.SessionManager
 
 private val LightColorScheme = lightColorScheme(
     primary = Color(0xFF1577C8),
@@ -22,6 +25,8 @@ private val LightColorScheme = lightColorScheme(
 
 @Composable
 fun App() {
+    val sessionManager = koinInject<SessionManager>()
+    ApiClient.sessionManager = sessionManager
     MaterialTheme(colorScheme = LightColorScheme) {
         Surface(
             modifier = Modifier.fillMaxSize(),

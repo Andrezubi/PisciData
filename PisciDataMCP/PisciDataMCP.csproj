@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
+<!--estandar para apps modernas de .net-->
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+  <PropertyGroup>  <!--bloque para varibles de config de compilacion-->
+    <TargetFramework>net10.0</TargetFramework> <!--sin esto el compilador falla por falta de api de la biblioteca base-->
     <RuntimeIdentifiers>win-x64;win-arm64;osx-arm64;linux-x64;linux-arm64;linux-musl-x64</RuntimeIdentifiers>
-    <OutputType>Exe</OutputType>
-    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType><!--permite que el agente pueda ejecutarlo de forma autonoma como un subproceso hijo -->
+    <Nullable>enable</Nullable> <!-- activa los nullable references tipes NRT-->
     <ImplicitUsings>enable</ImplicitUsings>
 
     <!-- Set up the NuGet package to be an MCP server -->
@@ -34,7 +35,15 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.12" />
     <PackageReference Include="ModelContextProtocol" Version="2.1.0" />
+  </ItemGroup>
+
+  <!-- Ordena a .NET copiar appsettings.json a la carpeta bin/ al compilar -->
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
