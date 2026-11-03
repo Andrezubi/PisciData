@@ -1,12 +1,26 @@
 package ucb.piscidata.chat.data.repository
 
 import ucb.piscidata.chat.data.datasource.ChatRemoteDataSource
+import ucb.piscidata.chat.data.mapper.toDomain
 import ucb.piscidata.chat.domain.model.ChatMessageModel
+import ucb.piscidata.chat.domain.model.ConversationModel
 import ucb.piscidata.chat.domain.repository.ChatRepository
 
 class ChatRepositoryImpl(
     private val dataSource: ChatRemoteDataSource
 ) : ChatRepository {
+
+    override suspend fun getConversations(): Result<List<ConversationModel>> {
+        return dataSource.getConversations().map { dtos ->
+            dtos.map { it.toDomain() }
+        }
+    }
+
+    override suspend fun createConversation(title: String): Result<ConversationModel> {
+        return dataSource.createConversation(title).map { dto ->
+            dto.toDomain()
+        }
+    }
 
     override suspend fun getOrCreateActiveConversation(): Result<Int> {
         val listResult = dataSource.getConversations()

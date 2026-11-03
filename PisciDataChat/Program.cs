@@ -44,6 +44,18 @@ async Task ConnectMcpAsync()
         Command = cfg["Mcp:Command"] ?? "dotnet",
         Arguments = mcpArgs,
     });
+
+    var dllPath = Path.GetFullPath(
+    Path.Combine(
+        app.Environment.ContentRootPath,
+        mcpArgs[0]
+    )
+);
+
+    logger.LogInformation("ContentRoot: {Path}", app.Environment.ContentRootPath);
+    logger.LogInformation("MCP DLL: {Path}", dllPath);
+    logger.LogInformation("DLL exists: {Exists}", File.Exists(dllPath));
+
     mcp = await McpClient.CreateAsync(transport);
     mcpTools = await mcp.ListToolsAsync();
     toolsForLlm = new JsonArray(mcpTools.Select(t => (JsonNode)new JsonObject

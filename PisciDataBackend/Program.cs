@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using PisciDataBackend.AI;
 using PisciDataBackend.Application.Services;
 using PisciDataBackend.Domain.Models;
+using PisciDataBackend.Infraestructure.Clients;
 using PisciDataBackend.Infraestructure.Persistence;
 using PisciDataBackend.Infraestructure.Repositories;
 using System.Text;
@@ -21,6 +24,31 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+// Ollama and MCP configuration
+
+builder.Services.Configure<OllamaOptions>(
+    builder.Configuration.GetSection("AI:Ollama"));
+
+builder.Services.Configure<McpOptions>(
+    builder.Configuration.GetSection("AI:MCP"));
+
+// MCP client: one shared connection to the stdio server.
+builder.Services.AddSingleton<McpToolService>();
+
+// Ollama client: HTTP client with MCP integration.
+builder.Services.AddHttpClient<OllamaApiClient>((serviceProvider, client) =>
+{
+    var options = serviceProvider
+        .GetRequiredService<IOptions<OllamaOptions>>()
+        .Value;
+
+    client.BaseAddress = new Uri(options.BaseUrl);
+    client.Timeout = TimeSpan.FromMinutes(5);
+});
+
+
+
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -109,14 +137,7 @@ builder.Services.AddScoped<BiometricService>();
 builder.Services.AddScoped<BiometricssampleService>();
 builder.Services.AddScoped<AiChatService>();
 
-// HTTP Clients
-builder.Services.AddHttpClient<PisciDataBackend.Infraestructure.Clients.OllamaApiClient>((serviceProvider, client) =>
-{
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var baseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
-    client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-    client.Timeout = TimeSpan.FromSeconds(360);
-});
+
 
 var app = builder.Build();
 

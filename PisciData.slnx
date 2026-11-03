@@ -1,4 +1,5 @@
 <Solution>
   <Project Path="PisciDataBackend/PisciDataBackend.csproj" />
+  <Project Path="PisciDataChat/PisciDataChat.csproj" />
   <Project Path="PisciDataMCP/PisciDataMCP.csproj" Id="464ff1ac-cbce-4f48-9b7e-c3b000b371c5" />
 </Solution>

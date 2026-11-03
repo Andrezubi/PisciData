@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
@@ -38,6 +39,7 @@ fun ChatScreen(
     val selectedFarmId by sessionManager.selectedFarmId.collectAsState()
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var expandedDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
@@ -58,10 +60,8 @@ fun ChatScreen(
 
     LaunchedEffect(state.isRecording) {
         if (state.isRecording) {
-            var secs = 0
             while (true) {
                 delay(1000)
-                secs++
             }
         }
     }
@@ -83,44 +83,91 @@ fun ChatScreen(
                 onSelectFarm = { sessionManager.selectFarm(it) }
             )
 
-            // Header
+            // Header with Conversation Selector & New Conversation Button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
                         text = "Asistente IA",
-                        fontSize = 20.sp,
+                        fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF0B2B3B)
                     )
-                    Text(
-                        text = sessionManager.getSelectedFarmName().ifBlank { "PisciData" },
-                        fontSize = 12.sp,
-                        color = Color(0xFF6B818B)
-                    )
-                }
-                Surface(
-                    color = Color(0xFFE8F4FC),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            text = if (state.isLoading) "Conectando..." else "En línea",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = if (state.isLoading) Color(0xFFE08B00) else Color(0xFF1577C8)
-                        )
+
+                    // Conversation Selector Box
+                    Box {
+                        Surface(
+                            onClick = { expandedDropdown = true },
+                            color = Color(0xFFE8F4FC),
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = state.selectedConversation?.title ?: "Seleccionar conversación...",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF1577C8),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    text = "▾",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1577C8)
+                                )
+                            }
+                        }
+
+                        DropdownMenu(
+                            expanded = expandedDropdown,
+                            onDismissRequest = { expandedDropdown = false }
+                        ) {
+                            state.conversations.forEach { conv ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = conv.title,
+                                            fontSize = 13.sp,
+                                            fontWeight = if (conv.id == state.conversationId) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (conv.id == state.conversationId) Color(0xFF1577C8) else Color(0xFF0B2B3B)
+                                        )
+                                    },
+                                    onClick = {
+                                        expandedDropdown = false
+                                        viewModel.emitEvent(ChatEvent.OnSelectConversation(conv.id))
+                                    }
+                                )
+                            }
+                        }
                     }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // New Conversation Button
+                Button(
+                    onClick = { viewModel.emitEvent(ChatEvent.OnOpenNewConversationDialog) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
+                    shape = RoundedCornerShape(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Text("+ Nueva", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
                 }
             }
 
@@ -363,5 +410,40 @@ fun ChatScreen(
                 }
             }
         }
+    }
+
+    // Dialog for creating a new conversation
+    if (state.showNewConversationDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.emitEvent(ChatEvent.OnCloseNewConversationDialog) },
+            title = { Text("Nueva Conversación") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Ingresa el título para la nueva conversación:", fontSize = 13.sp)
+                    OutlinedTextField(
+                        value = state.newConversationTitleInput,
+                        onValueChange = { viewModel.emitEvent(ChatEvent.OnNewConversationTitleChanged(it)) },
+                        placeholder = { Text("Ej. Manejo de Estanque 3") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.emitEvent(ChatEvent.OnCreateConversation) },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8))
+                ) {
+                    Text("Crear")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { viewModel.emitEvent(ChatEvent.OnCloseNewConversationDialog) }
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
