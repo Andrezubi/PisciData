@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PisciDataBackend.Application.DTOs;
 using PisciDataBackend.Application.Services;
@@ -5,6 +7,7 @@ using PisciDataBackend.Application.Services;
 namespace PisciDataBackend.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class FeedsController : ControllerBase
     {
@@ -18,14 +21,20 @@ namespace PisciDataBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<FeedDto>>> GetAll()
         {
-            var feeds = await _feedService.GetAllAsync();
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var feeds = await _feedService.GetAllAsync(userId);
             return Ok(feeds);
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<FeedDto>> GetById(int id)
         {
-            var feed = await _feedService.GetByIdAsync(id);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var feed = await _feedService.GetByIdAsync(id, userId);
             if (feed == null)
                 return NotFound();
 
@@ -35,7 +44,10 @@ namespace PisciDataBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<FeedDto>> Create([FromBody] CreateFeedDto dto)
         {
-            var (created, errors) = await _feedService.CreateAsync(dto);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var (created, errors) = await _feedService.CreateAsync(dto, userId);
             if (errors.Count > 0)
                 return BadRequest(errors);
 
@@ -45,7 +57,10 @@ namespace PisciDataBackend.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<FeedDto>> Update(int id, [FromBody] UpdateFeedDto dto)
         {
-            var (updated, errors) = await _feedService.UpdateAsync(id, dto);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var (updated, errors) = await _feedService.UpdateAsync(id, dto, userId);
             if (errors.Count > 0)
                 return BadRequest(errors);
 
@@ -58,11 +73,24 @@ namespace PisciDataBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _feedService.DeleteAsync(id);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var deleted = await _feedService.DeleteAsync(id, userId);
             if (!deleted)
                 return NotFound();
 
             return NoContent();
+        }
+
+        private bool TryGetUserId(out int userId)
+        {
+            userId = 0;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)
+                ?? User.FindFirst("UserId")
+                ?? User.FindFirst("sub");
+
+            return userIdClaim != null && int.TryParse(userIdClaim.Value, out userId);
         }
     }
 }

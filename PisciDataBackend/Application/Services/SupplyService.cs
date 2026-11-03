@@ -16,23 +16,27 @@ namespace PisciDataBackend.Application.Services
             _supplyRepository = supplyRepository;
         }
 
-        public async Task<IEnumerable<SupplyDto>> GetAllAsync()
+        public async Task<IEnumerable<SupplyDto>> GetAllAsync(int userId)
         {
-            var supplies = await _supplyRepository.GetAllAsync();
+            var supplies = await _supplyRepository.GetByOwnerAsync(userId);
             return supplies.Select(MapToDto);
         }
 
-        public async Task<SupplyDto?> GetByIdAsync(int id)
+        public async Task<SupplyDto?> GetByIdAsync(int id, int userId)
         {
-            var supply = await _supplyRepository.GetByIdAsync(id);
+            var supply = await _supplyRepository.GetByIdForOwnerAsync(id, userId);
             return supply == null ? null : MapToDto(supply);
         }
 
-        public async Task<(SupplyDto? Dto, List<string> Errors)> CreateAsync(CreateSupplyDto dto)
+        public async Task<(SupplyDto? Dto, List<string> Errors)> CreateAsync(
+            CreateSupplyDto dto, int userId)
         {
             var errors = SupplyValidator.Validate(dto);
             if (errors.Count > 0)
                 return (null, errors);
+
+            if (!await _supplyRepository.FarmBelongsToOwnerAsync(dto.FarmId, userId))
+                return (null, new List<string> { "La granja no existe o no pertenece al usuario." });
 
             var supply = new Supply
             {
@@ -50,15 +54,19 @@ namespace PisciDataBackend.Application.Services
             return (MapToDto(supply), errors);
         }
 
-        public async Task<(SupplyDto? Dto, List<string> Errors)> UpdateAsync(int id, UpdateSupplyDto dto)
+        public async Task<(SupplyDto? Dto, List<string> Errors)> UpdateAsync(
+            int id, UpdateSupplyDto dto, int userId)
         {
             var errors = SupplyValidator.Validate(dto);
             if (errors.Count > 0)
                 return (null, errors);
 
-            var supply = await _supplyRepository.GetByIdAsync(id);
+            var supply = await _supplyRepository.GetByIdForOwnerAsync(id, userId);
             if (supply == null)
                 return (null, errors);
+
+            if (!await _supplyRepository.FarmBelongsToOwnerAsync(dto.FarmId, userId))
+                return (null, new List<string> { "La granja no existe o no pertenece al usuario." });
 
             supply.FarmId = dto.FarmId;
             supply.Name = dto.Name;
@@ -72,9 +80,9 @@ namespace PisciDataBackend.Application.Services
             return (MapToDto(supply), errors);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int userId)
         {
-            var supply = await _supplyRepository.GetByIdAsync(id);
+            var supply = await _supplyRepository.GetByIdForOwnerAsync(id, userId);
             if (supply == null)
                 return false;
 
@@ -93,10 +101,19 @@ namespace PisciDataBackend.Application.Services
                 Quantity = supply.Quantity,
                 Unit = supply.Unit,
                 MinimumStock = supply.MinimumStock,
+                StockStatus = GetStockStatus(supply.Quantity, supply.MinimumStock),
                 CreatedAt = supply.CreatedAt,
                 UpdatedAt = supply.UpdatedAt,
                 IsActive = supply.IsActive
             };
+        }
+
+        private static string GetStockStatus(decimal quantity, decimal? minimumStock)
+        {
+            if (!minimumStock.HasValue)
+                return "NO DISPONIBLE";
+
+            return quantity <= minimumStock.Value ? "BAJO" : "DISPONIBLE";
         }
     }
 }

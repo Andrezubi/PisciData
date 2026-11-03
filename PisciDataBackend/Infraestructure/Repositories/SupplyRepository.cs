@@ -16,6 +16,33 @@ namespace PisciDataBackend.Infraestructure.Repositories
             return await _dbSet.Where(x => x.IsActive != false).ToListAsync();
         }
 
+        public async Task<List<Supply>> GetByOwnerAsync(int userId)
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Where(supply => supply.IsActive != false
+                    && supply.Farm.IsActive != false
+                    && supply.Farm.OwnerUserId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<Supply?> GetByIdForOwnerAsync(int id, int userId)
+        {
+            return await _dbSet
+                .Where(supply => supply.Id == id
+                    && supply.IsActive != false
+                    && supply.Farm.IsActive != false
+                    && supply.Farm.OwnerUserId == userId)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> FarmBelongsToOwnerAsync(int farmId, int userId)
+        {
+            return await _context.Farms.AnyAsync(farm => farm.Id == farmId
+                && farm.IsActive != false
+                && farm.OwnerUserId == userId);
+        }
+
         public override async Task DeleteAsync(Supply entity)
         {
             entity.IsActive = false;
