@@ -6,7 +6,7 @@ import ucb.piscidata.chat.domain.repository.ChatRepository
 class SendMessageUseCase(
     private val repository: ChatRepository
 ) {
-    suspend operator fun invoke(text: String): Result<List<ChatMessageModel>> {
-        return repository.sendMessage(text)
+    suspend operator fun invoke(conversationId: Int, text: String): Result<ChatMessageModel> {
+        return repository.sendMessage(conversationId, text)
     }
 }

@@ -1,6 +1,6 @@
 # 08. Estado Actual del Sistema (Current State)
 
-**Última actualización:** 06 de octubre de 2026  
+**Última actualización:** 03 de noviembre de 2026
 **Commit de referencia:** `a146b9f` (rama `main`)  
 **Propósito:** Este documento registra el inventario exhaustivo, auditable y verificable del código existente en el repositorio frente a la línea base oficial de **109 Historias de Usuario (HU-01 a HU-109)**. Sirve como base empírica para la especificación formal del sistema y la priorización del **MVP Inicial**.
 
@@ -106,22 +106,20 @@ PisciDataFrontend/
     └── iosApp/              # Proyecto Xcode / Swift para iOS
 ```
 
-### 4.1. Análisis de Dependencias (`libs.versions.toml`)
+### 4.1. Cliente y conectividad
 
-* **Presentes:**
-  * Kotlin `2.4.20`, Android Gradle Plugin `9.1.1`
-  * Compose Multiplatform `1.12.1`, Material3 `1.12.0-alpha03`
-  * AndroidX Lifecycle ViewModel y Runtime Compose
-* **Ausentes (Brechas críticas para conectar con Backend):**
-  * **Cliente HTTP:** No existe Ktor Client, Retrofit ni OkHttp.
-  * **Serialización:** No existe `kotlinx.serialization` instalada.
-  * **Navegación:** No existe biblioteca de navegación (Voyager, Decompose o Navigation Compose).
-  * **Almacenamiento Local:** No hay Room, SQLDelight ni Settings para almacenar tokens o estado offline.
+* El frontend utiliza Ktor y `kotlinx.serialization` para autenticación, granjas y chat.
+* Las rutas HTTP están centralizadas en `shared/src/commonMain/kotlin/ucb/piscidata/data/remote/ApiEndpoints.kt`.
+* El inicio de sesión conserva el JWT para llamadas protegidas. El registro vuelve al login para obtener ese token antes de entrar a la app.
+* Para desarrollo en un teléfono conectado por USB, `adb reverse tcp:5007 tcp:5007` permite conservar la URL local `127.0.0.1:5007`.
 
-### 4.2. Estado de Pantallas y Componentes
+### 4.2. Estado de pantallas y chat móvil
 
-* [`App.kt`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataFrontend/PisciDataFrontend/shared/src/commonMain/kotlin/ucb/piscidata/App.kt): Código estándar de plantilla de JetBrains con un botón interactivo y una animación básica.
-* **Estado SDD:** **SPECIFIED → MISSING** (No existe UI de negocio conectada, solo estructura base).
+* La app incluye pantallas de autenticación, asistente, base de datos, tareas, reportes y perfil; el alcance implementado varía por módulo.
+* El chat móvil recupera o crea una conversación en `/api/AiConversations`, envía mensajes al backend y muestra la respuesta de Ollama.
+* El backend usa el modelo `piscidata-ai` en Ollama. La respuesta móvil no usa herramientas MCP; por lo tanto, no debe presentarse como consulta de datos vivos de granjas.
+* **Verificación manual:** el usuario confirmó una respuesta real de la IA en un teléfono Android el 03 de noviembre de 2026. No hay pruebas automatizadas de esta integración.
+* **Estado SDD:** chat móvil **IMPLEMENTED + VERIFIED MANUALLY**; conexión móvil con MCP **MISSING**.
 
 ---
 
@@ -136,7 +134,7 @@ PisciDataFrontend/
   * [`ProductionCycleTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/ProductionCycleTools.cs): `GetProductionCycles`, `GetProductionCycleById`.
   * [`BiometricTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/BiometricTools.cs): `GetBiometrics`, `GetBiometricById`.
   * [`FeedingTools.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataMCP/Tools/FeedingTools.cs): `GetFeedings`, `GetFeedingById`.
-* **Estado SDD:** **IMPLEMENTED**. Componente completamente operativo y listo para consumo por agentes u orquestadores locales de LLM.
+* **Estado SDD:** **IMPLEMENTED / NOT VERIFIED**. El servidor MCP está implementado por stdio; `PisciDataChat` ofrece una interfaz web de prueba que lo orquesta con Ollama. Este flujo es independiente del chat móvil.
 
 ---
 
@@ -144,8 +142,8 @@ PisciDataFrontend/
 
 | ID Hallazgo | Componente | Severidad | Descripción del Hallazgo | Evidencia en Código |
 |---|---|---|---|---|
-| **TECH-SEC-01** | `PisciDataBackend` | **Crítica** | Contraseñas almacenadas en texto plano en la base de datos dentro de la columna `PasswordHash`. | [`UserService.cs:42`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataBackend/Application/Services/UserService.cs#L42) (`PasswordHash = dto.Password`) |
-| **TECH-SEC-02** | `PisciDataBackend` | **Alta** | Ausencia total de pipeline de autenticación. `app.UseAuthorization()` está activo sin `AddAuthentication()` ni esquemas JWT. Todos los endpoints son públicos. | [`Program.cs:53`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataBackend/Program.cs#L53) |
+| **TECH-SEC-01** | `PisciDataBackend` | **Media** | El registro aplica BCrypt y el login emite JWT; faltan controles de seguridad y gestión de secretos para un despliegue real. | `UserService.cs`, `UsersController.cs`, `Program.cs` |
+| **TECH-SEC-02** | `PisciDataBackend` | **Alta** | `appsettings.json` contiene una clave JWT de marcador y una cadena de conexión de desarrollo. Deben configurarse secretos únicos fuera del repositorio. | `PisciDataBackend/appsettings.json` |
 | **TECH-SEC-03** | `PisciDataBackend` | **Alta** | Cadena de conexión y credenciales de base de datos (`root:1234`) hardcodeadas en código C# bajo `#warning`. | [`PiscidatadbContext.cs:59`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataBackend/Infraestructure/Persistence/PiscidatadbContext.cs#L59) |
 | **TECH-ARC-01** | `PisciDataBackend` | **Media** | Inversión de Dependencias (DIP) rota. Existe `IBaseRepository<T>`, pero los servicios inyectan directamente las clases concretas de repositorio. | [`FarmService.cs:12`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataBackend/Application/Services/FarmService.cs#L12), [`Program.cs:22-41`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataBackend/Program.cs#L22-L41) |
 | **TECH-DAT-01** | `PisciDataBackend` | **Media** | Divergencia DDL vs EF Core. DDL incluye `ON DELETE CASCADE`. EF Core aplica `ClientSetNull` (Restrict implícito). *Riesgo esperado / Requiere verificación en runtime* si causará HTTP 500 al eliminar. | DDL vs [`PiscidatadbContext.cs`](file:///home/javi/Documentos/uni/taller/PisciData/PisciDataBackend/Infraestructure/Persistence/PiscidatadbContext.cs) |
@@ -172,11 +170,11 @@ Actualmente, las piezas codificadas proporcionan una base técnica (entidades, r
 
 | Elemento Funcional / Arquitectónico | Specified | Designed | Implemented | Verified | Estado Global SDD |
 |---|:---:|:---:|:---:|:---:|---|
-| **Login / Autenticación** | Sí | Sí | No | No | **SPECIFIED → MISSING** |
+| **Login / Autenticación** | Sí | Sí | Sí | Sí (manual) | **IMPLEMENTED / VERIFIED MANUALLY** |
 | **Backend CRUD REST** | Sí | Sí | Sí | No | **SPECIFIED → IMPLEMENTED / NOT VERIFIED** |
-| **UI (Android/iOS KMP)** | Sí | Sí | No | No | **SPECIFIED → MISSING** |
-| **Servidor MCP** | Sí | Sí | Parcial | No | **SPECIFIED → PARTIAL** |
-| **LLM (Ollama)** | Sí | Sí | No | No | **SPECIFIED → MISSING** |
+| **UI y chat móvil Android** | Sí | Sí | Parcial | Sí (chat manual) | **IMPLEMENTED / PARTIAL; CHAT VERIFIED MANUALLY** |
+| **Servidor MCP** | Sí | Sí | Sí | No | **IMPLEMENTED / NOT VERIFIED; NO INTEGRACIÓN MÓVIL** |
+| **LLM (Ollama) desde app móvil** | Sí | Sí | Sí | Sí (manual) | **IMPLEMENTED / VERIFIED MANUALLY** |
 | **STT (Whisper)** | Sí | Sí | No | No | **SPECIFIED → MISSING** |
 | **Base de Datos DDL vs EF**| Sí | Sí | Sí | No | **SPECIFIED → DIVERGENT** |
 

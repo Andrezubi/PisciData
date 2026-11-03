@@ -3,6 +3,7 @@ package ucb.piscidata.farm.data.service
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.data.remote.ApiEndpoints
 import ucb.piscidata.farm.data.datasource.FarmRemoteDataSource
 import ucb.piscidata.farm.data.dto.FarmDto
 import ucb.piscidata.farm.data.mapper.toModel
@@ -10,11 +11,10 @@ import ucb.piscidata.farm.domain.model.Farm
 
 class FarmService : FarmRemoteDataSource {
     private val client = ApiClient.client
-    private val farmsUrl = "http://127.0.0.1:5007/api/Farms/my"
 
     override suspend fun getMyFarms(): Result<List<Farm>> {
         return try {
-            val response = client.get(farmsUrl)
+            val response = client.get(ApiEndpoints.Farms.MY_FARMS)
             if (response.status.value in 200..299) {
                 val farmsDto = response.body<List<FarmDto>>()
                 Result.success(farmsDto.map { it.toModel() })
