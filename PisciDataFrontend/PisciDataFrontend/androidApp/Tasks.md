@@ -1,388 +1,674 @@
-# Tasks.md — Implementación Frontend de Ciclos Productivos (PisciData)
+# Tasks.md — Implementación Frontend de Estanques e Inventario (PisciData)
 
 ## 1. Objetivo
 
-Implementar y adaptar completamente el apartado **Ciclos activos (Production Cycle)** del frontend de PisciData para que funcione con la implementación real del backend.
-ggh
-Si corresponde con la funcionalidad existente, cambiar el nombre visible de **Ciclos activos** a **Ciclos productivos**, manteniendo la coherencia con los nombres utilizados en el backend y el resto de la aplicación.
+Implementar y adaptar completamente las pantallas de **Estanques (Ponds)** e **Inventario (Inventory)** del frontend de PisciData para que utilicen la información real proporcionada por el backend.
 
-Actualmente, la información mostrada en pantalla podría contener datos estáticos, valores de prueba o información hardcodeada. Se debe revisar detalladamente el frontend y reemplazar dichos datos por información real obtenida desde los endpoints del backend.
+El agente debe revisar detalladamente la implementación de backend correspondiente a ambos apartados, comprender los endpoints, DTO, campos, cálculos y reglas de negocio, y adaptar las pantallas existentes para mostrar correctamente los datos.
 
-El objetivo es que el usuario visualice correctamente los ciclos productivos de sus propias granjas, con sus datos actualizados y calculados de acuerdo con la lógica implementada en el backend.
+Actualmente, las pantallas podrían contener información hardcodeada, datos estáticos, valores de prueba o cálculos locales que no coinciden con la implementación real.
 
-**Alcance exclusivo:** frontend del apartado Production Cycle. No implementar ni modificar otros apartados de PisciData.
+El objetivo es eliminar esos datos ficticios y conectar las pantallas con la API real.
 
----
+**Alcance exclusivo:** frontend de Estanques e Inventario.
 
-## 2. Análisis obligatorio antes de implementar
-
-Antes de realizar cambios, el agente debe revisar y comprender la implementación existente.
-
-### 2.1. Revisar el frontend
-
-- Identificar la página, vista o componente correspondiente a Production Cycle.
-- Identificar los componentes reutilizados por esta sección.
-- Revisar los servicios HTTP, clientes API, modelos, interfaces, DTO y tipos relacionados con los ciclos productivos.
-- Identificar los endpoints que utiliza actualmente la sección.
-- Detectar datos hardcodeados, arreglos de ejemplo, valores estáticos, cálculos realizados en el cliente y respuestas simuladas.
-- Revisar los mecanismos existentes para gestionar la sesión, el token de autenticación y los errores de las peticiones.
-- Identificar cómo se selecciona una granja y cómo se conserva el `FarmId` seleccionado.
-- Revisar el diseño actual para conservar la identidad visual y los componentes reutilizables del proyecto.
-
-### 2.2. Revisar la implementación real del backend
-
-Leer y comprender el código implementado para Production Cycle, incluyendo los elementos que correspondan según la arquitectura del proyecto:
-
-- Controladores y endpoints.
-- DTO de respuesta y solicitud.
-- Entidades y relaciones.
-- Servicios y reglas de negocio.
-- Repositorios y consultas a la base de datos.
-- Autenticación y autorización.
-- Validaciones y manejo de errores.
-- Cálculos de cantidad actual de peces, peso promedio y edad actual.
-- Filtros por granja y por usuario autenticado.
-
-No asumir que los nombres de los endpoints, los campos de respuesta o los formatos de los datos son los esperados. Obtenerlos directamente del código real del backend.
-
-Si existen diferencias entre los contratos del frontend y del backend, adaptar el frontend al contrato real implementado. No modificar el backend como solución automática a un problema del frontend.
+No implementar otros módulos de PisciData.
 
 ---
 
-## 3. Conexión con el backend
+# 2. Análisis obligatorio antes de implementar
 
-### 3.1. Eliminar los datos estáticos
+## 2.1. Revisar el frontend
 
-- Reemplazar los datos hardcodeados de Production Cycle por datos obtenidos mediante peticiones reales al backend.
-- Eliminar los arreglos de prueba y objetos ficticios que se utilicen para mostrar ciclos productivos.
-- Evitar que se muestren datos de ejemplo cuando una petición falla, salvo que exista un modo de demostración explícitamente establecido por el proyecto.
-- No generar ciclos, granjas, especies, cantidades ni estadísticas ficticias.
-- No mantener valores estáticos que aparenten ser información real de la base de datos.
+Identificar:
 
-Los textos informativos, etiquetas, iconos y elementos puramente visuales pueden permanecer estáticos cuando no representen datos del negocio.
+- Pantalla de Estanques.
+- Pantalla de Inventario.
+- Componentes relacionados.
+- Servicios HTTP.
+- Cliente API.
+- Modelos.
+- DTO e interfaces.
+- Manejo de autenticación.
+- Manejo de estados.
+- Componentes de selección.
+- Filtros.
+- Categorías.
+- Tarjetas, listas, tablas o indicadores de inventario.
+- Componentes de calidad del agua.
+- Datos hardcodeados.
+- Cálculos realizados en el cliente.
 
-### 3.2. Utilizar los servicios existentes
+Revisar detalladamente cómo están representados actualmente los datos de estanques, alimentos y suministros.
 
-- Reutilizar el cliente HTTP y la configuración de conexión al backend que ya utilice el proyecto.
-- Reutilizar los servicios de autenticación y autorización existentes.
-- Crear o adaptar un servicio específico de Production Cycle únicamente si es necesario según la arquitectura actual.
-- Mantener separados los componentes visuales, los modelos y la comunicación con la API siguiendo las convenciones del proyecto.
-- No duplicar servicios ni crear clientes HTTP innecesarios.
-- No escribir consultas directas a MySQL desde el frontend.
-- No introducir una segunda implementación de las reglas de negocio que ya resuelve el backend.
+Identificar qué campos se muestran, cuáles faltan y cuáles utilizan valores estáticos.
 
-### 3.3. Contrato de datos
+## 2.2. Revisar detalladamente el backend
 
-Verificar que el frontend interprete correctamente los campos devueltos por el backend, incluidos los tipos, los valores nulos y los formatos de fecha.
+Antes de modificar las pantallas, revisar la implementación real del backend de Estanques e Inventario.
 
-Crear o actualizar los modelos e interfaces necesarios para representar la respuesta real de la API.
+Analizar:
 
-No inventar propiedades para completar la interfaz. Si algún dato no forma parte de la respuesta real, comprobar si existe otro endpoint legítimo que permita obtenerlo antes de decidir cómo mostrarlo.
+- Controllers.
+- Endpoints.
+- DTO de respuesta.
+- Services.
+- Repositories.
+- Entidades.
+- Relaciones.
+- Campos.
+- Tipos de datos.
+- Valores nulos.
+- Estados.
+- Cálculos.
+- Referencias.
+- Manejo de errores.
 
----
+El frontend debe adaptarse al contrato real del backend.
 
-## 4. Autenticación y selección de granja
+No inventar endpoints, campos, nombres de propiedades ni estructuras de respuesta.
 
-### 4.1. Usuario autenticado
+Si existe una diferencia entre la información que espera la pantalla y la información que realmente devuelve el backend, identificarla y adaptar el frontend.
 
-- Las peticiones de Production Cycle deben utilizar el mecanismo de autenticación establecido por el proyecto.
-- Enviar el token o las credenciales requeridas por el backend mediante el mecanismo existente.
-- No guardar tokens ni credenciales en lugares inseguros ni duplicar la lógica de autenticación.
-- Gestionar adecuadamente las respuestas `401 Unauthorized` y `403 Forbidden`, según el comportamiento real de la API.
-- Si la sesión ha expirado, utilizar el flujo de sesión expirada o redirección al inicio de sesión ya establecido por la aplicación.
-
-### 4.2. Selección de granja
-
-La información de ciclos productivos debe corresponder exclusivamente a la granja seleccionada por el usuario.
-
-- Obtener las granjas mediante el endpoint real que utiliza el backend para devolver las granjas del usuario autenticado.
-- Mostrar la información de las granjas que realmente devuelve la API.
-- Permitir seleccionar una granja y consultar los ciclos correspondientes a ella.
-- Utilizar el `FarmId` real de la granja seleccionada.
-- Actualizar la información cuando el usuario cambie de granja.
-- Evitar que permanezcan visibles los ciclos de la granja anterior mientras se cargan los datos de la nueva selección.
-- Mostrar un estado vacío cuando la granja seleccionada no tenga ciclos.
-- No asumir que un usuario tiene una sola granja.
-- No utilizar un `FarmId` fijo ni seleccionar una granja de prueba automáticamente.
-
-El backend es responsable de comprobar que la granja pertenece al usuario autenticado. El frontend debe enviar la selección correcta y respetar las respuestas de autorización, sin sustituir las validaciones de seguridad del servidor.
+No modificar el backend como solución automática a problemas de integración del frontend.
 
 ---
 
-## 5. Información que debe mostrar Production Cycle
+# 3. Conexión con la API
 
-La interfaz debe reflejar los datos reales que entrega el backend y mantener coherencia con las reglas de negocio implementadas.
+## 3.1. Eliminar datos hardcodeados
 
-### 5.1. Información de la granja
+Reemplazar los datos ficticios utilizados en Estanques e Inventario por datos reales.
 
-Cuando el backend proporcione estos datos, mostrar:
+Eliminar:
 
-- Nombre de la granja.
-- Código de la granja, únicamente si existe realmente en el modelo o contrato implementado.
-- Estado de la granja: activa o inactiva.
+- Arreglos de prueba.
+- Objetos ficticios.
+- Cantidades estáticas de inventario.
+- Valores ficticios de calidad del agua.
+- Categorías inventadas.
+- Estados de estanques inventados.
+- Referencias de calidad hardcodeadas.
+- Valores de stock mínimo de prueba.
 
-No utilizar el código del estanque como si fuera el código de la granja. Si el esquema o el contrato actual no incluyen un código de granja, no inventarlo ni mostrar un valor ficticio.
+Mantener únicamente los elementos estáticos que sean puramente visuales, como etiquetas, iconos y textos generales.
 
-### 5.2. Información de cada ciclo productivo
+No mostrar datos de prueba cuando una petición falle.
 
-Mostrar los siguientes datos cuando estén disponibles en la respuesta del backend:
+No generar automáticamente valores ficticios para completar las tarjetas.
 
-- Identificador del ciclo, si forma parte del contrato.
-- Especie cultivada.
-- Estanque relacionado, si el backend proporciona esa información.
-- Fecha de inicio.
-- Fecha de finalización, cuando corresponda.
-- Cantidad inicial de peces.
-- Cantidad actual de peces.
-- Peso promedio inicial en gramos.
-- Peso promedio actual en gramos.
-- Edad inicial en días.
-- Edad actual en días.
-- Observaciones.
-- Estado del ciclo, según las reglas reales del backend.
+## 3.2. Reutilizar la arquitectura
 
-Organizar estos datos en las tarjetas, tablas, paneles o componentes que mejor encajen con el diseño actual de la sección.
+- Utilizar el cliente HTTP existente.
+- Reutilizar la configuración de conexión.
+- Reutilizar la autenticación.
+- Reutilizar los servicios compartidos.
+- Crear servicios específicos únicamente cuando sea necesario.
+- Mantener separados los modelos, servicios y componentes visuales.
+- No realizar consultas directas a MySQL desde el frontend.
+- No duplicar las reglas de negocio del backend.
 
-No es necesario mostrar todos los campos con la misma jerarquía visual, pero sí deben poder consultarse los datos relevantes que el backend expone para este apartado.
+## 3.3. Modelos y DTO
 
-### 5.3. Información de ciclos activos e históricos
+Actualizar los modelos e interfaces del frontend para que coincidan con los DTO reales.
 
-- Revisar cómo determina el backend si un ciclo está activo, finalizado o en otro estado.
-- Utilizar la definición real del backend para clasificar y presentar los ciclos.
-- No asumir que `IsActive` y `EndDate` nulo son equivalentes sin comprobar la lógica implementada.
-- Si la API permite consultar ciclos activos e históricos, respetar sus filtros y contratos.
-- Si el backend solo expone una colección, clasificar los resultados únicamente cuando las reglas del servidor permitan hacerlo sin contradecir su lógica.
-- No cambiar el estado de un ciclo desde el frontend mediante cálculos o modificaciones locales.
+Verificar:
 
-El nombre visible de la sección debe ser coherente con el comportamiento real. Si se muestran tanto ciclos activos como finalizados, utilizar una denominación que represente correctamente el conjunto de información.
+- Nombres exactos.
+- Tipos.
+- Identificadores.
+- Campos opcionales.
+- Valores nulos.
+- Unidades.
+- Fechas.
+- Categorías.
+- Estados.
 
----
+No crear propiedades ficticias para completar la interfaz.
 
-## 6. Mostrar correctamente los cálculos del backend
-
-Los valores calculados deben proceder del backend. El frontend no debe reemplazar esos cálculos por estimaciones propias.
-
-### 6.1. Cantidad actual de peces
-
-Mostrar la cantidad actual devuelta por el backend.
-
-El backend determina esta cantidad considerando:
-
-- Cantidad inicial de peces del ciclo.
-- Peces cosechados registrados en `Harvest`.
-- Peces muertos registrados en `Mortality`.
-
-La lógica de referencia es:
-
-**Cantidad actual = cantidad inicial − peces cosechados − peces muertos.**
-
-El frontend no debe volver a sumar cosechas y mortalidades para calcular el resultado, ni restarlas nuevamente al valor recibido.
-
-Mostrar las cantidades con un formato legible, sin alterar su valor real. Si el backend devuelve un valor nulo o un resultado no disponible, manejarlo según el contrato y no sustituirlo por una cantidad ficticia.
-
-### 6.2. Peso promedio actual
-
-Mostrar el peso promedio actual proporcionado por el backend.
-
-La lógica implementada en el servidor prioriza la última medición válida de `Biometrics.AverageWeightGrams`. Si no existen mediciones válidas, utiliza la estimación correspondiente de `FeedingByAge.ApproximatedFishWeightGrams`, teniendo en cuenta la especie y la edad del ciclo.
-
-En el frontend:
-
-- No calcular el peso promedio a partir de la cantidad de alimento.
-- No utilizar `DailyAmountKilo` como si fuera el peso promedio de un pez.
-- No reemplazar el valor del backend por un promedio calculado con mediciones incompletas.
-- Diferenciar claramente el peso inicial y el peso promedio actual.
-- Mostrar la unidad en gramos.
-- Si no hay un peso disponible, indicar que el dato no está disponible en lugar de inventarlo.
-
-### 6.3. Edad actual del ciclo
-
-Mostrar la edad actual calculada por el backend.
-
-La edad considera la edad inicial del ciclo y los días naturales transcurridos desde su fecha de inicio, con el tratamiento de fechas que establezca el servidor para ciclos finalizados o fechas inconsistentes.
-
-- No sumar días en el frontend.
-- No utilizar cálculos basados en horas o zonas horarias que contradigan el resultado del backend.
-- Mostrar la unidad en días.
-- Respetar los valores nulos o no disponibles de acuerdo con el contrato.
-
-### 6.4. Fechas
-
-- Mostrar las fechas en un formato legible y consistente con el idioma de la aplicación.
-- Interpretar correctamente el formato que devuelve la API.
-- Evitar desplazamientos de fecha ocasionados por conversiones de zona horaria innecesarias.
-- No mostrar una fecha de finalización ficticia cuando el ciclo no tenga una.
-- Diferenciar visualmente las fechas de inicio y finalización.
+Si el backend devuelve una estructura diferente a la esperada, adaptar el modelo y la pantalla de acuerdo con la respuesta real.
 
 ---
 
-## 7. Estados de carga, errores y datos vacíos
+# 4. Estanques (Ponds)
 
-La sección debe manejar correctamente los distintos estados de la comunicación con el backend.
+## 4.1. Información general
 
-### 7.1. Cargando
+Conectar la pantalla de Estanques con el endpoint real del backend.
 
-- Mostrar un indicador de carga mientras se obtienen las granjas o los ciclos.
-- Evitar que la interfaz parezca vacía o rota durante la petición.
-- Evitar peticiones duplicadas innecesarias.
-- Evitar mostrar temporalmente datos de otra granja como si pertenecieran a la selección actual.
+Mostrar los datos correspondientes a cada estanque utilizando los campos reales.
 
-### 7.2. Sin resultados
+Cuando estén disponibles, presentar:
 
-Cuando la API responda correctamente, pero no existan ciclos para la granja seleccionada:
+- Nombre del estanque.
+- Código.
+- Granja relacionada.
+- Forma.
+- Área.
+- Profundidad.
+- Transparencia.
+- Estado.
 
-- Mostrar un mensaje claro indicando que no hay ciclos productivos registrados.
-- No mostrar tarjetas, cantidades ni especies ficticias.
-- Mantener la interfaz visualmente consistente con el resto del proyecto.
-- Si existe una funcionalidad de registro de ciclos en el frontend, mostrar su acceso únicamente si ya está implementado y permitido por el alcance actual.
+Confirmar que cada campo corresponde a la información real que devuelve el backend.
 
-### 7.3. Errores
+No inventar valores para campos ausentes.
 
-Gestionar, como mínimo, los siguientes casos:
+No utilizar información de otros estanques para completar la pantalla actual.
 
-- Error de conexión con el backend.
-- Respuesta `400 Bad Request`.
-- Respuesta `401 Unauthorized`.
-- Respuesta `403 Forbidden`.
-- Respuesta `404 Not Found`, cuando corresponda.
+---
+
+## 4.2. Forma, área y profundidad
+
+Obtener estos datos desde la respuesta del backend.
+
+### Forma
+
+- Mostrar la forma registrada en la base de datos.
+- Utilizar la propiedad real del DTO.
+- No inferir la forma por el nombre del estanque.
+- No mostrar una forma predeterminada cuando no existe información.
+
+### Área
+
+- Mostrar el área real del estanque.
+- Respetar la unidad proporcionada por el backend.
+- Presentar el valor con un formato legible.
+- No realizar conversiones innecesarias.
+- No reemplazar valores nulos por cantidades ficticias.
+
+### Profundidad
+
+- Mostrar la profundidad real.
+- Utilizar la unidad correspondiente.
+- No calcular una profundidad inventada.
+- No utilizar valores estáticos.
+
+### Transparencia física
+
+- Mostrar el valor de transparencia obtenido desde `Pond`, cuando esté disponible.
+- No confundirlo con una medición de calidad del agua de otra fecha.
+- No sustituirlo automáticamente por la referencia mínima o máxima.
+- Respetar los valores nulos.
+
+Si la respuesta del backend contiene información adicional para identificar el origen de la transparencia, utilizarla para mantener la coherencia de la pantalla.
+
+---
+
+# 5. Calidad del agua
+
+## 5.1. Datos reales
+
+Conectar la información de calidad del agua con los registros proporcionados por el backend.
+
+Mostrar correctamente:
+
+- Transparencia.
+- pH.
+- Temperatura.
+- Oxígeno disuelto.
+- Fecha de medición.
+- Referencias.
+- Estado de los parámetros, cuando exista.
+
+Los nombres anteriores son funcionales. Utilizar los campos reales del DTO.
+
+No utilizar valores de calidad del agua hardcodeados.
+
+No generar valores aleatorios.
+
+No mostrar valores de referencia como si fueran mediciones reales.
+
+## 5.2. Última medición
+
+La última medición válida debe ser determinada por el backend.
+
+El frontend debe mostrar el registro recibido, sin volver a seleccionar una fecha ni combinar mediciones de distintos registros.
+
+- Mostrar la fecha real.
+- Mostrar los parámetros disponibles.
+- Respetar valores nulos.
+- No reemplazar parámetros faltantes por valores ficticios.
+- No utilizar una medición de otro estanque.
+- No mostrar registros antiguos como si fueran los últimos cuando el backend ya proporciona la medición actual.
+
+Si el backend no devuelve ninguna medición, mostrar un estado claro de ausencia de datos.
+
+## 5.3. WaterQualityReference
+
+Utilizar las referencias que proporciona el backend.
+
+Mostrar correctamente, cuando estén disponibles:
+
+- Valor medido.
+- Valor mínimo.
+- Valor máximo.
+- Unidad.
+- Estado.
+
+No hardcodear límites de pH, temperatura, transparencia u oxígeno disuelto.
+
+No establecer estados de alerta mediante reglas locales diferentes a las del backend.
+
+## 5.4. Estado de calidad
+
+Si el backend devuelve el estado de cada parámetro:
+
+- Mostrarlo directamente.
+- Mantener coherencia con las reglas de calidad del agua.
+- Utilizar etiquetas, colores o indicadores visuales que correspondan al estado recibido.
+- No volver a calcular el estado en el frontend.
+
+Si el backend devuelve los valores y las referencias, pero no el estado:
+
+- Revisar el contrato.
+- Confirmar si el estado debe ser calculado por el frontend según la arquitectura existente.
+- Evitar duplicar una regla que ya esté implementada en el servidor.
+- Si es necesario implementar una presentación basada en las referencias, documentar la regla utilizada y mantenerla alineada con el backend.
+
+No mostrar una medición inexistente como normal.
+
+No mostrar alertas cuando faltan los datos necesarios para evaluar un parámetro.
+
+---
+
+# 6. Inventario
+
+## 6.1. Objetivo
+
+Conectar la pantalla de Inventario con la implementación real del backend.
+
+Eliminar todos los datos ficticios que representen productos, categorías o cantidades.
+
+La interfaz debe mostrar correctamente:
+
+- Alimentos.
+- Suministros.
+- Nombre.
+- Categoría.
+- Tipo.
+- Inventario actual.
+- Stock mínimo.
+- Unidad.
+- Estado.
+
+Los campos anteriores deben ajustarse a las propiedades reales del backend.
+
+No asumir que Feed y Supply tienen exactamente la misma estructura.
+
+---
+
+# 7. Feed — Inventario de alimentos
+
+## 7.1. Obtener los alimentos reales
+
+Consultar el endpoint real de Feed.
+
+Mostrar los alimentos registrados en la base de datos.
+
+Revisar detalladamente el modelo y el DTO para identificar las propiedades correctas.
+
+No utilizar una lista de alimentos ficticios.
+
+No inventar categorías ni cantidades.
+
+## 7.2. Proteínas y pellets
+
+Prestar especial atención a los alimentos de tipo:
+
+- Proteínas.
+- Pellets.
+
+Revisar cómo los representa realmente el backend.
+
+Determinar si se identifican mediante una categoría, tipo, propiedad o relación.
+
+No asumir que son columnas independientes.
+
+No clasificar alimentos por su nombre comercial.
+
+No crear categorías nuevas desde el frontend.
+
+Mostrar correctamente la clasificación real recibida.
+
+Si la API proporciona el nombre de la categoría mediante una relación, utilizarlo en la pantalla en lugar de mostrar únicamente un identificador.
+
+## 7.3. Información del alimento
+
+Mostrar los campos reales disponibles:
+
+- Nombre.
+- Categoría.
+- Tipo.
+- Inventario actual.
+- Stock mínimo.
+- Unidad.
+- Estado.
+
+Si existen otros campos relevantes para la pantalla, revisar su utilidad y mostrarlos únicamente cuando correspondan al alcance de esta tarea.
+
+No mostrar identificadores internos como nombres de categorías cuando exista un nombre legible disponible.
+
+## 7.4. Inventario actual
+
+Mostrar la cantidad real que devuelve el backend.
+
+- Utilizar el campo correcto.
+- Respetar su unidad.
+- Mostrar la precisión adecuada.
+- No recalcular el stock.
+- No sumar entradas o salidas nuevamente.
+- No sustituir cantidades nulas por valores inventados.
+
+Si el backend proporciona el stock actual calculado, mostrar ese valor directamente.
+
+## 7.5. Stock mínimo
+
+Mostrar el stock mínimo registrado.
+
+- Utilizar el campo real.
+- Respetar la unidad.
+- No utilizar un valor fijo para todos los alimentos.
+- No reemplazar un valor nulo por una cantidad ficticia.
+
+Si el backend proporciona un estado de inventario, utilizarlo.
+
+Si no existe un estado y la interfaz necesita mostrar una alerta:
+
+- Revisar la regla real del backend.
+- Mantener la comparación coherente.
+- No duplicar cálculos existentes.
+- No mostrar alertas incorrectas cuando falten datos.
+
+---
+
+# 8. Supply — Inventario de suministros
+
+## 8.1. Obtener suministros reales
+
+Consultar el endpoint real de Supply.
+
+Mostrar correctamente los suministros registrados.
+
+No utilizar datos ficticios.
+
+No asumir que los suministros son alimentos.
+
+## 8.2. Información del suministro
+
+Mostrar los campos disponibles en el backend:
+
+- Nombre.
+- Categoría.
+- Inventario actual.
+- Stock mínimo.
+- Unidad.
+- Estado.
+
+Revisar si existen otros campos relevantes para la pantalla.
+
+No utilizar automáticamente el modelo de Feed si el DTO de Supply tiene propiedades diferentes.
+
+## 8.3. Categorías
+
+- Utilizar las categorías reales.
+- Resolver correctamente las relaciones.
+- Mostrar nombres legibles.
+- No inventar categorías.
+- No mostrar identificadores numéricos como categorías si el backend proporciona el nombre correspondiente.
+
+## 8.4. Inventario y stock mínimo
+
+- Mostrar el stock actual real.
+- Mostrar el stock mínimo real.
+- Respetar las unidades.
+- No recalcular el inventario.
+- No realizar movimientos de stock desde esta pantalla.
+- No utilizar cantidades ficticias.
+- No comparar cantidades que tengan unidades incompatibles.
+
+Si el backend proporciona alertas de reposición, mostrarlas de acuerdo con el contrato real.
+
+---
+
+# 9. Organización de la pantalla de inventario
+
+Revisar la pantalla existente y adaptar su estructura para mostrar claramente los alimentos y los suministros.
+
+Si el diseño actual contiene pestañas, filtros o categorías:
+
+- Mantenerlos cuando sean coherentes con el modelo real.
+- Adaptarlos a los datos reales de Feed y Supply.
+- No inventar categorías para llenar filtros vacíos.
+- No mostrar productos de prueba.
+
+Si existen filtros por categoría:
+
+- Utilizar las categorías reales recibidas.
+- Evitar filtros hardcodeados que no coincidan con el backend.
+- Mantener la selección y actualización de filtros coherente con la respuesta.
+
+Si existen tarjetas de inventario:
+
+- Mostrar el nombre.
+- Mostrar la categoría.
+- Mostrar el stock actual.
+- Mostrar el stock mínimo.
+- Mostrar la unidad.
+- Mostrar el estado, cuando exista.
+
+No es necesario mostrar todos los campos con la misma jerarquía visual, pero los datos relevantes deben poder consultarse correctamente.
+
+---
+
+# 10. Estados de carga y errores
+
+Implementar estados de interfaz para ambos apartados.
+
+## 10.1. Cargando
+
+- Mostrar indicadores mientras se consultan los datos.
+- Evitar que la pantalla parezca rota.
+- Evitar peticiones duplicadas.
+- Evitar mostrar temporalmente información de otro estanque o inventario.
+
+## 10.2. Sin resultados
+
+Cuando el backend responda correctamente sin registros:
+
+### Estanques
+
+Mostrar un mensaje claro indicando que no existen estanques registrados o disponibles.
+
+No mostrar estanques ficticios.
+
+### Inventario
+
+Mostrar un mensaje claro cuando no existan alimentos o suministros.
+
+No mostrar cantidades de prueba.
+
+## 10.3. Errores
+
+Gestionar:
+
+- Error de conexión.
+- `400 Bad Request`.
+- `401 Unauthorized`.
+- `403 Forbidden`.
+- `404 Not Found`, cuando corresponda.
 - Error interno del servidor.
-- Respuesta vacía, incompleta o incompatible con el contrato esperado.
+- Respuestas incompatibles con el modelo.
+- Campos opcionales nulos.
 
-Mostrar mensajes comprensibles para el usuario y registrar detalles técnicos mediante los mecanismos de diagnóstico ya existentes.
+Mostrar mensajes comprensibles.
 
-No mostrar errores técnicos sensibles, tokens, credenciales ni detalles internos del servidor en la interfaz.
+No mostrar detalles internos del servidor, credenciales o tokens.
 
-Permitir reintentar la consulta cuando sea apropiado, sin crear ciclos duplicados ni modificar datos del servidor.
+Utilizar el mecanismo de manejo de errores existente.
 
----
-
-## 8. Diseño y experiencia de usuario
-
-- Mantener el diseño visual existente de PisciData.
-- Reutilizar los componentes y estilos que ya utiliza la aplicación.
-- Mantener la coherencia de colores, tipografía, espaciados, iconografía y jerarquía visual.
-- Presentar las cantidades con separadores y unidades legibles.
-- Diferenciar los estados de los ciclos mediante etiquetas visuales coherentes con el diseño existente.
-- Evitar que los valores nulos, las fechas extensas o los nombres largos rompan la distribución.
-- Asegurar que la información se vea correctamente en las resoluciones y dispositivos que soporte actualmente el proyecto.
-- Mantener accesibles los textos, indicadores de carga y mensajes de error.
-- No rediseñar las demás secciones de la aplicación.
-- No introducir dependencias de interfaz nuevas si los componentes existentes son suficientes.
-
-El cambio de nombre de la sección debe aplicarse donde corresponda dentro de este apartado, incluidos su título, encabezados y textos relacionados. No renombrar globalmente otros módulos que no formen parte de esta tarea.
+Permitir reintentar las consultas cuando corresponda.
 
 ---
 
-## 9. Actualización y consistencia de los datos
+# 11. Actualización y sincronización
 
-- Cargar la información real cuando se abra el apartado.
-- Actualizar los ciclos cuando cambie la granja seleccionada.
-- Respetar los mecanismos de actualización, invalidación de caché o recarga de datos que ya existan en el proyecto.
-- Si se vuelve a consultar el backend, mostrar los datos recibidos más recientes.
-- No modificar localmente cantidades de peces, pesos, edades o estados para simular una actualización.
-- No guardar en caché datos de una granja de forma que puedan mostrarse a otro usuario.
-- Si una petición falla, no presentar información antigua como si fuera actual sin indicarlo claramente.
+La información visualizada debe mantenerse sincronizada con la respuesta real del backend.
 
-La lectura de Production Cycle debe ser de solo consulta dentro de este alcance. No implementar operaciones de creación, edición, eliminación, cosecha, mortalidad ni biometría salvo que ya sean necesarias para integrar la lectura existente; esas funcionalidades quedan fuera de esta tarea.
+- Cargar los datos al abrir las pantallas.
+- Actualizar los estanques cuando se realice una nueva consulta.
+- Actualizar el inventario cuando se vuelva a consultar.
+- Respetar los mecanismos de actualización y caché existentes.
+- No conservar datos antiguos como si fueran actuales después de una consulta fallida.
+- No utilizar valores locales para simular cambios de stock.
+- No modificar los datos del backend desde operaciones de lectura.
 
----
+Si el proyecto ya dispone de mecanismos de actualización automática, utilizarlos cuando sean compatibles.
 
-## 10. Pruebas y validación
-
-Realizar las pruebas que correspondan a la tecnología y herramientas existentes en el frontend.
-
-### 10.1. Integración con la API
-
-- Verificar que se consultan los endpoints reales.
-- Verificar que los modelos del frontend coinciden con las respuestas del backend.
-- Confirmar que se envía la autenticación requerida.
-- Confirmar que el `FarmId` seleccionado se utiliza correctamente.
-- Comprobar que no quedan datos de prueba en la visualización.
-
-### 10.2. Casos funcionales
-
-Probar al menos los siguientes escenarios:
-
-1. Usuario autenticado con una granja y ciclos registrados.
-2. Usuario autenticado con varias granjas.
-3. Cambio entre dos granjas con ciclos diferentes.
-4. Granja sin ciclos productivos.
-5. Ciclo con mediciones biométricas válidas.
-6. Ciclo sin mediciones biométricas, pero con una estimación disponible por edad.
-7. Ciclo con cantidad actual de peces reducida por cosechas y mortalidad.
-8. Ciclo con fecha de finalización.
-9. Ciclo con datos opcionales nulos.
-10. Usuario sin sesión válida.
-11. Error de conexión con el backend.
-12. Respuesta de autorización denegada.
-13. Recarga de la sección después de que cambien los datos del backend.
-
-### 10.3. Calidad técnica
-
-- Ejecutar las pruebas existentes relacionadas con la sección.
-- Ejecutar el proceso de compilación o verificación del frontend.
-- Corregir los errores introducidos por los cambios.
-- Evitar modificar funcionalidades de otros apartados para solucionar problemas ajenos a Production Cycle.
-
-No afirmar que las pruebas fueron exitosas si no se ejecutaron realmente.
+No implementar sincronización en tiempo real adicional si no forma parte de la arquitectura existente.
 
 ---
 
-## 11. Restricciones de alcance
+# 12. Diseño y experiencia de usuario
 
-Durante esta implementación:
-
-- Modificar exclusivamente el frontend de Production Cycle y los archivos compartidos que sean estrictamente necesarios para su integración.
-- No implementar nuevas reglas de negocio que correspondan al backend.
-- No modificar controladores, servicios ni repositorios del backend.
-- No ejecutar ni modificar scripts SQL.
-- No cambiar el esquema de la base de datos.
-- No inventar endpoints, propiedades, datos, estados ni identificadores.
-- No eliminar validaciones o mecanismos de autenticación existentes.
-- No alterar otras secciones de PisciData.
-- No realizar refactorizaciones generales que no sean necesarias para esta funcionalidad.
-- No sustituir la arquitectura existente por otra.
+- Mantener la identidad visual de PisciData.
+- Reutilizar componentes existentes.
+- Mantener coherencia entre Estanques e Inventario.
+- Presentar unidades de forma clara.
+- Utilizar formatos numéricos legibles.
+- Mostrar correctamente los valores nulos.
+- Diferenciar estados de calidad del agua.
+- Diferenciar alertas de stock.
+- Evitar que los nombres extensos o las cantidades rompan el diseño.
+- Mantener la accesibilidad.
+- Respetar los tamaños de pantalla soportados.
+- No rediseñar otras secciones.
 - No introducir dependencias innecesarias.
 
-Si se descubre que falta un dato o endpoint imprescindible en el backend, documentar exactamente qué falta y comunicarlo antes de realizar cambios fuera del alcance del frontend.
+No cambiar la arquitectura visual de la aplicación sin una necesidad concreta.
 
 ---
 
-## 12. Criterios de aceptación
+# 13. Pruebas
+
+Realizar las pruebas existentes y las que sean necesarias para verificar la integración.
+
+## 13.1. Estanques
+
+Probar:
+
+1. Estanque con todos los datos físicos.
+2. Estanque con valores nulos.
+3. Estanque con última medición de calidad del agua.
+4. Estanque con parámetros incompletos.
+5. Estanque sin mediciones.
+6. Medición con referencias.
+7. Medición con estado normal.
+8. Medición con alerta.
+9. Cambio de estanque.
+10. Error de conexión.
+
+## 13.2. Inventario
+
+Probar:
+
+1. Feed con categoría.
+2. Feed de proteínas.
+3. Feed de pellets.
+4. Feed con stock actual.
+5. Feed con stock mínimo.
+6. Feed con stock bajo.
+7. Feed con datos opcionales nulos.
+8. Supply con categoría.
+9. Supply con stock actual.
+10. Supply con stock mínimo.
+11. Inventario vacío.
+12. Respuesta del backend con error.
+13. Actualización de inventario después de una nueva consulta.
+
+## 13.3. Validación técnica
+
+- Ejecutar las pruebas existentes.
+- Ejecutar la compilación del frontend.
+- Verificar la integración con la API.
+- Confirmar que los modelos coinciden con los DTO.
+- Confirmar que no existen datos ficticios.
+- Verificar que los campos se presentan correctamente.
+- Documentar los resultados reales.
+
+No afirmar que las pruebas fueron ejecutadas si no se realizaron.
+
+---
+
+# 14. Restricciones de alcance
+
+- Modificar exclusivamente el frontend de Estanques e Inventario.
+- No modificar el backend.
+- No ejecutar SQL.
+- No cambiar el esquema de la base de datos.
+- No implementar Production Cycle.
+- No implementar módulos adicionales.
+- No inventar endpoints.
+- No inventar campos.
+- No inventar categorías.
+- No inventar valores de calidad del agua.
+- No inventar cantidades de inventario.
+- No recalcular valores que ya proporciona el backend.
+- No duplicar reglas de negocio.
+- No introducir dependencias innecesarias.
+- No realizar refactorizaciones generales.
+
+Si falta un campo o endpoint necesario, documentar exactamente qué información falta y comunicarlo antes de realizar cambios fuera del alcance.
+
+---
+
+# 15. Criterios de aceptación
 
 La implementación se considerará completa cuando:
 
-- [ ] La sección de Production Cycle utiliza información real del backend.
-- [ ] Se eliminaron los datos hardcodeados que representaban información del negocio.
-- [ ] Los servicios y modelos del frontend coinciden con el contrato real de la API.
-- [ ] La información corresponde a la granja seleccionada.
-- [ ] Se respeta la autenticación del usuario.
-- [ ] Se muestran correctamente los datos disponibles de la granja y del ciclo.
-- [ ] La cantidad actual de peces coincide con el valor calculado por el backend.
-- [ ] El peso promedio actual coincide con el valor calculado por el backend.
-- [ ] La edad actual coincide con el valor calculado por el backend.
-- [ ] Las fechas, unidades, estados y valores nulos se presentan correctamente.
-- [ ] Existen estados visuales de carga, error y ausencia de resultados.
-- [ ] El cambio de granja actualiza correctamente los datos.
-- [ ] La interfaz conserva la identidad visual de PisciData.
-- [ ] No se modificaron otros módulos fuera del alcance.
-- [ ] Las verificaciones técnicas aplicables se ejecutaron y sus resultados fueron documentados.
+- [ ] Se revisó detalladamente la implementación real del backend.
+- [ ] Se revisaron los DTO y endpoints de Estanques e Inventario.
+- [ ] Los datos hardcodeados fueron reemplazados por datos reales.
+- [ ] Forma, área, profundidad y transparencia se muestran correctamente.
+- [ ] pH, temperatura, oxígeno disuelto y transparencia se muestran desde las mediciones reales.
+- [ ] Se muestra correctamente la fecha de la última medición.
+- [ ] Se muestran las referencias de calidad del agua disponibles.
+- [ ] Los estados de calidad coinciden con la lógica del backend.
+- [ ] Los datos ausentes se presentan correctamente.
+- [ ] Feed se conecta con el endpoint real.
+- [ ] Proteínas y pellets se clasifican correctamente.
+- [ ] Supply se conecta con el endpoint real.
+- [ ] Los nombres y categorías son correctos.
+- [ ] El inventario actual coincide con el backend.
+- [ ] El stock mínimo coincide con el backend.
+- [ ] Las unidades se muestran correctamente.
+- [ ] No existen cantidades ficticias.
+- [ ] Se muestran estados de carga, error y ausencia de resultados.
+- [ ] Las pantallas se actualizan correctamente.
+- [ ] Se conserva el diseño existente.
+- [ ] No se modificaron otros módulos.
+- [ ] Las verificaciones técnicas aplicables fueron ejecutadas.
 
 ---
 
-## 13. Informe final del agente
+# 16. Informe final
 
-Al finalizar, presentar un resumen que incluya:
+Al finalizar, presentar:
 
 1. Archivos del frontend revisados.
 2. Archivos creados o modificados.
-3. Endpoints reales utilizados y su propósito.
-4. Modelos y campos conectados con el backend.
-5. Datos estáticos eliminados o sustituidos.
-6. Forma en que se gestiona la autenticación y la selección de granja.
-7. Confirmación de cómo se presentan la cantidad actual de peces, el peso promedio y la edad.
-8. Pruebas y verificaciones ejecutadas, con sus resultados reales.
-9. Problemas encontrados en el contrato del backend, si los hubiera.
-10. Funcionalidades pendientes que estén fuera del alcance de esta tarea.
+3. Endpoints utilizados.
+4. Modelos e interfaces actualizados.
+5. Datos hardcodeados eliminados.
+6. Campos de estanques conectados.
+7. Campos de calidad del agua conectados.
+8. Referencias utilizadas.
+9. Campos de Feed conectados.
+10. Campos de Supply conectados.
+11. Forma en que se muestran proteínas y pellets.
+12. Forma en que se muestran stock actual y stock mínimo.
+13. Manejo de estados de carga, error y datos vacíos.
+14. Pruebas ejecutadas y resultados reales.
+15. Problemas encontrados en el contrato del backend.
+16. Funcionalidades pendientes que estén fuera del alcance.
 
-**Importante:** esta tarea implementa únicamente la integración del frontend para Production Cycle. Las siguientes funcionalidades se agregarán cuando se indiquen nuevos requisitos, sin ampliar automáticamente el alcance a otros módulos.
+**Importante:** esta tarea implementa exclusivamente el frontend de Estanques e Inventario. No ampliar el alcance a otros módulos de PisciData hasta recibir nuevas instrucciones.

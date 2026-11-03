@@ -6,7 +6,11 @@ import io.ktor.client.request.header
 import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
 import ucb.piscidata.database.data.dto.FarmResponseDto
+import ucb.piscidata.database.data.dto.FeedResponseDto
+import ucb.piscidata.database.data.dto.PondResponseDto
 import ucb.piscidata.database.data.dto.ProductionCycleResponseDto
+import ucb.piscidata.database.data.dto.SupplyResponseDto
+import ucb.piscidata.database.data.mapper.toModel
 import ucb.piscidata.database.data.mapper.toRecord
 import ucb.piscidata.database.domain.model.*
 import ucb.piscidata.session.SessionManager
@@ -24,6 +28,21 @@ class DatabaseService {
     private fun cyclesUrls(farmId: Int) = listOf(
         "https://127.0.0.1:7190/api/productioncycles/farm/$farmId",
         "http://127.0.0.1:5007/api/productioncycles/farm/$farmId"
+    )
+
+    private val pondUrls = listOf(
+        "https://127.0.0.1:7190/api/ponds",
+        "http://127.0.0.1:5007/api/ponds"
+    )
+
+    private val feedUrls = listOf(
+        "https://127.0.0.1:7190/api/feeds",
+        "http://127.0.0.1:5007/api/feeds"
+    )
+
+    private val supplyUrls = listOf(
+        "https://127.0.0.1:7190/api/supplies",
+        "http://127.0.0.1:5007/api/supplies"
     )
 
     suspend fun getFarms(): Result<List<FarmModel>> {
@@ -93,21 +112,76 @@ class DatabaseService {
     }
 
     suspend fun getPonds(): Result<List<Pond>> {
-        return Result.success(
-            listOf(
-                Pond(1, "EST-01", "Estanque 1", PondShape.RECTANGULAR, largo = 40.0, ancho = 20.0, area = 800.0, profundidad = 1.8, transparenciaCm = 45.0, ph = 7.2, claridad = "Alta", temperatura = 24.0, oxigeno = 6.8, cicloActivo = "CP-2026-017", especie = "Trucha arcoíris"),
-                Pond(2, "EST-02", "Estanque 2", PondShape.RECTANGULAR, largo = 35.0, ancho = 18.0, area = 630.0, profundidad = 1.6, transparenciaCm = 50.0, ph = 7.0, claridad = "Media", temperatura = 25.0, oxigeno = 6.2, cicloActivo = null, especie = null)
-            )
-        )
+        val token = sessionManager.token.value
+        val farmId = sessionManager.selectedFarmId.value
+
+        // Fetch active cycles for this farm so we can match them to ponds
+        var activeCycles = listOf<ProductionCycleResponseDto>()
+        for (url in cyclesUrls(farmId)) {
+            try {
+                val resp = client.get(url) {
+                    if (!token.isNullOrBlank()) header("Authorization", "Bearer $token")
+                }
+                if (resp.status.value in 200..299) {
+                    activeCycles = resp.body()
+                    break
+                }
+            } catch (_: Exception) {}
+        }
+
+        for (url in pondUrls) {
+            try {
+                val response = client.get(url) {
+                    if (!token.isNullOrBlank()) {
+                        header("Authorization", "Bearer $token")
+                    }
+                }
+                if (response.status.value in 200..299) {
+                    val dtos: List<PondResponseDto> = response.body()
+                    // Filter ponds belonging to current farm if FarmId matches
+                    val farmPonds = dtos.filter { it.farmId == farmId }
+                    return Result.success(farmPonds.map { it.toModel(activeCycles) })
+                }
+            } catch (_: Exception) {}
+        }
+        return Result.success(emptyList())
     }
 
     suspend fun getInventory(): Result<List<InvItem>> {
-        return Result.success(
-            listOf(
-                InvItem(1, "Alimento F1", InvCategory.ALIMENTO, 320, "kg", 100, proteinPercentage = 45.0, pelletSizeMm = 2.0),
-                InvItem(2, "Alimento F2", InvCategory.ALIMENTO, 200, "kg", 80, proteinPercentage = 40.0, pelletSizeMm = 4.0)
-            )
-        )
+        val token = sessionManager.token.value
+        val items = mutableListOf<InvItem>()
+
+        for (url in feedUrls) {
+            try {
+                val response = client.get(url) {
+                    if (!token.isNullOrBlank()) {
+                        header("Authorization", "Bearer $token")
+                    }
+                }
+                if (response.status.value in 200..299) {
+                    val dtos: List<FeedResponseDto> = response.body()
+                    items.addAll(dtos.map { it.toModel() })
+                    break
+                }
+            } catch (_: Exception) {}
+        }
+
+        for (url in supplyUrls) {
+            try {
+                val response = client.get(url) {
+                    if (!token.isNullOrBlank()) {
+                        header("Authorization", "Bearer $token")
+                    }
+                }
+                if (response.status.value in 200..299) {
+                    val dtos: List<SupplyResponseDto> = response.body()
+                    items.addAll(dtos.map { it.toModel() })
+                    break
+                }
+            } catch (_: Exception) {}
+        }
+
+        return Result.success(items)
     }
 
     suspend fun updateInventoryQty(id: Int, newQty: Int): Result<Unit> {
