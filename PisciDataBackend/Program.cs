@@ -115,7 +115,7 @@ builder.Services.AddHttpClient<PisciDataBackend.Infraestructure.Clients.OllamaAp
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
     var baseUrl = configuration["Ollama:BaseUrl"] ?? "http://localhost:11434";
     client.BaseAddress = new Uri(baseUrl.TrimEnd('/') + "/");
-    client.Timeout = TimeSpan.FromSeconds(120);
+    client.Timeout = TimeSpan.FromSeconds(360);
 });
 
 var app = builder.Build();

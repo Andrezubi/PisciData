@@ -8,7 +8,7 @@ data class RegisterState(
     val phone: String = "",
     val password: String = "",
     val confirmPassword: String = "",
-    val role: String = "Owner",
+    val role: String = "Worker",
     val isLoading: Boolean = false,
     val registeredUser: UserModel? = null,
     val isRegistered: Boolean = false,

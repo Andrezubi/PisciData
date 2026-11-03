@@ -13,6 +13,7 @@ import ucb.piscidata.auth.data.dto.CreateUserDto
 import ucb.piscidata.auth.data.dto.LoginDto
 import ucb.piscidata.auth.domain.model.UserModel
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.data.remote.ApiEndpoints
 import ucb.piscidata.session.SessionManager
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -26,8 +27,8 @@ class AuthService(
 
     private val client = ApiClient.client
 
-    private val loginUrl = "http://127.0.0.1:5007/api/users/login"
-    private val registerUrl = "http://127.0.0.1:5007/api/users"
+    private val loginUrl = ApiEndpoints.Auth.LOGIN
+    private val registerUrl = ApiEndpoints.Auth.REGISTER
 
     @OptIn(ExperimentalEncodingApi::class)
     private fun decodeUserIdFromToken(token: String): Int? {

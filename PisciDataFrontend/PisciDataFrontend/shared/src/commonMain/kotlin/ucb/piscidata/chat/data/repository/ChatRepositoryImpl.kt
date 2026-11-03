@@ -7,15 +7,30 @@ import ucb.piscidata.chat.domain.repository.ChatRepository
 class ChatRepositoryImpl(
     private val dataSource: ChatRemoteDataSource
 ) : ChatRepository {
-    override suspend fun getInitialMessages(): Result<List<ChatMessageModel>> {
-        return dataSource.getInitialMessages()
+
+    override suspend fun getOrCreateActiveConversation(): Result<Int> {
+        val listResult = dataSource.getConversations()
+        if (listResult.isFailure) {
+            return Result.failure(listResult.exceptionOrNull() ?: Exception("Error al obtener conversaciones"))
+        }
+
+        val list = listResult.getOrNull() ?: emptyList()
+        return if (list.isNotEmpty()) {
+            Result.success(list.first().id)
+        } else {
+            val createResult = dataSource.createConversation("Conversación PisciData")
+            if (createResult.isFailure) {
+                return Result.failure(createResult.exceptionOrNull() ?: Exception("Error al crear conversación"))
+            }
+            Result.success(createResult.getOrNull()!!.id)
+        }
     }
 
-    override suspend fun sendMessage(text: String): Result<List<ChatMessageModel>> {
-        return dataSource.sendMessage(text)
+    override suspend fun getMessages(conversationId: Int): Result<List<ChatMessageModel>> {
+        return dataSource.getMessages(conversationId)
     }
 
-    override suspend fun sendAudio(duration: Int): Result<List<ChatMessageModel>> {
-        return dataSource.sendAudio(duration)
+    override suspend fun sendMessage(conversationId: Int, text: String): Result<ChatMessageModel> {
+        return dataSource.sendMessage(conversationId, text)
     }
 }
