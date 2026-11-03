@@ -1,6 +1,6 @@
 # 09. Guía de Configuración y Ejecución Local (Setup Guide)
 
-**Última actualización:** 06 de octubre de 2026  
+**Última actualización:** 03 de noviembre de 2026
 **Propósito:** Proveer instrucciones paso a paso, reproducibles y verificables para clonar, configurar y ejecutar los proyectos de PisciData en un entorno de desarrollo local.
 
 ---
@@ -13,6 +13,7 @@ Asegúrate de contar con las siguientes herramientas instaladas antes de comenza
 |---|---|---|---|
 | **.NET SDK** | `10.0.100` o superior | Compilación y ejecución de Backend y MCP | `dotnet --version` |
 | **MySQL Server** | `8.0` o superior | Base de datos relacional del backend | `mysql --version` |
+| **Ollama** | Versión actual | Inferencia local del chat móvil | `ollama --version` |
 | **JDK (Java)** | OpenJDK `17` o superior | Compilación de módulos Kotlin / Gradle | `java -version` |
 | **Android Studio** | Ladybug / Koala o superior | Emulador y SDK de Android para KMP | `adb version` |
 | **Git** | `2.40` o superior | Control de versiones | `git --version` |
@@ -59,7 +60,24 @@ cd ..
 
 ## 3. Ejecución del Backend (`PisciDataBackend`)
 
-### 3.1. Restauración y Compilación
+### 3.1. Iniciar Ollama
+
+El chat móvil usa Ollama a través del backend. El backend espera Ollama en `http://localhost:11434` y el modelo `piscidata-ai` (ver `PisciDataBackend/appsettings.json`). Si Ollama ya está activo como servicio, no inicies una segunda instancia.
+
+```bash
+# Si no está activo como servicio, mantener esta terminal abierta
+ollama serve
+```
+
+En otra terminal, crea el modelo local a partir de `Modelfile`:
+
+```bash
+ollama pull qwen3.5:4b
+ollama create piscidata-ai -f Modelfile
+ollama list
+```
+
+### 3.2. Restauración y compilación
 
 Desde la raíz del repositorio:
 
@@ -71,7 +89,7 @@ dotnet restore PisciDataBackend/PisciDataBackend.csproj
 dotnet build PisciDataBackend/PisciDataBackend.csproj
 ```
 
-### 3.2. Iniciar el Servidor de Desarrollo
+### 3.3. Iniciar el Servidor de Desarrollo
 
 ```bash
 dotnet run --project PisciDataBackend/PisciDataBackend.csproj
@@ -79,7 +97,7 @@ dotnet run --project PisciDataBackend/PisciDataBackend.csproj
 
 La consola mostrará los puertos asignados por Kestrel (por defecto HTTP `5007` y HTTPS `7071` o dinámicos según `launchSettings.json`).
 
-### 3.3. Verificación de Funcionamiento
+### 3.4. Verificación de Funcionamiento
 
 * **Documento OpenAPI:** Abre en tu navegador o cliente HTTP:  
   `http://localhost:5007/openapi/v1.json`
@@ -119,6 +137,17 @@ Para instalarlo en un emulador o dispositivo físico conectado por ADB:
 ./gradlew :androidApp:installDebug
 ```
 
+La URL base del cliente está centralizada en `shared/src/commonMain/kotlin/ucb/piscidata/data/remote/ApiEndpoints.kt`. Para un teléfono conectado por USB, conservar `127.0.0.1:5007` y crear el túnel ADB:
+
+```bash
+adb reverse tcp:5007 tcp:5007
+adb reverse --list
+```
+
+El backend debe estar ejecutándose en la laptop. Al desconectar el USB se pierde el túnel; para usar el teléfono por Wi-Fi hay que emparejar ADB inalámbrico o configurar una dirección LAN accesible para el teléfono. El emulador Android usa `10.0.2.2` para llegar al host.
+
+Para probar el chat móvil, registra una cuenta con contraseña de al menos 6 caracteres y un rol aceptado (`Admin`, `Technician` o `Worker`), luego inicia sesión y envía un mensaje. El registro devuelve al login para obtener el JWT requerido por el chat. La inferencia local puede tardar; el backend y el chat permiten hasta 6 minutos. El chat responde con Ollama y todavía no usa el MCP para consultar granjas.
+
 ---
 
 ## 5. Ejecución del Servidor MCP (`PisciDataMCP`)
@@ -133,7 +162,24 @@ dotnet run --project PisciDataMCP/PisciDataMCP.csproj
 
 *(El proceso quedará a la espera de mensajes JSON-RPC por entrada estándar `stdin`).*
 
-### 5.2. Configuración en un Cliente MCP (ej. VS Code Copilot o Claude Desktop)
+### 5.2. Chat web de prueba con MCP
+
+`PisciDataChat` es un orquestador separado del chat móvil. Conecta un servidor compatible con API OpenAI, el servidor MCP por stdio y el backend REST. Para probarlo con el modelo GGUF local y un backend simulado, configura la ruta local del modelo (no se guarda en el repositorio):
+
+```bash
+export QWEN_GGUF="/ruta/local/al/modelo.gguf"
+scripts/start-all.sh --mock
+```
+
+La interfaz se sirve en `http://localhost:5050`. El script requiere `llama-server`, el archivo configurado en `QWEN_GGUF`, .NET 10 y dependencias NuGet disponibles. `--mock` usa datos simulados de solo lectura; este flujo no es el chat móvil.
+
+Para detener los servicios iniciados por el script:
+
+```bash
+scripts/start-all.sh --stop
+```
+
+### 5.3. Configuración en un Cliente MCP (ej. VS Code Copilot o Claude Desktop)
 
 Agrega la siguiente configuración en tu archivo `mcp.json` del cliente:
 
