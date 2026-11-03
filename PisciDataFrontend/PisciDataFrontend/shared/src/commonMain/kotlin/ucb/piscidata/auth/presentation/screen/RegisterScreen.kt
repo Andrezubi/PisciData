@@ -132,7 +132,7 @@ fun RegisterScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text(text = "Rol en el sistema", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF16313D))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf("Owner", "Administrator", "Technician", "Worker").forEach { r ->
+                            listOf("Admin", "Technician", "Worker").forEach { r ->
                                 val selected = state.role == r
                                 Button(
                                     onClick = { viewModel.emitEvent(RegisterEvent.OnRoleChanged(r)) },

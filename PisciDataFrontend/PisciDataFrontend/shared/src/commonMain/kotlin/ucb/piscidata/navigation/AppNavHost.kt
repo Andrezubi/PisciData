@@ -46,15 +46,8 @@ fun AppNavHost() {
         composable<NavRoute.Register> {
             RegisterScreen(
                 onRegisterSuccess = {
-                    ApiClient.sessionManager = sessionManager
-                    scope.launch {
-                        getMyFarmsUseCase().onSuccess { farms ->
-                            val farmModels = farms.map { ucb.piscidata.database.domain.model.FarmModel(it.id, it.name) }
-                            sessionManager.setFarms(farmModels)
-                        }
-                    }
-                    navController.navigate(NavRoute.Main) {
-                        popUpTo(NavRoute.Login) { inclusive = true }
+                    navController.navigate(NavRoute.Login) {
+                        popUpTo(NavRoute.Register) { inclusive = true }
                     }
                 },
                 onBackToLogin = {
