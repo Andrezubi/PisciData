@@ -23,7 +23,7 @@ import ucb.piscidata.farm.domain.repository.FarmRepository
 
 val dataModule = module {
     single { SessionManager() }
-    single<AuthRemoteDataSource> { AuthService(get()) }
+    single<AuthRemoteDataSource> { AuthService() }
     single<AuthRepository> { AuthRepositoryImpl(get()) }
 
     single<ChatRemoteDataSource> { ChatService() }

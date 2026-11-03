@@ -3,7 +3,7 @@
 ## 1. Objetivo
 
 Implementar y adaptar completamente el apartado **Ciclos activos (Production Cycle)** del frontend de PisciData para que funcione con la implementación real del backend.
-
+ggh
 Si corresponde con la funcionalidad existente, cambiar el nombre visible de **Ciclos activos** a **Ciclos productivos**, manteniendo la coherencia con los nombres utilizados en el backend y el resto de la aplicación.
 
 Actualmente, la información mostrada en pantalla podría contener datos estáticos, valores de prueba o información hardcodeada. Se debe revisar detalladamente el frontend y reemplazar dichos datos por información real obtenida desde los endpoints del backend.

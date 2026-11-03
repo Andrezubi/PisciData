@@ -2,49 +2,64 @@ package ucb.piscidata.database.data.service
 
 import io.ktor.client.call.body
 import io.ktor.client.request.get
+import io.ktor.client.request.header
+import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
 import ucb.piscidata.database.data.dto.FarmResponseDto
 import ucb.piscidata.database.data.dto.ProductionCycleResponseDto
 import ucb.piscidata.database.data.mapper.toRecord
 import ucb.piscidata.database.domain.model.*
+import ucb.piscidata.session.SessionManager
 
 class DatabaseService {
     private val client = ApiClient.client
+    private val sessionManager: SessionManager by lazy { KoinPlatform.getKoin().get() }
     private val loadedCiclos = mutableListOf<CicloRecord>()
 
     private val farmUrls = listOf(
-        "https://10.0.2.2:7190/api/farms",
-        "http://10.0.2.2:5007/api/farms"
+        "https://127.0.0.1:7190/api/farms/my",
+        "http://127.0.0.1:5007/api/farms/my"
     )
 
     private fun cyclesUrls(farmId: Int) = listOf(
-        "https://10.0.2.2:7190/api/productioncycles/farm/$farmId",
-        "http://10.0.2.2:5007/api/productioncycles/farm/$farmId"
+        "https://127.0.0.1:7190/api/productioncycles/farm/$farmId",
+        "http://127.0.0.1:5007/api/productioncycles/farm/$farmId"
     )
 
     suspend fun getFarms(): Result<List<FarmModel>> {
+        val token = sessionManager.token.value
         for (url in farmUrls) {
             try {
-                val response = client.get(url)
+                val response = client.get(url) {
+                    if (!token.isNullOrBlank()) {
+                        header("Authorization", "Bearer $token")
+                    }
+                }
                 if (response.status.value in 200..299) {
                     val dtos: List<FarmResponseDto> = response.body()
                     val models = dtos.map { FarmModel(id = it.id, name = it.name) }
+                    sessionManager.setFarms(models)
                     return Result.success(models)
                 }
             } catch (_: Exception) {}
         }
-        return Result.success(
-            listOf(
-                FarmModel(1, "Piscigranja El Manantial"),
-                FarmModel(2, "Piscigranja Norte - San Juan")
-            )
+        val fallbackFarms = listOf(
+            FarmModel(1, "Piscigranja El Manantial"),
+            FarmModel(2, "Piscigranja Norte - San Juan")
         )
+        sessionManager.setFarms(fallbackFarms)
+        return Result.success(fallbackFarms)
     }
 
     suspend fun getCiclos(farmId: Int): Result<List<CicloRecord>> {
+        val token = sessionManager.token.value
         for (url in cyclesUrls(farmId)) {
             try {
-                val response = client.get(url)
+                val response = client.get(url) {
+                    if (!token.isNullOrBlank()) {
+                        header("Authorization", "Bearer $token")
+                    }
+                }
                 if (response.status.value in 200..299) {
                     val dtos: List<ProductionCycleResponseDto> = response.body()
                     val records = dtos.map { dto ->
@@ -57,29 +72,7 @@ class DatabaseService {
                 }
             } catch (_: Exception) {}
         }
-        if (loadedCiclos.isEmpty()) {
-            loadedCiclos.addAll(
-                listOf(
-                    CicloRecord(
-                        id = "CP-2026-018",
-                        status = BadgeVariant.ACTIVO,
-                        estanque = "EST-03 - Estanque 3",
-                        especie = "Tilapia nilótica",
-                        peces = "15.400",
-                        pesoActual = "145.2 g",
-                        edadDias = 56,
-                        startDate = "2026-08-12",
-                        endDate = null,
-                        initialAgeDays = 15,
-                        initialWeightGrams = "12 g",
-                        initialFishCount = "16.000",
-                        observations = "Crecimiento óptimo, consumo estable.",
-                        isExpanded = false
-                    )
-                )
-            )
-        }
-        return Result.success(loadedCiclos.toList())
+        return Result.success(emptyList())
     }
 
     suspend fun saveCiclo(ciclo: CicloRecord): Result<Unit> {

@@ -65,7 +65,8 @@ fun AppNavHost() {
         composable<NavRoute.Main> {
             MainTabScreen(
                 onLogout = {
-                    sessionManager.clear()
+                    sessionManager.setToken(null)
+                    sessionManager.setFarms(emptyList())
                     ApiClient.sessionManager = sessionManager
                     navController.navigate(NavRoute.Login) {
                         popUpTo(NavRoute.Main) { inclusive = true }
