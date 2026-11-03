@@ -9,31 +9,27 @@ class SessionManager {
     private val _token = MutableStateFlow<String?>(null)
     val token: StateFlow<String?> = _token.asStateFlow()
 
-    private val _userId = MutableStateFlow<Int?>(null)
-    val userId: StateFlow<Int?> = _userId.asStateFlow()
-
     private val _farms = MutableStateFlow<List<FarmModel>>(emptyList())
     val farms: StateFlow<List<FarmModel>> = _farms.asStateFlow()
 
-    private val _selectedFarmId = MutableStateFlow<Int?>(null)
-    val selectedFarmId: StateFlow<Int?> = _selectedFarmId.asStateFlow()
+    private val _selectedFarmId = MutableStateFlow<Int>(1)
+    val selectedFarmId: StateFlow<Int> = _selectedFarmId.asStateFlow()
 
-    fun setToken(token: String) {
-        _token.value = token
+    fun setToken(newToken: String?) {
+        _token.value = newToken
     }
 
     fun getToken(): String? = _token.value
 
-    fun setUserId(userId: Int) {
-        _userId.value = userId
+    fun clear() {
+        _token.value = null
+        _farms.value = emptyList()
     }
 
-    fun setFarms(farms: List<FarmModel>) {
-        _farms.value = farms
-        if (_selectedFarmId.value == null && farms.isNotEmpty()) {
-            _selectedFarmId.value = farms.first().id
-        } else if (farms.isNotEmpty() && _selectedFarmId.value != null && farms.none { it.id == _selectedFarmId.value }) {
-            _selectedFarmId.value = farms.first().id
+    fun setFarms(newFarms: List<FarmModel>) {
+        _farms.value = newFarms
+        if (newFarms.isNotEmpty() && !newFarms.any { it.id == _selectedFarmId.value }) {
+            _selectedFarmId.value = newFarms.first().id
         }
     }
 
@@ -42,13 +38,6 @@ class SessionManager {
     }
 
     fun getSelectedFarmName(): String {
-        return _farms.value.find { it.id == _selectedFarmId.value }?.name ?: ""
-    }
-
-    fun clear() {
-        _token.value = null
-        _userId.value = null
-        _farms.value = emptyList()
-        _selectedFarmId.value = null
+        return _farms.value.find { it.id == _selectedFarmId.value }?.name ?: "Piscigranja Principal"
     }
 }

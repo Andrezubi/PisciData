@@ -136,16 +136,46 @@ namespace PisciDataBackend.Application.Services
                 .Select(biometric => biometric.AverageWeightGrams)
                 .FirstOrDefault();
 
-            var estimatedWeight = biometricWeight ?? feedingByAge
-                .Where(item => item.MinimumAgeDays <= (currentAgeDays ?? 0)
-                    && item.MaximumAgeDays >= (currentAgeDays ?? 0)
-                    && (item.SpeciesId == cycle.SpeciesId || item.SpeciesId == null))
-                .OrderBy(item => item.SpeciesId == null)
-                .ThenBy(item => item.MaximumAgeDays - item.MinimumAgeDays)
-                .ThenByDescending(item => item.MinimumAgeDays)
-                .ThenBy(item => item.Id)
-                .Select(item => item.ApproximatedFishWeightGrams)
-                .FirstOrDefault();
+            var estimatedWeight = biometricWeight;
+            if (!estimatedWeight.HasValue)
+            {
+                var ageDays = currentAgeDays ?? 0;
+
+                static Feedingbyage? FindFeedingByAge(
+                    IEnumerable<Feedingbyage> records, int ageDays)
+                {
+                    var recordInRange = records
+                        .Where(item => item.MinimumAgeDays <= ageDays
+                            && item.MaximumAgeDays >= ageDays)
+                        .OrderBy(item => item.MaximumAgeDays - item.MinimumAgeDays)
+                        .ThenByDescending(item => item.MinimumAgeDays)
+                        .ThenBy(item => item.Id)
+                        .FirstOrDefault();
+
+                    if (recordInRange != null || !records.Any()
+                        || ageDays <= records.Max(item => item.MaximumAgeDays))
+                        return recordInRange;
+
+                    return records
+                        .OrderByDescending(item => item.MaximumAgeDays)
+                        .ThenByDescending(item => item.MinimumAgeDays)
+                        .ThenBy(item => item.Id)
+                        .FirstOrDefault();
+                }
+
+                var speciesRecords = feedingByAge
+                    .Where(item => item.SpeciesId == cycle.SpeciesId);
+                var selectedFeeding = FindFeedingByAge(speciesRecords, ageDays);
+
+                if (selectedFeeding == null)
+                {
+                    var generalRecords = feedingByAge
+                        .Where(item => item.SpeciesId == null);
+                    selectedFeeding = FindFeedingByAge(generalRecords, ageDays);
+                }
+
+                estimatedWeight = selectedFeeding?.ApproximatedFishWeightGrams;
+            }
 
             var status = cycle.EndDate.HasValue || cycle.IsActive == false
                 ? "FINALIZADO"

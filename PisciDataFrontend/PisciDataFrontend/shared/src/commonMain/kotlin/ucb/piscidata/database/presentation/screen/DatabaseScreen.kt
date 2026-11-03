@@ -346,12 +346,8 @@ fun InventarioTab(state: DatabaseState, viewModel: DatabaseViewModel) {
                     // Protein percentage and pellet size for feed items
                     if (item.category == InvCategory.ALIMENTO) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            if (item.proteinPercentage != null) {
-                                Text("Proteína: ${item.proteinPercentage}%", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1577C8))
-                            }
-                            if (item.pelletSizeMm != null) {
-                                Text("Pellet: ${item.pelletSizeMm} mm", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1577C8))
-                            }
+                            Text("Proteína: ${item.proteinPercentage ?: 40.0}%", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1577C8))
+                            Text("Pellet: ${item.pelletSizeMm ?: 2.0} mm", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF1577C8))
                         }
                     }
 

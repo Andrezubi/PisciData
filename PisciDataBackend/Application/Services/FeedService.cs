@@ -16,23 +16,27 @@ namespace PisciDataBackend.Application.Services
             _feedRepository = feedRepository;
         }
 
-        public async Task<IEnumerable<FeedDto>> GetAllAsync()
+        public async Task<IEnumerable<FeedDto>> GetAllAsync(int userId)
         {
-            var feeds = await _feedRepository.GetAllAsync();
+            var feeds = await _feedRepository.GetByOwnerAsync(userId);
             return feeds.Select(MapToDto);
         }
 
-        public async Task<FeedDto?> GetByIdAsync(int id)
+        public async Task<FeedDto?> GetByIdAsync(int id, int userId)
         {
-            var feed = await _feedRepository.GetByIdAsync(id);
+            var feed = await _feedRepository.GetByIdForOwnerAsync(id, userId);
             return feed == null ? null : MapToDto(feed);
         }
 
-        public async Task<(FeedDto? Dto, List<string> Errors)> CreateAsync(CreateFeedDto dto)
+        public async Task<(FeedDto? Dto, List<string> Errors)> CreateAsync(
+            CreateFeedDto dto, int userId)
         {
             var errors = FeedValidator.Validate(dto);
             if (errors.Count > 0)
                 return (null, errors);
+
+            if (!await _feedRepository.FarmBelongsToOwnerAsync(dto.FarmId, userId))
+                return (null, new List<string> { "La granja no existe o no pertenece al usuario." });
 
             var feed = new Feed
             {
@@ -52,15 +56,19 @@ namespace PisciDataBackend.Application.Services
             return (MapToDto(feed), errors);
         }
 
-        public async Task<(FeedDto? Dto, List<string> Errors)> UpdateAsync(int id, UpdateFeedDto dto)
+        public async Task<(FeedDto? Dto, List<string> Errors)> UpdateAsync(
+            int id, UpdateFeedDto dto, int userId)
         {
             var errors = FeedValidator.Validate(dto);
             if (errors.Count > 0)
                 return (null, errors);
 
-            var feed = await _feedRepository.GetByIdAsync(id);
+            var feed = await _feedRepository.GetByIdForOwnerAsync(id, userId);
             if (feed == null)
                 return (null, errors);
+
+            if (!await _feedRepository.FarmBelongsToOwnerAsync(dto.FarmId, userId))
+                return (null, new List<string> { "La granja no existe o no pertenece al usuario." });
 
             feed.FarmId = dto.FarmId;
             feed.Brand = dto.Brand;
@@ -76,9 +84,9 @@ namespace PisciDataBackend.Application.Services
             return (MapToDto(feed), errors);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int userId)
         {
-            var feed = await _feedRepository.GetByIdAsync(id);
+            var feed = await _feedRepository.GetByIdForOwnerAsync(id, userId);
             if (feed == null)
                 return false;
 
@@ -99,10 +107,19 @@ namespace PisciDataBackend.Application.Services
                 PelletSizeMm = feed.PelletSizeMm,
                 StockKg = feed.StockKg,
                 MinimumStockKg = feed.MinimumStockKg,
+                StockStatus = GetStockStatus(feed.StockKg, feed.MinimumStockKg),
                 CreatedAt = feed.CreatedAt,
                 UpdatedAt = feed.UpdatedAt,
                 IsActive = feed.IsActive
             };
+        }
+
+        private static string GetStockStatus(decimal? stock, decimal? minimumStock)
+        {
+            if (!stock.HasValue || !minimumStock.HasValue)
+                return "NO DISPONIBLE";
+
+            return stock.Value <= minimumStock.Value ? "BAJO" : "DISPONIBLE";
         }
     }
 }

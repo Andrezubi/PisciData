@@ -11,7 +11,7 @@ class ApiService {
     suspend fun getWeather(): List<WeatherForecast> {
 
         return client
-            .get("http://10.0.2.2:5007/weatherforecast")
+            .get("http://127.0.0.1:5007/weatherforecast")
             .body()
     }
 }

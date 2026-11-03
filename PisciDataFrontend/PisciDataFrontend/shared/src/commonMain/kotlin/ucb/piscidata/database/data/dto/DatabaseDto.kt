@@ -30,3 +30,55 @@ data class ProductionCycleResponseDto(
     val currentAgeDays: Int? = null,
     val status: String
 )
+
+@Serializable
+data class PondResponseDto(
+    val id: Int,
+    val farmId: Int,
+    val code: String,
+    val name: String? = null,
+    val shape: String? = null,
+    val width: Double? = null,
+    val length: Double? = null,
+    val diameter: Double? = null,
+    val depth: Double? = null,
+    val area: Double? = null,
+    val description: String? = null,
+    val latestWaterQuality: WaterQualityResponseDto? = null
+)
+
+@Serializable
+data class WaterQualityResponseDto(
+    val id: Int,
+    val transparencyCm: Double? = null,
+    val temperatureC: Double? = null,
+    val ph: Double? = null,
+    val dissolvedOxygen: Double? = null,
+    val measurementDate: String? = null
+)
+
+@Serializable
+data class FeedResponseDto(
+    val id: Int,
+    val farmId: Int,
+    val brand: String,
+    val productName: String? = null,
+    val phase: String? = null,
+    val proteinPercentage: Double? = null,
+    val pelletSizeMm: Double? = null,
+    val stockKg: Double? = null,
+    val minimumStockKg: Double? = null,
+    val stockStatus: String? = null
+)
+
+@Serializable
+data class SupplyResponseDto(
+    val id: Int,
+    val farmId: Int,
+    val name: String,
+    val category: String? = null,
+    val quantity: Double,
+    val unit: String,
+    val minimumStock: Double? = null,
+    val stockStatus: String? = null
+)
