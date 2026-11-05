@@ -1,6 +1,7 @@
-using System.ComponentModel;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using PisciDataMCP.Clients;
+using System.ComponentModel;
 
 namespace PisciDataMCP.Tools;
 
@@ -16,19 +17,46 @@ public class BiometricTools
     {
         _apiClient = apiClient;
     }
+    private static string? GetAuthorization(
+        RequestContext<CallToolRequestParams> context)
+    {
+        var authorization = context.Params?
+            .Meta?["authorization"]?
+            .GetValue<string>();
+
+        if (string.IsNullOrWhiteSpace(authorization) ||
+            !authorization.StartsWith(
+                "Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return authorization;
+    }
 
     [McpServerTool]
     [Description("Obtiene el historial de todos los muestreos biométricos registrados en el sistema.")]
-    public async Task<string> GetBiometrics()
+    public async Task<string> GetBiometrics(RequestContext<CallToolRequestParams> context)
     {
-        return await _apiClient.GetAsync("Biometrics");
+        var authorization = GetAuthorization(context);
+
+        if (authorization is null)
+            return "{\"error\":\"No se recibió la autenticación de la sesión.\"}";
+
+        return await _apiClient.GetAsync("Biometrics",authorization);
     }
 
     [McpServerTool]
     [Description("Obtiene los detalles de un muestreo biométrico específico por ID (peso promedio en gramos, biomasa total estimada en kg, ración recomendada y estado de salud).")]
     public async Task<string> GetBiometricById(
-        [Description("Identificador numérico único del registro biométrico")] int id)
+        [Description("Identificador numérico único del registro biométrico")] int id,
+        RequestContext<CallToolRequestParams> context)
     {
-        return await _apiClient.GetAsync($"Biometrics/{id}");
+        var authorization = GetAuthorization(context);
+
+        if (authorization is null)
+            return "{\"error\":\"No se recibió la autenticación de la sesión.\"}";
+
+        return await _apiClient.GetAsync($"Biometrics/{id}", authorization);
     }
 }

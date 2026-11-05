@@ -1,7 +1,12 @@
-﻿using System.Text.Json;
-using System.Text.Json.Nodes;
+﻿using Microsoft.Extensions.Options;
+using ModelContextProtocol;
 using ModelContextProtocol.Client;
-using Microsoft.Extensions.Options;
+using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
+using System.ComponentModel;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Xml.Linq;
 
 namespace PisciDataBackend.AI
 {
@@ -123,7 +128,9 @@ namespace PisciDataBackend.AI
         public async Task<string> CallToolAsync(
             string name,
             JsonObject arguments,
-            CancellationToken cancellationToken = default)
+            string authorizationHeader,
+            CancellationToken cancellationToken = default
+            )
         {
             await EnsureConnectedAsync(cancellationToken);
 
@@ -141,10 +148,21 @@ namespace PisciDataBackend.AI
                     arguments.ToJsonString())
                 ?? new Dictionary<string, object?>();
 
+            var requestOptions = new RequestOptions
+            {
+                Meta = new JsonObject
+                {
+                    ["authorization"] = authorizationHeader
+                }
+            };
+
             var result = await _client!.CallToolAsync(
                 name,
                 args,
+                options: requestOptions,
                 cancellationToken: cancellationToken);
+
+
 
             // Return the complete result to Ollama, including structured
             // content where the MCP server provides it.
@@ -161,5 +179,24 @@ namespace PisciDataBackend.AI
 
             _initLock.Dispose();
         }
+
+        private static string GetAuthorizationHeader(
+        RequestContext<CallToolRequestParams> context)
+        {
+            var authorization =
+                context.Params?.Meta?["authorization"]?.GetValue<string>();
+
+            if (string.IsNullOrWhiteSpace(authorization) ||
+                !authorization.StartsWith(
+                    "Bearer ",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UnauthorizedAccessException(
+                    "No valid user authentication was provided.");
+            }
+
+            return authorization;
+        }
+
     }
 }

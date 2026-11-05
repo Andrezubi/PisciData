@@ -1,6 +1,7 @@
-using System.ComponentModel;
+using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using PisciDataMCP.Clients;
+using System.ComponentModel;
 
 namespace PisciDataMCP.Tools;
 
@@ -17,18 +18,46 @@ public class FeedingTools
         _apiClient = apiClient;
     }
 
+    private static string? GetAuthorization(
+        RequestContext<CallToolRequestParams> context)
+    {
+        var authorization = context.Params?
+            .Meta?["authorization"]?
+            .GetValue<string>();
+
+        if (string.IsNullOrWhiteSpace(authorization) ||
+            !authorization.StartsWith(
+                "Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return authorization;
+    }
+
     [McpServerTool]
     [Description("Obtiene la lista de todos los eventos de alimentación registrados en el sistema.")]
-    public async Task<string> GetFeedings()
+    public async Task<string> GetFeedings(RequestContext<CallToolRequestParams> context)
     {
-        return await _apiClient.GetAsync("Feedings");
+        var authorization = GetAuthorization(context);
+
+        if (authorization is null)
+            return "{\"error\":\"No se recibió la autenticación de la sesión.\"}";
+
+        return await _apiClient.GetAsync("Feedings", authorization);
     }
 
     [McpServerTool]
     [Description("Obtiene el detalle de un evento de alimentación específico por su ID (fecha, hora, cantidad en kg, número de ración y comportamiento observado).")]
     public async Task<string> GetFeedingById(
-        [Description("Identificador numérico único del registro de alimentación")] int id)
+        [Description("Identificador numérico único del registro de alimentación")] int id,
+        RequestContext<CallToolRequestParams> context)
     {
-        return await _apiClient.GetAsync($"Feedings/{id}");
+        var authorization = GetAuthorization(context);
+
+        if (authorization is null)
+            return "{\"error\":\"No se recibió la autenticación de la sesión.\"}";
+
+        return await _apiClient.GetAsync($"Feedings/{id}", authorization);
     }
 }

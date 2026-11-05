@@ -26,9 +26,7 @@ namespace PisciDataBackend.Infraestructure.Clients
             _options = options.Value;
         }
 
-        public async Task<(string? Content, string? Error)> ChatAsync(
-            List<OllamaMessageItem> conversationMessages,
-            CancellationToken cancellationToken = default)
+        public async Task<(string? Content, string? Error)> ChatAsync(List<OllamaMessageItem> conversationMessages,string authorizationHeader,CancellationToken cancellationToken = default)
         {
             try
             {
@@ -135,11 +133,7 @@ namespace PisciDataBackend.Infraestructure.Clients
                             function?["arguments"] as JsonObject
                             ?? new JsonObject();
 
-                        var toolResult =
-                            await _mcpToolService.CallToolAsync(
-                                name,
-                                arguments,
-                                cancellationToken);
+                        var toolResult = await _mcpToolService.CallToolAsync(name,arguments,authorizationHeader,cancellationToken);
 
                         // Return the MCP result to Ollama.
                         messages.Add(new JsonObject

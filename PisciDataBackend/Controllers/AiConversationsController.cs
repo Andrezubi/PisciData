@@ -65,12 +65,27 @@ namespace PisciDataBackend.Controllers
 
         // POST: api/AiConversations/{id}/messages (envia un mensaje y obtiene respuesta de la ia)
         [HttpPost("{id}/messages")]
-        public async Task<ActionResult<AimessageDto>> SendMessage(int id, [FromBody] SendAiMessageDto dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<AimessageDto>> SendMessage(int id,[FromBody] SendAiMessageDto dto, CancellationToken cancellationToken)
         {
             var userId = GetCurrentUserId();
-            if (userId == null) return Unauthorized(new { message = "No se pudo identificar al usuario." });
 
-            var (responseMsg, error) = await _chatService.SendMessageAsync(id, userId.Value, dto, cancellationToken);
+            if (userId == null)
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var authorizationHeader = Request.Headers.Authorization.ToString();
+
+
+            if (string.IsNullOrWhiteSpace(authorizationHeader))
+                return Unauthorized(new { message = "No se encontró el token de autenticación." });
+
+
+            var (responseMsg, error) = await _chatService.SendMessageAsync(
+                id,
+                userId.Value,
+                dto,
+                authorizationHeader,
+                cancellationToken);
+
             if (error != null)
             {
                 if (error == "Conversación no encontrada.")
