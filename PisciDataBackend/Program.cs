@@ -107,9 +107,15 @@ builder.Services.AddAuthentication(options =>
     });
 
 // Database context
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new Exception("Connection string is not configured. Set ConnectionStrings:DefaultConnection in User Secrets or an environment variable.");
+}
+
 builder.Services.AddDbContext<PiscidatadbContext>(options =>
     options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+        connectionString,
         Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.46-mysql")));
 
 // Repositories

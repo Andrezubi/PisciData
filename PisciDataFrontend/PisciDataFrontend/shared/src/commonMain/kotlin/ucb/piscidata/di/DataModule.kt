@@ -9,9 +9,18 @@ import ucb.piscidata.chat.data.datasource.ChatRemoteDataSource
 import ucb.piscidata.chat.data.repository.ChatRepositoryImpl
 import ucb.piscidata.chat.data.service.ChatService
 import ucb.piscidata.chat.domain.repository.ChatRepository
-import ucb.piscidata.database.data.repository.DatabaseRepositoryImpl
-import ucb.piscidata.database.data.service.DatabaseService
-import ucb.piscidata.database.domain.repository.DatabaseRepository
+import ucb.piscidata.database.data.repository.FarmLookupRepositoryImpl
+import ucb.piscidata.database.data.repository.InventoryRepositoryImpl
+import ucb.piscidata.database.data.repository.PondRepositoryImpl
+import ucb.piscidata.database.data.repository.ProductionCycleRepositoryImpl
+import ucb.piscidata.database.data.service.FarmLookupService
+import ucb.piscidata.database.data.service.InventoryService
+import ucb.piscidata.database.data.service.PondService
+import ucb.piscidata.database.data.service.ProductionCycleService
+import ucb.piscidata.database.domain.repository.FarmLookupRepository
+import ucb.piscidata.database.domain.repository.InventoryRepository
+import ucb.piscidata.database.domain.repository.PondRepository
+import ucb.piscidata.database.domain.repository.ProductionCycleRepository
 import ucb.piscidata.session.SessionManager
 import ucb.piscidata.tasks.data.repository.TaskRepositoryImpl
 import ucb.piscidata.tasks.data.service.TaskService
@@ -33,8 +42,18 @@ val dataModule = module {
     single<ChatRemoteDataSource> { ChatService() }
     single<ChatRepository> { ChatRepositoryImpl(get()) }
 
-    single { DatabaseService() }
-    single<DatabaseRepository> { DatabaseRepositoryImpl(get()) }
+    // Database services and repositories
+    single { ProductionCycleService() }
+    single<ProductionCycleRepository> { ProductionCycleRepositoryImpl(get()) }
+
+    single { PondService(get()) }
+    single<PondRepository> { PondRepositoryImpl(get()) }
+
+    single { InventoryService() }
+    single<InventoryRepository> { InventoryRepositoryImpl(get()) }
+
+    single { FarmLookupService() }
+    single<FarmLookupRepository> { FarmLookupRepositoryImpl(get()) }
 
     single { TaskService() }
     single<TaskRepository> { TaskRepositoryImpl(get()) }
