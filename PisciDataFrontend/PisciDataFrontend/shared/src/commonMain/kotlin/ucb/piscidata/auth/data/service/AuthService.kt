@@ -10,6 +10,8 @@ import ucb.piscidata.auth.data.datasource.AuthRemoteDataSource
 import ucb.piscidata.auth.data.dto.CreateUserDto
 import ucb.piscidata.auth.data.dto.LoginDto
 import ucb.piscidata.auth.data.dto.LoginResponseDto
+import ucb.piscidata.auth.data.dto.UserResponseDto
+import ucb.piscidata.auth.data.mapper.toModel
 import ucb.piscidata.auth.domain.model.UserModel
 import ucb.piscidata.data.remote.ApiClient
 import ucb.piscidata.session.SessionManager
@@ -43,9 +45,11 @@ class AuthService : AuthRemoteDataSource {
                 if (response.status.value in 200..299) {
                     val loginResp: LoginResponseDto = response.body()
                     sessionManager.setToken(loginResp.token)
+                    ApiClient.sessionManager = sessionManager
 
                     return Result.success(
                         UserModel(
+                            id = 0,
                             name = "Usuario Autenticado",
                             phone = phone,
                             role = "Owner",
@@ -73,14 +77,8 @@ class AuthService : AuthRemoteDataSource {
                     setBody(CreateUserDto(firstName = firstName, lastName = lastName, phone = phone, password = pass, role = role))
                 }
                 if (response.status.value in 200..299) {
-                    return Result.success(
-                        UserModel(
-                            name = "$firstName $lastName",
-                            phone = phone,
-                            role = role,
-                            farmName = "Piscigranja Principal"
-                        )
-                    )
+                    val userDto: UserResponseDto = response.body()
+                    return Result.success(userDto.toModel())
                 }
             } catch (e: Exception) {
                 lastException = e

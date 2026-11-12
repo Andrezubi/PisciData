@@ -4,7 +4,7 @@ namespace PisciDataBackend.Domain.Validators
 {
     public static class UserValidator
     {
-        private static readonly string[] AllowedRoles = { "Admin", "Technician", "Worker" };
+        private static readonly string[] AllowedRoles = { "Owner", "Admin", "Technician", "Worker" };
 
         public static List<string> Validate(CreateUserDto dto)
         {

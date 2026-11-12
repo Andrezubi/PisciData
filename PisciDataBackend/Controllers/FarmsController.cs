@@ -51,6 +51,15 @@ namespace PisciDataBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<FarmDto>> Create([FromBody] CreateFarmDto dto)
         {
+            if (dto.OwnerUserId <= 0)
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("UserId") ?? User.FindFirst("sub");
+                if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+                {
+                    dto.OwnerUserId = userId;
+                }
+            }
+
             var (created, errors) = await _farmService.CreateAsync(dto);
             if (errors.Count > 0)
                 return BadRequest(errors);
