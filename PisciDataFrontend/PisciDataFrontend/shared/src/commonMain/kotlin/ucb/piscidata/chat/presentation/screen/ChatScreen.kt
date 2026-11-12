@@ -1,6 +1,7 @@
 package ucb.piscidata.chat.presentation.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,7 +12,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -21,6 +24,7 @@ import kotlinx.coroutines.flow.collectLatest
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import ucb.piscidata.chat.domain.model.MessageSender
+import ucb.piscidata.chat.presentation.audio.rememberAudioRecorder
 import ucb.piscidata.chat.presentation.viewmodel.ChatEffect
 import ucb.piscidata.chat.presentation.viewmodel.ChatEvent
 import ucb.piscidata.chat.presentation.viewmodel.ChatViewModel
@@ -40,6 +44,7 @@ fun ChatScreen(
     val listState = rememberLazyListState()
     val snackbarHostState = remember { SnackbarHostState() }
     var expandedDropdown by remember { mutableStateOf(false) }
+    val audioRecorder = rememberAudioRecorder()
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
@@ -139,20 +144,9 @@ fun ChatScreen(
                             onDismissRequest = { expandedDropdown = false }
                         ) {
                             state.conversations.forEach { conv ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = conv.title,
-                                            fontSize = 13.sp,
-                                            fontWeight = if (conv.id == state.conversationId) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (conv.id == state.conversationId) Color(0xFF1577C8) else Color(0xFF0B2B3B)
-                                        )
-                                    },
-                                    onClick = {
-                                        expandedDropdown = false
-                                        viewModel.emitEvent(ChatEvent.OnSelectConversation(conv.id))
-                                    }
-                                )
+                                DropMenuItem(conv, state, viewModel) {
+                                    expandedDropdown = false
+                                }
                             }
                         }
                     }
@@ -364,6 +358,41 @@ fun ChatScreen(
                 }
             }
 
+            // Indicador de grabación o transcripción activa
+            if (state.isRecording || state.isTranscribing) {
+                Surface(
+                    color = if (state.isRecording) Color(0xFFFFEBEE) else Color(0xFFE8F4FC),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (state.isTranscribing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(14.dp),
+                                strokeWidth = 2.dp,
+                                color = Color(0xFF1577C8)
+                            )
+                            Text(
+                                text = "Transcribiendo con Whisper...",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF1577C8)
+                            )
+                        } else {
+                            Text(
+                                text = "🔴 Grabando... mantén presionado y suelta para enviar",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFD32F2F)
+                            )
+                        }
+                    }
+                }
+            }
+
             // Input Bar
             Surface(
                 modifier = Modifier.fillMaxWidth(),
@@ -384,25 +413,65 @@ fun ChatScreen(
                         placeholder = { Text("Escribe un mensaje...", color = Color(0xFF91A5AD)) },
                         shape = RoundedCornerShape(24.dp),
                         maxLines = 3,
-                        enabled = !state.isLoading
+                        enabled = !state.isLoading && !state.isTranscribing
                     )
                     if (state.inputMessage.isBlank()) {
-                        IconButton(
-                            onClick = { viewModel.emitEvent(ChatEvent.OnStartRecording) },
-                            enabled = !state.isLoading,
+                        // Botón Push-to-Talk para grabación de audio y transcripción con Whisper
+                        Box(
                             modifier = Modifier
-                                .size(44.dp)
-                                .background(Color(0xFFE8F4FC), CircleShape)
+                                .size(46.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (state.isRecording) Color(0xFFE53935)
+                                    else if (state.isLoading || state.isTranscribing) Color(0xFFECEFF1)
+                                    else Color(0xFFE8F4FC)
+                                )
+                                .pointerInput(state.isLoading, state.isTranscribing) {
+                                    if (state.isLoading || state.isTranscribing) return@pointerInput
+                                    detectTapGestures(
+                                        onPress = {
+                                            viewModel.emitEvent(ChatEvent.OnStartRecording)
+                                            audioRecorder.startRecording(
+                                                onError = {
+                                                    viewModel.emitEvent(ChatEvent.OnCancelRecording)
+                                                }
+                                            )
+                                            val released = tryAwaitRelease()
+                                            if (released) {
+                                                audioRecorder.stopRecording(
+                                                    onAudioReady = { wavBytes ->
+                                                        viewModel.emitEvent(ChatEvent.OnAudioRecorded(wavBytes))
+                                                    },
+                                                    onError = {
+                                                        viewModel.emitEvent(ChatEvent.OnCancelRecording)
+                                                    }
+                                                )
+                                            } else {
+                                                audioRecorder.cancelRecording()
+                                                viewModel.emitEvent(ChatEvent.OnCancelRecording)
+                                            }
+                                        }
+                                    )
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
-                            MicIcon(Color(0xFF1577C8))
+                            if (state.isTranscribing) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Color(0xFF1577C8)
+                                )
+                            } else {
+                                MicIcon(if (state.isRecording) Color.White else Color(0xFF1577C8))
+                            }
                         }
                     } else {
                         IconButton(
                             onClick = { viewModel.emitEvent(ChatEvent.OnSendText) },
-                            enabled = !state.isLoading,
+                            enabled = !state.isLoading && !state.isTranscribing,
                             modifier = Modifier
                                 .size(44.dp)
-                                .background(if (state.isLoading) Color.LightGray else Color(0xFF1577C8), CircleShape)
+                                .background(if (state.isLoading || state.isTranscribing) Color.LightGray else Color(0xFF1577C8), CircleShape)
                         ) {
                             SendIcon(Color.White)
                         }
@@ -446,4 +515,27 @@ fun ChatScreen(
             }
         )
     }
+}
+
+@Composable
+private fun DropMenuItem(
+    conv: ucb.piscidata.chat.domain.model.ConversationModel,
+    state: ucb.piscidata.chat.presentation.viewmodel.ChatState,
+    viewModel: ChatViewModel,
+    onDismiss: () -> Unit
+) {
+    DropdownMenuItem(
+        text = {
+            Text(
+                text = conv.title,
+                fontSize = 13.sp,
+                fontWeight = if (conv.id == state.conversationId) FontWeight.Bold else FontWeight.Normal,
+                color = if (conv.id == state.conversationId) Color(0xFF1577C8) else Color(0xFF0B2B3B)
+            )
+        },
+        onClick = {
+            onDismiss()
+            viewModel.emitEvent(ChatEvent.OnSelectConversation(conv.id))
+        }
+    )
 }

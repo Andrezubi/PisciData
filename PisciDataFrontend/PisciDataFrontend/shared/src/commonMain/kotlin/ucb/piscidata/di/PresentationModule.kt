@@ -6,12 +6,14 @@ import ucb.piscidata.auth.presentation.viewmodel.AuthViewModel
 import ucb.piscidata.auth.presentation.viewmodel.RegisterViewModel
 import ucb.piscidata.chat.presentation.viewmodel.ChatViewModel
 import ucb.piscidata.database.presentation.viewmodel.DatabaseViewModel
-import ucb.piscidata.tasks.presentation.viewmodel.TaskViewModel
+import ucb.piscidata.farm.presentation.viewmodel.RegisterFarmViewModel
 import ucb.piscidata.profile.presentation.viewmodel.ProfileViewModel
+import ucb.piscidata.tasks.presentation.viewmodel.TaskViewModel
 
 val presentationModule = module {
     viewModelOf(::AuthViewModel)
     viewModelOf(::RegisterViewModel)
+    viewModelOf(::RegisterFarmViewModel)
     viewModelOf(::ChatViewModel)
     viewModelOf(::DatabaseViewModel)
     viewModelOf(::TaskViewModel)

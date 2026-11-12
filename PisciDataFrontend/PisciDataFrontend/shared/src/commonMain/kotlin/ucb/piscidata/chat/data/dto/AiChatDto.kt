@@ -34,3 +34,10 @@ data class AiMessageDto(
 data class SendAiMessageDto(
     val content: String
 )
+
+// Respuesta de la transcripción de audio devuelta por POST /api/AiConversations/transcribe
+@Serializable
+data class TranscriptionResponseDto(
+    val text: String = "",
+    val language: String = "es"
+)

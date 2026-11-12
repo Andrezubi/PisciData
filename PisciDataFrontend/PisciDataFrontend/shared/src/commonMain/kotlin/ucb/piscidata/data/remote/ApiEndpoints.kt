@@ -18,5 +18,6 @@ object ApiEndpoints {
     object AiChat {
         const val CONVERSATIONS = "$BASE_URL/api/AiConversations"
         fun messages(conversationId: Int) = "$CONVERSATIONS/$conversationId/messages"
+        const val TRANSCRIBE = "$CONVERSATIONS/transcribe"
     }
 }

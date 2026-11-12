@@ -21,14 +21,18 @@ import ucb.piscidata.auth.presentation.viewmodel.RegisterViewModel
 @Composable
 fun RegisterScreen(
     viewModel: RegisterViewModel = koinViewModel(),
-    onRegisterSuccess: () -> Unit,
+    onRegisterSuccess: (userId: Int, phone: String, pass: String) -> Unit,
     onBackToLogin: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
 
     LaunchedEffect(state.isRegistered) {
         if (state.isRegistered) {
-            onRegisterSuccess()
+            onRegisterSuccess(
+                state.registeredUser?.id ?: 0,
+                state.phone,
+                state.password
+            )
         }
     }
 
@@ -63,7 +67,7 @@ fun RegisterScreen(
                         Text("← Volver al login", color = Color(0xFF1577C8))
                     }
                     Text(
-                        text = "Piscidata",
+                        text = "PisciData",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = Color(0xFF0B2B3B)
@@ -128,23 +132,34 @@ fun RegisterScreen(
                         visualTransformation = PasswordVisualTransformation()
                     )
 
-                    // Role selection
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(text = "Rol en el sistema", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF16313D))
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            listOf("Admin", "Technician", "Worker").forEach { r ->
-                                val selected = state.role == r
-                                Button(
-                                    onClick = { viewModel.emitEvent(RegisterEvent.OnRoleChanged(r)) },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = if (selected) Color(0xFF1577C8) else Color(0xFFF0F4F6)
-                                    ),
-                                    shape = RoundedCornerShape(8.dp),
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(r, fontSize = 11.sp, color = if (selected) Color.White else Color(0xFF6B818B))
-                                }
+                    // Fixed Role Badge
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Color(0xFFE8F1F8),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "Rol en el sistema",
+                                fontSize = 13.sp,
+                                color = Color(0xFF4A6572),
+                                fontWeight = FontWeight.Medium
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFF1577C8)
+                            ) {
+                                Text(
+                                    text = "Dueño (Owner)",
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
                             }
                         }
                     }
@@ -171,7 +186,7 @@ fun RegisterScreen(
                         CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                     } else {
                         Text(
-                            text = "Registrarse",
+                            text = "Siguiente: Registrar Granja →",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White

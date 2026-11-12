@@ -5,7 +5,8 @@ import ucb.piscidata.auth.domain.model.UserModel
 
 fun UserResponseDto.toModel(): UserModel {
     return UserModel(
-        name = "$firstName $lastName",
+        id = id,
+        name = "$firstName $lastName".trim(),
         phone = phone,
         role = role,
         farmName = "Piscigranja El Manantial"
