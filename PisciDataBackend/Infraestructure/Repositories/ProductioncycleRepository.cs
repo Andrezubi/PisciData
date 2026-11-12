@@ -35,12 +35,13 @@ namespace PisciDataBackend.Infraestructure.Repositories
             .ToListAsync();
     }
 
-    public async Task<Productioncycle?> GetOwnedByIdAsync(int id, int ownerUserId)
+    public async Task<Productioncycle?> GetOwnedByIdAsync(
+        int id, int ownerUserId, bool includeFinalized = false)
     {
         return await _dbSet
             .AsSplitQuery()
             .Where(pc => pc.Id == id
-                && pc.IsActive != false
+                && (includeFinalized || pc.IsActive != false)
                 && pc.Pond.Farm.OwnerUserId == ownerUserId
                 && pc.Pond.Farm.IsActive != false
                 && pc.Pond.IsActive != false)
@@ -51,6 +52,27 @@ namespace PisciDataBackend.Infraestructure.Repositories
             .Include(pc => pc.Mortalities)
             .Include(pc => pc.Biometrics)
             .FirstOrDefaultAsync();
+    }
+
+    public async Task<List<Pond>> GetAvailablePondsAsync(int ownerUserId)
+    {
+        return await _context.Ponds
+            .AsNoTracking()
+            .Where(pond => pond.IsActive != false
+                && pond.Farm.IsActive != false
+                && pond.Farm.OwnerUserId == ownerUserId)
+            .OrderBy(pond => pond.Farm.Name)
+            .ThenBy(pond => pond.Code)
+            .ToListAsync();
+    }
+
+    public async Task<List<Species>> GetActiveSpeciesAsync()
+    {
+        return await _context.Species
+            .AsNoTracking()
+            .Where(species => species.IsActive != false)
+            .OrderBy(species => species.CommonName)
+            .ToListAsync();
     }
 
     public async Task<bool> PondBelongsToOwnerAsync(int pondId, int ownerUserId)

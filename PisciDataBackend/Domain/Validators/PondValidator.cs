@@ -13,6 +13,17 @@ namespace PisciDataBackend.Domain.Validators
 
             if (string.IsNullOrWhiteSpace(dto.Code))
                 errors.Add("Code is required.");
+            else if (dto.Code.Length > 50)
+                errors.Add("El código no puede superar los 50 caracteres.");
+
+            if (dto.Name?.Length > 100)
+                errors.Add("El nombre no puede superar los 100 caracteres.");
+
+            if (dto.Shape?.Length > 50)
+                errors.Add("La forma no puede superar los 50 caracteres.");
+
+            if (dto.Description?.Length > 500)
+                errors.Add("La descripción no puede superar los 500 caracteres.");
 
             if (dto.Width.HasValue && dto.Width < 0)
                 errors.Add("Width must be greater than or equal to 0.");
@@ -41,6 +52,17 @@ namespace PisciDataBackend.Domain.Validators
 
             if (string.IsNullOrWhiteSpace(dto.Code))
                 errors.Add("Code is required.");
+            else if (dto.Code.Length > 50)
+                errors.Add("El código no puede superar los 50 caracteres.");
+
+            if (dto.Name?.Length > 100)
+                errors.Add("El nombre no puede superar los 100 caracteres.");
+
+            if (dto.Shape?.Length > 50)
+                errors.Add("La forma no puede superar los 50 caracteres.");
+
+            if (dto.Description?.Length > 500)
+                errors.Add("La descripción no puede superar los 500 caracteres.");
 
             if (dto.Width.HasValue && dto.Width < 0)
                 errors.Add("Width must be greater than or equal to 0.");

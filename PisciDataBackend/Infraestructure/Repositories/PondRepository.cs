@@ -11,6 +11,14 @@ namespace PisciDataBackend.Infraestructure.Repositories
         {
         }
 
+        public async Task<bool> CodeExistsAsync(int farmId, string code, int? excludedId = null)
+        {
+            return await _context.Ponds.AnyAsync(pond => pond.FarmId == farmId
+                && pond.Code == code
+                && pond.IsActive != false
+                && (!excludedId.HasValue || pond.Id != excludedId.Value));
+        }
+
         public override async Task<IEnumerable<Pond>> GetAllAsync()
         {
             return await _dbSet.Where(p => p.IsActive != false).ToListAsync();
@@ -25,11 +33,9 @@ namespace PisciDataBackend.Infraestructure.Repositories
                     && pond.Farm.IsActive != false
                     && pond.Farm.OwnerUserId == userId)
                 .Include(pond => pond.Farm)
-                .Include(pond => pond.Productioncycles
-                    .Where(cycle => cycle.IsActive != false))
+                .Include(pond => pond.Productioncycles)
                     .ThenInclude(cycle => cycle.Species)
-                .Include(pond => pond.Productioncycles
-                    .Where(cycle => cycle.IsActive != false))
+                .Include(pond => pond.Productioncycles)
                     .ThenInclude(cycle => cycle.Waterqualities
                         .Where(quality => quality.IsActive != false))
                 .ToListAsync();
@@ -45,11 +51,9 @@ namespace PisciDataBackend.Infraestructure.Repositories
                     && pond.Farm.IsActive != false
                     && pond.Farm.OwnerUserId == userId)
                 .Include(pond => pond.Farm)
-                .Include(pond => pond.Productioncycles
-                    .Where(cycle => cycle.IsActive != false))
+                .Include(pond => pond.Productioncycles)
                     .ThenInclude(cycle => cycle.Species)
-                .Include(pond => pond.Productioncycles
-                    .Where(cycle => cycle.IsActive != false))
+                .Include(pond => pond.Productioncycles)
                     .ThenInclude(cycle => cycle.Waterqualities
                         .Where(quality => quality.IsActive != false))
                 .FirstOrDefaultAsync();

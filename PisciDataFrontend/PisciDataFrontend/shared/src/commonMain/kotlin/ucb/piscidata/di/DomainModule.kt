@@ -18,12 +18,18 @@ val domainModule = module {
     // Database use cases
     factory { GetFarmsUseCase(get()) }
     factory { GetCiclosUseCase(get()) }
+    factory { CreateProductionCycleUseCase(get()) }
+    factory { FinalizeProductionCycleUseCase(get()) }
     factory { SaveCicloUseCase(get()) }
     factory { DeleteCicloUseCase(get()) }
     factory { ToggleCicloExpandUseCase(get()) }
     factory { GetPondsUseCase(get()) }
+    factory { CreatePondUseCase(get()) }
     factory { GetInventoryUseCase(get()) }
+    factory { CreateFeedUseCase(get()) }
+    factory { CreateSupplyUseCase(get()) }
     factory { UpdateInventoryQtyUseCase(get()) }
+    factory { GetSpeciesUseCase(get()) }
 
     factory { GetTasksUseCase(get()) }
     factory { ToggleTaskUseCase(get()) }

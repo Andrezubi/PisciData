@@ -34,101 +34,147 @@ fun CiclosTab(
                 it.id.contains(state.searchQuery, true)
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(filtered) { ciclo ->
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(12.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.clickable { viewModel.emitEvent(DatabaseEvent.ToggleCicloExpand(ciclo.id)) }
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(filtered) { ciclo ->
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    shape = RoundedCornerShape(12.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier.clickable { viewModel.emitEvent(DatabaseEvent.ToggleCicloExpand(ciclo.id)) }
                 ) {
-                    // Header row before expanding: Estanque, Codigo, Especie, Peces, Peso Actual, Edad dias
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        // Header row before expanding: Estanque, Codigo, Especie, Peces, Peso Actual, Edad dias
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(ciclo.id, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1577C8))
-                            Text("•", color = Color(0xFF91A5AD), fontSize = 12.sp)
-                            Text(ciclo.estanque, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0B2B3B))
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(ciclo.id, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1577C8))
+                                Text("•", color = Color(0xFF91A5AD), fontSize = 12.sp)
+                                Text(ciclo.estanque, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF0B2B3B))
+                            }
+                            Surface(
+                                color = when (ciclo.status) {
+                                    BadgeVariant.ACTIVO -> Color(0xFFE8F8F1)
+                                    BadgeVariant.EN_SEGUIMIENTO -> Color(0xFFE8F4FC)
+                                    BadgeVariant.FINALIZADO -> Color(0xFFDCE8ED)
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    text = ciclo.status.displayName(),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = when (ciclo.status) {
+                                        BadgeVariant.ACTIVO -> Color(0xFF19A974)
+                                        BadgeVariant.EN_SEGUIMIENTO -> Color(0xFF1577C8)
+                                        BadgeVariant.FINALIZADO -> Color(0xFF6B818B)
+                                    }
+                                )
+                            }
                         }
-                        Surface(
-                            color = when (ciclo.status) {
-                                BadgeVariant.ACTIVO -> Color(0xFFE8F8F1)
-                                BadgeVariant.EN_SEGUIMIENTO -> Color(0xFFE8F4FC)
-                                BadgeVariant.FINALIZADO -> Color(0xFFDCE8ED)
-                            },
-                            shape = RoundedCornerShape(12.dp)
+
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            InfoRow("Especie", ciclo.especie)
+                            InfoRow("Cantidad de Peces", ciclo.peces)
+                            InfoRow("Peso Promedio Actual", ciclo.pesoActual)
+                            InfoRow("Edad en Días", "${ciclo.edadDias} días")
+                        }
+
+                        // Expanded additional info
+                        if (ciclo.isExpanded) {
+                            HorizontalDivider(color = Color(0xFFF0F4F6), modifier = Modifier.padding(vertical = 4.dp))
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                InfoRow("Fecha Inicio", ciclo.startDate)
+                                InfoRow("Fecha Fin", ciclo.endDate ?: "En curso")
+                                InfoRow("Edad Inicial", "${ciclo.initialAgeDays} días")
+                                InfoRow("Peso Inicial", ciclo.initialWeightGrams)
+                                InfoRow("Cantidad Inicial", ciclo.initialFishCount)
+                                if (ciclo.observations.isNotBlank()) {
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Surface(
+                                        color = Color(0xFFF5F8FA),
+                                        shape = RoundedCornerShape(8.dp),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Text("Observaciones:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6B818B))
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(ciclo.observations, fontSize = 12.sp, color = Color(0xFF0B2B3B), lineHeight = 16.sp)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = ciclo.status.displayName(),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = when (ciclo.status) {
-                                    BadgeVariant.ACTIVO -> Color(0xFF19A974)
-                                    BadgeVariant.EN_SEGUIMIENTO -> Color(0xFF1577C8)
-                                    BadgeVariant.FINALIZADO -> Color(0xFF6B818B)
-                                }
+                                text = if (ciclo.isExpanded) "▲ Ocultar detalles" else "▼ Ver más detalles",
+                                fontSize = 11.sp,
+                                color = Color(0xFF1577C8),
+                                fontWeight = FontWeight.SemiBold
                             )
-                        }
-                    }
-
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        InfoRow("Especie", ciclo.especie)
-                        InfoRow("Cantidad de Peces", ciclo.peces)
-                        InfoRow("Peso Promedio Actual", ciclo.pesoActual)
-                        InfoRow("Edad en Días", "${ciclo.edadDias} días")
-                    }
-
-                    // Expanded additional info
-                    if (ciclo.isExpanded) {
-                        HorizontalDivider(color = Color(0xFFF0F4F6), modifier = Modifier.padding(vertical = 4.dp))
-                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                            InfoRow("Fecha Inicio", ciclo.startDate)
-                            InfoRow("Fecha Fin", ciclo.endDate ?: "En curso")
-                            InfoRow("Edad Inicial", "${ciclo.initialAgeDays} días")
-                            InfoRow("Peso Inicial", ciclo.initialWeightGrams)
-                            InfoRow("Cantidad Inicial", ciclo.initialFishCount)
-                            if (ciclo.observations.isNotBlank()) {
-                                InfoRow("Observaciones", ciclo.observations)
-                            }
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = if (ciclo.isExpanded) "▲ Ocultar detalles" else "▼ Ver más detalles",
-                            fontSize = 11.sp,
-                            color = Color(0xFF1577C8),
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            IconButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.Editar(ciclo))) }) {
-                                EditIcon(Color(0xFF1577C8))
-                            }
-                            IconButton(onClick = { viewModel.emitEvent(DatabaseEvent.DeleteCiclo(ciclo.id)) }) {
-                                DeleteIcon(Color(0xFFE05A5A))
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
+                                if (ciclo.status == BadgeVariant.ACTIVO || ciclo.status == BadgeVariant.EN_SEGUIMIENTO) {
+                                    OutlinedButton(
+                                        onClick = { viewModel.emitEvent(DatabaseEvent.PromptFinalizeCycle(ciclo)) },
+                                        shape = RoundedCornerShape(6.dp),
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                        modifier = Modifier.height(28.dp)
+                                    ) {
+                                        Text("Finalizar", fontSize = 10.sp, color = Color(0xFFE05A5A))
+                                    }
+                                }
+                                IconButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.Editar(ciclo))) }) {
+                                    EditIcon(Color(0xFF1577C8))
+                                }
+                                IconButton(onClick = { viewModel.emitEvent(DatabaseEvent.DeleteCiclo(ciclo.id)) }) {
+                                    DeleteIcon(Color(0xFFE05A5A))
+                                }
                             }
                         }
                     }
                 }
             }
+        }
+
+        // Finalize Confirmation Dialog
+        if (state.cycleToFinalize != null) {
+            val cycle = state.cycleToFinalize
+            AlertDialog(
+                onDismissRequest = { viewModel.emitEvent(DatabaseEvent.PromptFinalizeCycle(null)) },
+                title = { Text("Finalizar ciclo productivo") },
+                text = { Text("¿Deseas dar por finalizado el ciclo ${cycle.id} en ${cycle.estanque}? La fecha de fin se actualizará al día de hoy.") },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.emitEvent(DatabaseEvent.ConfirmFinalizeCycle(cycle)) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE05A5A))
+                    ) {
+                        Text("Finalizar ciclo")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.emitEvent(DatabaseEvent.PromptFinalizeCycle(null)) }) {
+                        Text("Cancelar")
+                    }
+                }
+            )
         }
     }
 }
