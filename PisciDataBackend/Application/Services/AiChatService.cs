@@ -85,10 +85,11 @@ namespace PisciDataBackend.Application.Services
 
         // envia mensaje, consulta ollama via cliente tipado y guarda respuesta
         public async Task<(AimessageDto? Dto, string? Error)> SendMessageAsync(
-            int conversationId,
-            int userId,
-            SendAiMessageDto dto,
-            CancellationToken cancellationToken = default)
+    int conversationId,
+    int userId,
+    SendAiMessageDto dto,
+    string authorizationHeader,
+    CancellationToken cancellationToken = default)
         {
             var chat = await _conversationRepo.GetByIdAndUserAsync(conversationId, userId);
             if (chat == null)
@@ -129,7 +130,8 @@ namespace PisciDataBackend.Application.Services
             });
 
             // 2. consultar a ollama a traves de su cliente tipado ANTES de tocar la base de datos
-            var (assistantContent, ollamaError) = await _ollamaClient.ChatAsync(ollamaMessages, cancellationToken);
+
+            var (assistantContent, ollamaError) =await _ollamaClient.ChatAsync(ollamaMessages,authorizationHeader,cancellationToken);
             if (ollamaError != null)
                 return (null, ollamaError); // costo cero en db: si ollama falla, no se escribe ningun registro
 

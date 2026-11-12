@@ -15,6 +15,7 @@ val domainModule = module {
     factory { RegisterUseCase(get()) }
     factory { SendMessageUseCase(get()) }
 
+    // Database use cases
     factory { GetFarmsUseCase(get()) }
     factory { GetCiclosUseCase(get()) }
     factory { SaveCicloUseCase(get()) }
