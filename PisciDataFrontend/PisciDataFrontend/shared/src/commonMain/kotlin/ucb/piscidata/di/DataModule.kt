@@ -20,6 +20,10 @@ import ucb.piscidata.farm.data.datasource.FarmRemoteDataSource
 import ucb.piscidata.farm.data.repository.FarmRepositoryImpl
 import ucb.piscidata.farm.data.service.FarmService
 import ucb.piscidata.farm.domain.repository.FarmRepository
+import ucb.piscidata.profile.data.datasource.ProfileRemoteDataSource
+import ucb.piscidata.profile.data.repository.ProfileRepositoryImpl
+import ucb.piscidata.profile.data.service.ProfileService
+import ucb.piscidata.profile.domain.repository.ProfileRepository
 
 val dataModule = module {
     single { SessionManager() }
@@ -37,4 +41,7 @@ val dataModule = module {
 
     single<FarmRemoteDataSource> { FarmService() }
     single<FarmRepository> { FarmRepositoryImpl(get()) }
+
+    single<ProfileRemoteDataSource> { ProfileService() }
+    single<ProfileRepository> { ProfileRepositoryImpl(get()) }
 }

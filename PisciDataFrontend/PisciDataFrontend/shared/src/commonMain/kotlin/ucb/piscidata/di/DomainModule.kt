@@ -6,8 +6,9 @@ import ucb.piscidata.auth.domain.usecase.RegisterUseCase
 import ucb.piscidata.chat.domain.usecase.SendMessageUseCase
 import ucb.piscidata.database.domain.usecase.*
 import ucb.piscidata.tasks.domain.usecase.*
-
 import ucb.piscidata.farm.domain.usecase.GetMyFarmsUseCase
+import ucb.piscidata.profile.domain.usecase.GetUserProfileUseCase
+import ucb.piscidata.profile.domain.usecase.UpdateUserProfileUseCase
 
 val domainModule = module {
     factory { LoginUseCase(get()) }
@@ -28,4 +29,6 @@ val domainModule = module {
     factory { AddTaskUseCase(get()) }
 
     factory { GetMyFarmsUseCase(get()) }
+    factory { GetUserProfileUseCase(get()) }
+    factory { UpdateUserProfileUseCase(get()) }
 }

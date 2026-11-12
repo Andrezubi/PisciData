@@ -30,6 +30,39 @@ namespace PisciDataBackend.Application.Services
             return user == null ? null : MapToDto(user);
         }
 
+        public async Task<UserProfileDto?> GetProfileAsync(int userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            return user == null ? null : MapToProfileDto(user);
+        }
+
+        public async Task<(UserProfileDto? Dto, List<string> Errors)> UpdateProfileAsync(
+            int userId, UpdateUserProfileDto dto)
+        {
+            var errors = UserValidator.Validate(dto);
+            if (errors.Count > 0)
+                return (null, errors);
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                return (null, errors);
+
+            var firstName = dto.FirstName.Trim();
+            var lastName = dto.LastName.Trim();
+            var phone = dto.Phone.Trim();
+
+            if (await _userRepository.PhoneExistsForOtherUserAsync(phone, userId))
+                return (null, new List<string> { "El teléfono ya está registrado por otro usuario." });
+
+            user.FirstName = firstName;
+            user.LastName = lastName;
+            user.Phone = phone;
+            user.UserId = userId;
+
+            await _userRepository.UpdateAsync(user);
+            return (MapToProfileDto(user), errors);
+        }
+
         public async Task<(UserDto? Dto, List<string> Errors)> CreateAsync(CreateUserDto dto)
         {
             var errors = UserValidator.Validate(dto);
@@ -95,6 +128,22 @@ namespace PisciDataBackend.Application.Services
         private static UserDto MapToDto(User user)
         {
             return new UserDto
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                Phone = user.Phone,
+                Role = user.Role,
+                LastLoginAt = user.LastLoginAt,
+                CreatedAt = user.CreatedAt,
+                UpdatedAt = user.UpdatedAt,
+                IsActive = user.IsActive
+            };
+        }
+
+        private static UserProfileDto MapToProfileDto(User user)
+        {
+            return new UserProfileDto
             {
                 Id = user.Id,
                 FirstName = user.FirstName,

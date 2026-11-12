@@ -25,6 +25,37 @@ namespace PisciDataBackend.Controllers
             _configuration = configuration;
         }
 
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<ActionResult<UserProfileDto>> GetMyProfile()
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var profile = await _userService.GetProfileAsync(userId);
+            return profile == null ? NotFound() : Ok(profile);
+        }
+
+        [Authorize]
+        [HttpPut("me")]
+        public async Task<ActionResult<UserProfileDto>> UpdateMyProfile(
+            [FromBody] UpdateUserProfileDto dto)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var (updated, errors) = await _userService.UpdateProfileAsync(userId, dto);
+            if (errors.Count > 0)
+            {
+                if (errors.Any(error => error.Contains("ya está registrado", StringComparison.OrdinalIgnoreCase)))
+                    return Conflict(new { message = errors[0] });
+
+                return BadRequest(errors);
+            }
+
+            return updated == null ? NotFound() : Ok(updated);
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetAll()
         {
@@ -115,6 +146,16 @@ namespace PisciDataBackend.Controllers
                 return NotFound();
 
             return NoContent();
+        }
+
+        private bool TryGetUserId(out int userId)
+        {
+            userId = 0;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)
+                ?? User.FindFirst("UserId")
+                ?? User.FindFirst("sub");
+
+            return userIdClaim != null && int.TryParse(userIdClaim.Value, out userId);
         }
     }
 }
