@@ -50,5 +50,27 @@ namespace PisciDataBackend.Domain.Validators
 
             return errors;
         }
+
+        public static List<string> Validate(UpdateUserProfileDto dto)
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrWhiteSpace(dto.FirstName))
+                errors.Add("El nombre es obligatorio.");
+            else if (dto.FirstName.Length > 100)
+                errors.Add("El nombre no puede superar los 100 caracteres.");
+
+            if (string.IsNullOrWhiteSpace(dto.LastName))
+                errors.Add("El apellido es obligatorio.");
+            else if (dto.LastName.Length > 100)
+                errors.Add("El apellido no puede superar los 100 caracteres.");
+
+            if (string.IsNullOrWhiteSpace(dto.Phone))
+                errors.Add("El teléfono es obligatorio.");
+            else if (dto.Phone.Length > 30)
+                errors.Add("El teléfono no puede superar los 30 caracteres.");
+
+            return errors;
+        }
     }
 }

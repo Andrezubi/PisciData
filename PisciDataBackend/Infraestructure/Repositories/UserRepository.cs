@@ -16,6 +16,13 @@ namespace PisciDataBackend.Infraestructure.Repositories
             return await _dbSet.FirstOrDefaultAsync(u => u.Phone == phone && u.IsActive != false);
         }
 
+        public async Task<bool> PhoneExistsForOtherUserAsync(string phone, int userId)
+        {
+            return await _dbSet.AnyAsync(user => user.IsActive != false
+                && user.Phone == phone
+                && user.Id != userId);
+        }
+
         public override async Task<IEnumerable<User>> GetAllAsync()
         {
             return await _dbSet.Where(u => u.IsActive != false).ToListAsync();
