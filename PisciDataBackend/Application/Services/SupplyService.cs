@@ -41,13 +41,14 @@ namespace PisciDataBackend.Application.Services
             var supply = new Supply
             {
                 FarmId = dto.FarmId,
-                Name = dto.Name,
+                Name = dto.Name.Trim(),
                 Category = dto.Category,
                 Quantity = dto.Quantity,
-                Unit = dto.Unit,
+                Unit = dto.Unit.Trim(),
                 MinimumStock = dto.MinimumStock,
                 CreatedAt = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                UserId = userId
             };
 
             await _supplyRepository.AddAsync(supply);
@@ -69,12 +70,13 @@ namespace PisciDataBackend.Application.Services
                 return (null, new List<string> { "La granja no existe o no pertenece al usuario." });
 
             supply.FarmId = dto.FarmId;
-            supply.Name = dto.Name;
+            supply.Name = dto.Name.Trim();
             supply.Category = dto.Category;
             supply.Quantity = dto.Quantity;
-            supply.Unit = dto.Unit;
+            supply.Unit = dto.Unit.Trim();
             supply.MinimumStock = dto.MinimumStock;
             supply.UpdatedAt = DateTime.UtcNow;
+            supply.UserId = userId;
 
             await _supplyRepository.UpdateAsync(supply);
             return (MapToDto(supply), errors);

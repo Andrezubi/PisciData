@@ -31,7 +31,6 @@ namespace PisciDataBackend.Application.DTOs
         public int PondId { get; set; }
         public int SpeciesId { get; set; }
         public DateOnly StartDate { get; set; }
-        public DateOnly? EndDate { get; set; }
         public int? InitialFishCount { get; set; }
         public decimal? InitialAverageWeightGrams { get; set; }
         public int? InitialAgeDays { get; set; }
@@ -40,13 +39,25 @@ namespace PisciDataBackend.Application.DTOs
 
     public class UpdateProductioncycleDto
     {
-        public int PondId { get; set; }
-        public int SpeciesId { get; set; }
         public DateOnly StartDate { get; set; }
-        public DateOnly? EndDate { get; set; }
         public int? InitialFishCount { get; set; }
         public decimal? InitialAverageWeightGrams { get; set; }
         public int? InitialAgeDays { get; set; }
         public string? Observations { get; set; }
+    }
+
+    public class PondOptionDto
+    {
+        public int Id { get; set; }
+        public int FarmId { get; set; }
+        public string Code { get; set; } = null!;
+        public string? Name { get; set; }
+    }
+
+    public class SpeciesOptionDto
+    {
+        public int Id { get; set; }
+        public string CommonName { get; set; } = null!;
+        public string? ScientificName { get; set; }
     }
 }

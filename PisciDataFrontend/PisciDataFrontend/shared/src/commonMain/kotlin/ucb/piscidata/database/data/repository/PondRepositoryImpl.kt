@@ -8,4 +8,7 @@ class PondRepositoryImpl(
     private val service: PondService
 ) : PondRepository {
     override suspend fun getPonds(): Result<List<Pond>> = service.getPonds()
+    override suspend fun createPond(
+        code: String, name: String?, shape: String?, width: Double?, length: Double?, diameter: Double?, depth: Double?, area: Double?, description: String?
+    ): Result<Unit> = service.createPond(code, name, shape, width, length, diameter, depth, area, description)
 }

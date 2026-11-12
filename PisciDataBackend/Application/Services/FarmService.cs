@@ -16,6 +16,12 @@ namespace PisciDataBackend.Application.Services
             _farmRepository = farmRepository;
         }
 
+        public async Task<FarmDto?> GetByIdForOwnerAsync(int id, int userId)
+        {
+            var farm = await _farmRepository.GetByIdForOwnerAsync(id, userId);
+            return farm == null ? null : MapToDto(farm);
+        }
+
         public async Task<IEnumerable<FarmDto>> GetAllAsync()
         {
             var farms = await _farmRepository.GetAllAsync();
@@ -42,7 +48,7 @@ namespace PisciDataBackend.Application.Services
             return farm == null ? null : MapToDto(farm);
         }
 
-        public async Task<(FarmDto? Dto, List<string> Errors)> CreateAsync(CreateFarmDto dto)
+        public async Task<(FarmDto? Dto, List<string> Errors)> CreateAsync(CreateFarmDto dto, int userId)
         {
             var errors = FarmValidator.Validate(dto);
             if (errors.Count > 0)
@@ -50,7 +56,7 @@ namespace PisciDataBackend.Application.Services
 
             var farm = new Farm
             {
-                OwnerUserId = dto.OwnerUserId,
+                OwnerUserId = userId,
                 Name = dto.Name,
                 Description = dto.Description,
                 Address = dto.Address,
@@ -64,17 +70,16 @@ namespace PisciDataBackend.Application.Services
             return (MapToDto(farm), errors);
         }
 
-        public async Task<(FarmDto? Dto, List<string> Errors)> UpdateAsync(int id, UpdateFarmDto dto)
+        public async Task<(FarmDto? Dto, List<string> Errors)> UpdateAsync(int id, UpdateFarmDto dto, int userId)
         {
             var errors = FarmValidator.Validate(dto);
             if (errors.Count > 0)
                 return (null, errors);
 
-            var farm = await _farmRepository.GetByIdAsync(id);
+            var farm = await _farmRepository.GetByIdForOwnerAsync(id, userId);
             if (farm == null)
                 return (null, errors);
 
-            farm.OwnerUserId = dto.OwnerUserId;
             farm.Name = dto.Name;
             farm.Description = dto.Description;
             farm.Address = dto.Address;
@@ -86,9 +91,9 @@ namespace PisciDataBackend.Application.Services
             return (MapToDto(farm), errors);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id, int userId)
         {
-            var farm = await _farmRepository.GetByIdAsync(id);
+            var farm = await _farmRepository.GetByIdForOwnerAsync(id, userId);
             if (farm == null)
                 return false;
 

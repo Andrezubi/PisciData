@@ -18,6 +18,24 @@ namespace PisciDataBackend.Controllers
             _productioncycleService = productioncycleService;
         }
 
+        [HttpGet("ponds")]
+        public async Task<ActionResult<IEnumerable<PondOptionDto>>> GetAvailablePonds()
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            return Ok(await _productioncycleService.GetAvailablePondsAsync(userId));
+        }
+
+        [HttpGet("species")]
+        public async Task<ActionResult<IEnumerable<SpeciesOptionDto>>> GetAvailableSpecies()
+        {
+            if (!TryGetUserId(out _))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            return Ok(await _productioncycleService.GetAvailableSpeciesAsync());
+        }
+
         [HttpGet("farm/{farmId:int}")]
         public async Task<ActionResult<IEnumerable<ProductioncycleDto>>> GetByFarm(int farmId)
         {
@@ -26,6 +44,19 @@ namespace PisciDataBackend.Controllers
 
             var cycles = await _productioncycleService.GetByFarmAsync(farmId, userId);
             return Ok(cycles);
+        }
+
+        [HttpPost("{id:int}/finalize")]
+        public async Task<ActionResult<ProductioncycleDto>> Finalize(int id)
+        {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var (finalized, errors) = await _productioncycleService.FinalizeAsync(id, userId);
+            if (errors.Count > 0)
+                return BadRequest(errors);
+
+            return finalized == null ? NotFound() : Ok(finalized);
         }
 
         [HttpGet("{id:int}")]

@@ -13,12 +13,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import ucb.piscidata.database.domain.model.BadgeVariant
-import ucb.piscidata.database.domain.model.CicloRecord
 import ucb.piscidata.database.presentation.screen.ciclos.CicloFormScreen
 import ucb.piscidata.database.presentation.screen.ciclos.CiclosTab
 import ucb.piscidata.database.presentation.screen.estanques.EstanquesTab
+import ucb.piscidata.database.presentation.screen.estanques.PondFormScreen
+import ucb.piscidata.database.presentation.screen.inventario.FeedFormScreen
 import ucb.piscidata.database.presentation.screen.inventario.InventarioTab
+import ucb.piscidata.database.presentation.screen.inventario.SupplyFormScreen
 import ucb.piscidata.database.presentation.viewmodel.DatabaseEvent
 import ucb.piscidata.database.presentation.viewmodel.DatabaseViewModel
 import ucb.piscidata.database.presentation.viewmodel.DbTab
@@ -35,124 +36,187 @@ fun DatabaseScreen(
     val farms by sessionManager.farms.collectAsState()
     val selectedFarmId by sessionManager.selectedFarmId.collectAsState()
 
-    when (val view = state.view) {
-        is DbView.Nuevo -> {
+    when (state.view) {
+        is DbView.NuevoCiclo -> {
             CicloFormScreen(
-                initial = CicloRecord(
-                    id = viewModel.generateNewCicloId(),
-                    status = BadgeVariant.ACTIVO,
-                    estanque = "Estanque 1",
-                    especie = "",
-                    peces = "",
-                    pesoActual = "0 g",
-                    edadDias = 0,
-                    startDate = "2026-10-07",
-                    endDate = null,
-                    initialAgeDays = 0,
-                    initialWeightGrams = "",
-                    initialFishCount = "",
-                    observations = "",
-                    isExpanded = true
-                ),
-                mode = "nuevo",
-                onSave = { ciclo -> viewModel.emitEvent(DatabaseEvent.SaveCiclo(ciclo)) },
+                state = state,
+                viewModel = viewModel,
+                onCancel = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.List)) }
+            )
+        }
+        is DbView.NuevoEstanque -> {
+            PondFormScreen(
+                viewModel = viewModel,
+                onCancel = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.List)) }
+            )
+        }
+        is DbView.NuevoFeed -> {
+            FeedFormScreen(
+                viewModel = viewModel,
+                onCancel = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.List)) }
+            )
+        }
+        is DbView.NuevoSupply -> {
+            SupplyFormScreen(
+                viewModel = viewModel,
                 onCancel = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.List)) }
             )
         }
         is DbView.Editar -> {
             CicloFormScreen(
-                initial = view.record,
-                mode = "editar",
-                onSave = { ciclo -> viewModel.emitEvent(DatabaseEvent.SaveCiclo(ciclo)) },
+                state = state,
+                viewModel = viewModel,
                 onCancel = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.List)) }
             )
         }
         is DbView.List -> {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0xFFF5F8FA))
-            ) {
-                // Unified Farm Selector Header
-                FarmSelectorHeader(
-                    farms = farms,
-                    selectedFarmId = selectedFarmId,
-                    onSelectFarm = { sessionManager.selectFarm(it) }
-                )
-
-                // Header with Tabs and New button
+            Box(modifier = Modifier.fillMaxSize()) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White)
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .fillMaxSize()
+                        .background(Color(0xFFF5F8FA))
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    // Unified Farm Selector Header
+                    FarmSelectorHeader(
+                        farms = farms,
+                        selectedFarmId = selectedFarmId,
+                        onSelectFarm = { sessionManager.selectFarm(it) }
+                    )
+
+                    // Header with Tabs and Contextual New button
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.White)
+                            .padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Column {
-                            Text("Base de datos", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B2B3B))
-                            Text("Administra ciclos, estanques e inventario", fontSize = 12.sp, color = Color(0xFF6B818B))
-                        }
-                        Button(
-                            onClick = { viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.Nuevo)) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
-                            shape = RoundedCornerShape(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Nuevo", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White)
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text("Base de datos", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B2B3B))
+                                Text(
+                                    text = when (state.tab) {
+                                        DbTab.CICLOS -> "Administra los ciclos productivos de tu granja"
+                                        DbTab.ESTANQUES -> "Administra los estanques e infraestructura"
+                                        DbTab.INVENTARIO -> "Administra alimentos y suministros de tu granja"
+                                    },
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF6B818B)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Button(
+                                onClick = { viewModel.emitEvent(DatabaseEvent.ClickNuevo) },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                            ) {
+                                Text(
+                                    text = when (state.tab) {
+                                        DbTab.CICLOS -> "+ Nuevo Ciclo"
+                                        DbTab.ESTANQUES -> "+ Nuevo Estanque"
+                                        DbTab.INVENTARIO -> "+ Nuevo Registro"
+                                    },
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+
+                        // Search
+                        OutlinedTextField(
+                            value = state.searchQuery,
+                            onValueChange = { viewModel.emitEvent(DatabaseEvent.Search(it)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("Buscar ciclo, estanque o insumo...") },
+                            shape = RoundedCornerShape(10.dp),
+                            singleLine = true
+                        )
+
+                        // Tabs
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            listOf(
+                                DbTab.CICLOS to "Ciclos productivos",
+                                DbTab.ESTANQUES to "Estanques",
+                                DbTab.INVENTARIO to "Inventario"
+                            ).forEach { (tab, label) ->
+                                val selected = state.tab == tab
+                                TextButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeTab(tab)) }) {
+                                    Text(
+                                        text = label,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (selected) Color(0xFF1577C8) else Color(0xFF6B818B)
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    // Search
-                    OutlinedTextField(
-                        value = state.searchQuery,
-                        onValueChange = { viewModel.emitEvent(DatabaseEvent.Search(it)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        placeholder = { Text("Buscar ciclo, estanque o insumo...") },
-                        shape = RoundedCornerShape(10.dp),
-                        singleLine = true
-                    )
+                    HorizontalDivider(color = Color(0xFFDCE8ED))
 
-                    // Tabs
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    // Content based on tab
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f)
                     ) {
-                        listOf(
-                            DbTab.CICLOS to "Ciclos activos",
-                            DbTab.ESTANQUES to "Estanques",
-                            DbTab.INVENTARIO to "Inventario"
-                        ).forEach { (tab, label) ->
-                            val selected = state.tab == tab
-                            TextButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeTab(tab)) }) {
-                                Text(
-                                    text = label,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selected) Color(0xFF1577C8) else Color(0xFF6B818B)
-                                )
-                            }
+                        when (state.tab) {
+                            DbTab.CICLOS -> CiclosTab(state, viewModel)
+                            DbTab.ESTANQUES -> EstanquesTab(state)
+                            DbTab.INVENTARIO -> InventarioTab(state, viewModel)
                         }
                     }
                 }
 
-                HorizontalDivider(color = Color(0xFFDCE8ED))
-
-                // Content based on tab
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f)
-                ) {
-                    when (state.tab) {
-                        DbTab.CICLOS -> CiclosTab(state, viewModel)
-                        DbTab.ESTANQUES -> EstanquesTab(state)
-                        DbTab.INVENTARIO -> InventarioTab(state, viewModel)
-                    }
+                // Inventory Type Choice Dialog
+                if (state.showInventoryTypeDialog) {
+                    AlertDialog(
+                        onDismissRequest = { viewModel.emitEvent(DatabaseEvent.ToggleShowInventoryTypeDialog(false)) },
+                        title = { Text("Registrar en Inventario") },
+                        text = { Text("Seleccione el tipo de elemento que desea registrar en el inventario:") },
+                        confirmButton = {
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Button(
+                                    onClick = {
+                                        viewModel.emitEvent(DatabaseEvent.ToggleShowInventoryTypeDialog(false))
+                                        viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.NuevoFeed))
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8))
+                                ) {
+                                    Text("Alimento para peces (Feed)")
+                                }
+                                Button(
+                                    onClick = {
+                                        viewModel.emitEvent(DatabaseEvent.ToggleShowInventoryTypeDialog(false))
+                                        viewModel.emitEvent(DatabaseEvent.ChangeView(DbView.NuevoSupply))
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF19A974))
+                                ) {
+                                    Text("Suministro / Insumo (Supply)")
+                                }
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { viewModel.emitEvent(DatabaseEvent.ToggleShowInventoryTypeDialog(false)) }) {
+                                Text("Cancelar")
+                            }
+                        }
+                    )
                 }
             }
         }

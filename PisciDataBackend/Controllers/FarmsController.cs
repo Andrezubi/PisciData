@@ -7,6 +7,7 @@ using System.Security.Claims;
 namespace PisciDataBackend.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api/[controller]")]
     public class FarmsController : ControllerBase
     {
@@ -18,13 +19,15 @@ namespace PisciDataBackend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<FarmDto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<FarmResponseDto>>> GetAll()
         {
-            var farms = await _farmService.GetAllAsync();
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var farms = await _farmService.GetFarmsByUserIdAsync(userId);
             return Ok(farms);
         }
 
-        [Authorize]
         [HttpGet("my")]
         public async Task<ActionResult<IEnumerable<FarmResponseDto>>> GetMyFarms()
         {
@@ -41,7 +44,10 @@ namespace PisciDataBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<FarmDto>> GetById(int id)
         {
-            var farm = await _farmService.GetByIdAsync(id);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var farm = await _farmService.GetByIdForOwnerAsync(id, userId);
             if (farm == null)
                 return NotFound();
 
@@ -51,6 +57,10 @@ namespace PisciDataBackend.Controllers
         [HttpPost]
         public async Task<ActionResult<FarmDto>> Create([FromBody] CreateFarmDto dto)
         {
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var (created, errors) = await _farmService.CreateAsync(dto, userId);
             if (dto.OwnerUserId <= 0)
             {
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier) ?? User.FindFirst("UserId") ?? User.FindFirst("sub");
@@ -70,7 +80,10 @@ namespace PisciDataBackend.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<FarmDto>> Update(int id, [FromBody] UpdateFarmDto dto)
         {
-            var (updated, errors) = await _farmService.UpdateAsync(id, dto);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var (updated, errors) = await _farmService.UpdateAsync(id, dto, userId);
             if (errors.Count > 0)
                 return BadRequest(errors);
 
@@ -83,11 +96,24 @@ namespace PisciDataBackend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var deleted = await _farmService.DeleteAsync(id);
+            if (!TryGetUserId(out var userId))
+                return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            var deleted = await _farmService.DeleteAsync(id, userId);
             if (!deleted)
                 return NotFound();
 
             return NoContent();
+        }
+
+        private bool TryGetUserId(out int userId)
+        {
+            userId = 0;
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)
+                ?? User.FindFirst("UserId")
+                ?? User.FindFirst("sub");
+
+            return claim != null && int.TryParse(claim.Value, out userId);
         }
     }
 }

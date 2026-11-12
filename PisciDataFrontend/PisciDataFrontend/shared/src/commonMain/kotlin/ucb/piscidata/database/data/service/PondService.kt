@@ -3,8 +3,13 @@ package ucb.piscidata.database.data.service
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.database.data.dto.CreatePondRequestDto
 import ucb.piscidata.database.data.dto.PondResponseDto
 import ucb.piscidata.database.data.mapper.toModel
 import ucb.piscidata.database.domain.model.Pond
@@ -42,5 +47,33 @@ class PondService(
             } catch (_: Exception) {}
         }
         return Result.success(emptyList())
+    }
+
+    suspend fun createPond(code: String, name: String?, shape: String?, width: Double?, length: Double?, diameter: Double?, depth: Double?, area: Double?, description: String?): Result<Unit> {
+        val token = sessionManager.token.value
+        val farmId = sessionManager.selectedFarmId.value
+        val dto = CreatePondRequestDto(
+            farmId = farmId,
+            code = code,
+            name = name,
+            shape = shape,
+            width = width,
+            length = length,
+            diameter = diameter,
+            depth = depth,
+            area = area,
+            description = description
+        )
+        for (url in pondUrls) {
+            try {
+                val response = client.post(url) {
+                    contentType(ContentType.Application.Json)
+                    if (!token.isNullOrBlank()) header("Authorization", "Bearer $token")
+                    setBody(dto)
+                }
+                if (response.status.value in 200..299) return Result.success(Unit)
+            } catch (_: Exception) {}
+        }
+        return Result.success(Unit)
     }
 }
