@@ -34,25 +34,31 @@ fun FarmSelectorHeader(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
+            Row(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text(
-                    text = "GRANJA ACTUAL",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF6B818B),
-                    letterSpacing = 0.5.sp
-                )
-                Text(
-                    text = currentFarmName,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0B2B3B),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                PisciDataLogo(darkTheme = true, modifier = Modifier.size(38.dp))
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(
+                        text = "PISCIDATA · GRANJA ACTUAL",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF6B818B),
+                        letterSpacing = 0.5.sp
+                    )
+                    Text(
+                        text = currentFarmName,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0B2B3B),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
             Spacer(modifier = Modifier.width(8.dp))
             Box {

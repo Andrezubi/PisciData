@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
 import ucb.piscidata.auth.presentation.viewmodel.RegisterEvent
 import ucb.piscidata.auth.presentation.viewmodel.RegisterViewModel
+import ucb.piscidata.ui.components.PisciDataLogo
 
 @Composable
 fun RegisterScreen(
@@ -62,12 +63,18 @@ fun RegisterScreen(
                     TextButton(onClick = onBackToLogin) {
                         Text("← Volver al login", color = Color(0xFF1577C8))
                     }
-                    Text(
-                        text = "Piscidata",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF0B2B3B)
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        PisciDataLogo(darkTheme = false, modifier = Modifier.size(32.dp))
+                        Text(
+                            text = "PisciData",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF0B2B3B)
+                        )
+                    }
                 }
 
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {

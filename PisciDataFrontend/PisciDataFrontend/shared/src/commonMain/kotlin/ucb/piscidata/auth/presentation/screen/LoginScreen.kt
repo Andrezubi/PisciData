@@ -21,6 +21,7 @@ import piscidatafrontend.shared.generated.resources.Res
 import piscidatafrontend.shared.generated.resources.img_login_bg
 import ucb.piscidata.auth.presentation.viewmodel.AuthEvent
 import ucb.piscidata.auth.presentation.viewmodel.AuthViewModel
+import ucb.piscidata.ui.components.PisciDataLogo
 
 @Composable
 fun LoginScreen(
@@ -81,18 +82,10 @@ fun LoginScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Surface(
-                                modifier = Modifier.size(36.dp),
-                                shape = CircleShape,
-                                color = Color(0xFF4EC5C1)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("🐟", fontSize = 18.sp)
-                                }
-                            }
+                            PisciDataLogo(darkTheme = true, modifier = Modifier.size(42.dp))
                             Text(
-                                text = "Piscidata",
-                                fontSize = 20.sp,
+                                text = "PisciData",
+                                fontSize = 22.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = Color.White
                             )
@@ -229,7 +222,7 @@ fun LoginScreen(
                     }
 
                     Text(
-                        text = "© 2026 Piscidata · Gestión acuícola inteligente",
+                        text = "© 2026 PisciData · Gestión acuícola inteligente",
                         fontSize = 11.sp,
                         color = Color(0xFF91A5AD),
                         modifier = Modifier.align(Alignment.CenterHorizontally)

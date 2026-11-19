@@ -1,15 +1,37 @@
 package ucb.piscidata.ui.components
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.painterResource
+import piscidatafrontend.shared.generated.resources.Res
+import piscidatafrontend.shared.generated.resources.logo_piscidata_dark
+import piscidatafrontend.shared.generated.resources.logo_piscidata_light
+
+@Composable
+fun PisciDataLogo(
+    darkTheme: Boolean = false,
+    modifier: Modifier = Modifier.size(36.dp)
+) {
+    val resource = if (darkTheme) Res.drawable.logo_piscidata_dark else Res.drawable.logo_piscidata_light
+    Image(
+        painter = painterResource(resource),
+        contentDescription = "PisciData Logo",
+        modifier = modifier.clip(RoundedCornerShape(10.dp)),
+        contentScale = ContentScale.Crop
+    )
+}
 
 @Composable
 fun ChatIcon(color: Color, modifier: Modifier = Modifier.size(24.dp)) {

@@ -27,6 +27,7 @@ import ucb.piscidata.chat.presentation.viewmodel.ChatViewModel
 import ucb.piscidata.session.SessionManager
 import ucb.piscidata.ui.components.FarmSelectorHeader
 import ucb.piscidata.ui.components.MicIcon
+import ucb.piscidata.ui.components.PisciDataLogo
 import ucb.piscidata.ui.components.SendIcon
 
 @Composable
@@ -191,15 +192,7 @@ fun ChatScreen(
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
                                 verticalAlignment = Alignment.Top
                             ) {
-                                Surface(
-                                    modifier = Modifier.size(32.dp),
-                                    shape = CircleShape,
-                                    color = Color(0xFF1577C8)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text("IA", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
+                                PisciDataLogo(darkTheme = true, modifier = Modifier.size(34.dp))
                                 if (msg.isConfirmCard) {
                                     Surface(
                                         color = Color(0xFFE8F8F1),
@@ -329,15 +322,7 @@ fun ChatScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Surface(
-                                modifier = Modifier.size(32.dp),
-                                shape = CircleShape,
-                                color = Color(0xFF1577C8)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("IA", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
+                            PisciDataLogo(darkTheme = true, modifier = Modifier.size(34.dp))
                             Surface(
                                 color = Color(0xFFE8F8F1),
                                 shape = RoundedCornerShape(4.dp, 24.dp, 24.dp, 24.dp)
