@@ -1,7 +1,9 @@
 package ucb.piscidata.database.presentation.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +17,7 @@ import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import ucb.piscidata.database.domain.model.BadgeVariant
 import ucb.piscidata.database.domain.model.CicloRecord
+import ucb.piscidata.database.presentation.screen.alimentacion.AlimentacionTab
 import ucb.piscidata.database.presentation.screen.ciclos.CicloFormScreen
 import ucb.piscidata.database.presentation.screen.ciclos.CiclosTab
 import ucb.piscidata.database.presentation.screen.estanques.EstanquesTab
@@ -119,13 +122,16 @@ fun DatabaseScreen(
 
                     // Tabs
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         listOf(
                             DbTab.CICLOS to "Ciclos activos",
                             DbTab.ESTANQUES to "Estanques",
-                            DbTab.INVENTARIO to "Inventario"
+                            DbTab.INVENTARIO to "Inventario",
+                            DbTab.ALIMENTACION to "Alimentación"
                         ).forEach { (tab, label) ->
                             val selected = state.tab == tab
                             TextButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeTab(tab)) }) {
@@ -152,6 +158,7 @@ fun DatabaseScreen(
                         DbTab.CICLOS -> CiclosTab(state, viewModel)
                         DbTab.ESTANQUES -> EstanquesTab(state)
                         DbTab.INVENTARIO -> InventarioTab(state, viewModel)
+                        DbTab.ALIMENTACION -> AlimentacionTab(state, viewModel)
                     }
                 }
             }
