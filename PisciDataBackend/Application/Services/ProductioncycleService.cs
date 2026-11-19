@@ -23,7 +23,7 @@ namespace PisciDataBackend.Application.Services
 
         public async Task<ProductioncycleDto?> GetByIdAsync(int id, int userId)
         {
-            var cycle = await _productioncycleRepository.GetOwnedByIdAsync(id, userId);
+            var cycle = await _productioncycleRepository.GetOwnedByIdAsync(id, userId, true);
             if (cycle == null)
                 return null;
 
@@ -47,7 +47,7 @@ namespace PisciDataBackend.Application.Services
                 PondId = dto.PondId,
                 SpeciesId = dto.SpeciesId,
                 StartDate = dto.StartDate,
-                EndDate = dto.EndDate,
+                EndDate = null,
                 InitialFishCount = dto.InitialFishCount,
                 InitialAverageWeightGrams = dto.InitialAverageWeightGrams,
                 InitialAgeDays = dto.InitialAgeDays,
@@ -73,20 +73,14 @@ namespace PisciDataBackend.Application.Services
                 return (null, errors);
 
             var cycle = await _productioncycleRepository.GetOwnedByIdAsync(id, userId);
-            if (cycle == null
-                || !await _productioncycleRepository.PondBelongsToOwnerAsync(dto.PondId, userId)
-                || !await _productioncycleRepository.SpeciesExistsAsync(dto.SpeciesId))
-                return (null, errors);
+            if (cycle == null)
+                return (null, new List<string> { "El ciclo no existe, no está activo o no pertenece al usuario." });
 
-            cycle.PondId = dto.PondId;
-            cycle.SpeciesId = dto.SpeciesId;
             cycle.StartDate = dto.StartDate;
-            cycle.EndDate = dto.EndDate;
             cycle.InitialFishCount = dto.InitialFishCount;
             cycle.InitialAverageWeightGrams = dto.InitialAverageWeightGrams;
             cycle.InitialAgeDays = dto.InitialAgeDays;
             cycle.Observations = dto.Observations;
-            cycle.UserId = userId;
 
             await _productioncycleRepository.UpdateAsync(cycle);
             var updated = await _productioncycleRepository.GetOwnedByIdAsync(id, userId);
@@ -95,6 +89,49 @@ namespace PisciDataBackend.Application.Services
 
             var feedingByAge = await _productioncycleRepository.GetActiveFeedingByAgeAsync();
             return (MapToDto(updated, feedingByAge), errors);
+        }
+
+        public async Task<(ProductioncycleDto? Dto, List<string> Errors)> FinalizeAsync(
+            int id, int userId)
+        {
+            var cycle = await _productioncycleRepository.GetOwnedByIdAsync(id, userId);
+            if (cycle == null)
+                return (null, new List<string> { "El ciclo no existe, ya está finalizado o no pertenece al usuario." });
+
+            cycle.EndDate = DateOnly.FromDateTime(DateTime.UtcNow);
+            cycle.IsActive = false;
+            cycle.UpdatedAt = DateTime.UtcNow;
+            await _productioncycleRepository.UpdateAsync(cycle);
+
+            var finalized = await _productioncycleRepository.GetOwnedByIdAsync(id, userId, true);
+            if (finalized == null)
+                return (null, new List<string> { "No se pudo recuperar el ciclo finalizado." });
+
+            var feedingByAge = await _productioncycleRepository.GetActiveFeedingByAgeAsync();
+            return (MapToDto(finalized, feedingByAge), new List<string>());
+        }
+
+        public async Task<IEnumerable<PondOptionDto>> GetAvailablePondsAsync(int userId)
+        {
+            var ponds = await _productioncycleRepository.GetAvailablePondsAsync(userId);
+            return ponds.Select(pond => new PondOptionDto
+            {
+                Id = pond.Id,
+                FarmId = pond.FarmId,
+                Code = pond.Code,
+                Name = pond.Name
+            });
+        }
+
+        public async Task<IEnumerable<SpeciesOptionDto>> GetAvailableSpeciesAsync()
+        {
+            var species = await _productioncycleRepository.GetActiveSpeciesAsync();
+            return species.Select(item => new SpeciesOptionDto
+            {
+                Id = item.Id,
+                CommonName = item.CommonName,
+                ScientificName = item.ScientificName
+            });
         }
 
         public async Task<bool> DeleteAsync(int id, int userId)

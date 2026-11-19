@@ -32,6 +32,7 @@ import ucb.piscidata.session.SessionManager
 import ucb.piscidata.ui.components.FarmSelectorHeader
 import ucb.piscidata.ui.components.MicIcon
 import ucb.piscidata.ui.components.SendIcon
+import ucb.piscidata.ui.components.MarkdownContent
 
 @Composable
 fun ChatScreen(
@@ -254,20 +255,22 @@ fun ChatScreen(
                                             }
                                         }
                                     }
+
                                 } else {
                                     Surface(
                                         color = Color(0xFFE8F8F1),
                                         shape = RoundedCornerShape(4.dp, 24.dp, 24.dp, 24.dp),
-                                        modifier = Modifier.widthIn(max = 260.dp)
+                                        modifier = Modifier.weight(1f)
                                     ) {
-                                        Text(
-                                            text = msg.text ?: "",
-                                            modifier = Modifier.padding(12.dp),
-                                            fontSize = 13.sp,
-                                            color = Color(0xFF16313D)
+                                        MarkdownContent(
+                                            content = msg.text ?: "",
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(12.dp)
                                         )
                                     }
                                 }
+
                             }
                         }
                         MessageSender.USER -> {

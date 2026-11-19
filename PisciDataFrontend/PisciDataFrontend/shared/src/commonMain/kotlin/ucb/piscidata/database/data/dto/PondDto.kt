@@ -27,3 +27,17 @@ data class WaterQualityResponseDto(
     val dissolvedOxygen: Double? = null,
     val measurementDate: String? = null
 )
+
+@Serializable
+data class CreatePondRequestDto(
+    val farmId: Int,
+    val code: String,
+    val name: String? = null,
+    val shape: String? = null,
+    val width: Double? = null,
+    val length: Double? = null,
+    val diameter: Double? = null,
+    val depth: Double? = null,
+    val area: Double? = null,
+    val description: String? = null
+)

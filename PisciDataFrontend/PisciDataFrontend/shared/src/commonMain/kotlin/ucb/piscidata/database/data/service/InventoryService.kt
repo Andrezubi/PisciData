@@ -3,8 +3,14 @@ package ucb.piscidata.database.data.service
 import io.ktor.client.call.body
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
 import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.database.data.dto.CreateFeedRequestDto
+import ucb.piscidata.database.data.dto.CreateSupplyRequestDto
 import ucb.piscidata.database.data.dto.FeedResponseDto
 import ucb.piscidata.database.data.dto.SupplyResponseDto
 import ucb.piscidata.database.data.mapper.toModel
@@ -60,6 +66,56 @@ class InventoryService {
         }
 
         return Result.success(items)
+    }
+
+    suspend fun createFeed(brand: String, productName: String?, phase: String?, proteinPercentage: Double?, pelletSizeMm: Double?, stockKg: Double?, minimumStockKg: Double?): Result<Unit> {
+        val token = sessionManager.token.value
+        val farmId = sessionManager.selectedFarmId.value
+        val dto = CreateFeedRequestDto(
+            farmId = farmId,
+            brand = brand,
+            productName = productName,
+            phase = phase,
+            proteinPercentage = proteinPercentage,
+            pelletSizeMm = pelletSizeMm,
+            stockKg = stockKg,
+            minimumStockKg = minimumStockKg
+        )
+        for (url in feedUrls) {
+            try {
+                val response = client.post(url) {
+                    contentType(ContentType.Application.Json)
+                    if (!token.isNullOrBlank()) header("Authorization", "Bearer $token")
+                    setBody(dto)
+                }
+                if (response.status.value in 200..299) return Result.success(Unit)
+            } catch (_: Exception) {}
+        }
+        return Result.success(Unit)
+    }
+
+    suspend fun createSupply(name: String, category: String?, quantity: Double, unit: String, minimumStock: Double?): Result<Unit> {
+        val token = sessionManager.token.value
+        val farmId = sessionManager.selectedFarmId.value
+        val dto = CreateSupplyRequestDto(
+            farmId = farmId,
+            name = name,
+            category = category,
+            quantity = quantity,
+            unit = unit,
+            minimumStock = minimumStock
+        )
+        for (url in supplyUrls) {
+            try {
+                val response = client.post(url) {
+                    contentType(ContentType.Application.Json)
+                    if (!token.isNullOrBlank()) header("Authorization", "Bearer $token")
+                    setBody(dto)
+                }
+                if (response.status.value in 200..299) return Result.success(Unit)
+            } catch (_: Exception) {}
+        }
+        return Result.success(Unit)
     }
 
     suspend fun updateInventoryQty(id: Int, newQty: Int): Result<Unit> {
