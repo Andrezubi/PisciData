@@ -3,7 +3,7 @@ package ucb.piscidata.database.presentation.viewmodel
 import ucb.piscidata.database.domain.model.*
 
 enum class DbTab {
-    CICLOS, ESTANQUES, INVENTARIO
+    CICLOS, ESTANQUES, INVENTARIO, ALIMENTACION
 }
 
 sealed interface DbView {

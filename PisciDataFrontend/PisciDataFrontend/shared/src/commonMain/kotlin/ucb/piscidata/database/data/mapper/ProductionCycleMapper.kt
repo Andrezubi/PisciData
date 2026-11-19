@@ -24,6 +24,7 @@ fun ProductionCycleResponseDto.toRecord(): CicloRecord {
         initialWeightGrams = "${initialAverageWeightGrams ?: 0.0} g",
         initialFishCount = initialFishCount?.toString() ?: "0",
         observations = observations ?: "",
-        isExpanded = false
+        isExpanded = false,
+        numericId = id
     )
 }

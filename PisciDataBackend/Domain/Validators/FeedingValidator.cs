@@ -21,8 +21,8 @@ namespace PisciDataBackend.Domain.Validators
             if (feedingDate == default)
                 errors.Add("FeedingDate is required.");
 
-            if (quantityKg <= 0)
-                errors.Add("QuantityKg must be greater than 0.");
+            if (quantityKg < 0)
+                errors.Add("QuantityKg cannot be negative.");
 
             if (mealNumber.HasValue && mealNumber <= 0)
                 errors.Add("MealNumber must be greater than 0.");
