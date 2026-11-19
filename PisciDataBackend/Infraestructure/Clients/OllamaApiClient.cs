@@ -1,4 +1,5 @@
 
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -15,6 +16,7 @@ namespace PisciDataBackend.Infraestructure.Clients
         private readonly OllamaOptions _options;
 
         private const string ChatEndpoint = "api/chat";
+        private const string OpenAiChatEndpoint = "chat/completions";
 
         public OllamaApiClient(
             HttpClient httpClient,
@@ -28,6 +30,11 @@ namespace PisciDataBackend.Infraestructure.Clients
 
         public async Task<(string? Content, string? Error)> ChatAsync(List<OllamaMessageItem> conversationMessages,string authorizationHeader,CancellationToken cancellationToken = default)
         {
+            if (!string.IsNullOrWhiteSpace(_options.ApiKey))
+            {
+                return await ChatOpenAiCompatibleAsync(conversationMessages, cancellationToken);
+            }
+
             try
             {
                 // Convert the existing conversation history to Ollama messages.
@@ -166,6 +173,59 @@ namespace PisciDataBackend.Infraestructure.Clients
             {
                 return (null,
                     $"Error al consultar Ollama o ejecutar una herramienta MCP: {ex.Message}");
+            }
+        }
+
+        private async Task<(string? Content, string? Error)> ChatOpenAiCompatibleAsync(
+            List<OllamaMessageItem> conversationMessages,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var messages = new JsonArray();
+                foreach (var item in conversationMessages)
+                {
+                    messages.Add(new JsonObject
+                    {
+                        ["role"] = item.Role,
+                        ["content"] = item.Content ?? string.Empty
+                    });
+                }
+
+                var payload = new JsonObject
+                {
+                    ["model"] = _options.Model,
+                    ["messages"] = messages,
+                    ["temperature"] = 0.4
+                };
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, OpenAiChatEndpoint)
+                {
+                    Content = JsonContent.Create(payload)
+                };
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey!.Trim());
+
+                using var response = await _httpClient.SendAsync(request, cancellationToken);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+                    return (null, $"El proveedor IA respondió con HTTP {(int)response.StatusCode}: {errorBody}");
+                }
+
+                var json = await response.Content.ReadFromJsonAsync<JsonObject>(cancellationToken: cancellationToken);
+                var content = json?["choices"]?[0]?["message"]?["content"]?.GetValue<string>();
+                if (string.IsNullOrWhiteSpace(content))
+                    return (null, "El proveedor IA devolvió una respuesta vacía.");
+
+                return (content, null);
+            }
+            catch (OperationCanceledException)
+            {
+                return (null, "La solicitud al proveedor IA excedió el tiempo límite.");
+            }
+            catch (Exception ex)
+            {
+                return (null, $"Error al conectar con el proveedor IA: {ex.Message}");
             }
         }
     }

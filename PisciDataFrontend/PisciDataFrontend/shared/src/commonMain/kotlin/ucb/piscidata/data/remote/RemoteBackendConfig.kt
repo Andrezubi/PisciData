@@ -16,8 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
  * siempre como respaldo automático si no hay URL remota configurada o si falla.
  */
 object RemoteBackendConfig {
-    // URL remota por defecto (ngrok fijo). Si falla o se borra, cae automáticamente a 127.0.0.1:5007
-    const val DEFAULT_REMOTE_URL: String = "https://preface-coliseum-showbiz.ngrok-free.dev"
+    // URL remota en Railway (producción 24/7). Si falla o se borra, cae automáticamente a 127.0.0.1:5007
+    const val DEFAULT_REMOTE_URL: String = "https://piscidatabackend-production.up.railway.app"
 
     val LOCAL_FALLBACK_URLS: List<String> = listOf(
         "https://127.0.0.1:7190",

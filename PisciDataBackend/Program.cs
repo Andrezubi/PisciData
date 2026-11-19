@@ -156,23 +156,14 @@ builder.Services.AddScoped<ReportService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+// Swagger habilitado también para pruebas universitarias en despliegue remoto
+app.MapOpenApi();
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    app.MapOpenApi();
-    // Enable Swagger UI in Development for testing
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.RoutePrefix = "swagger"; // serve at /swagger
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "PisciData API V1");
-    });
-}
-// Solo redirigir a HTTPS si no estamos en entorno de desarrollo
-if (!app.Environment.IsDevelopment())
-{
-    app.UseHttpsRedirection();
-}
+    options.RoutePrefix = "swagger"; // serve at /swagger
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "PisciData API V1");
+});
 
 app.UseCors("DevelopmentCors");
 
@@ -180,5 +171,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+await DatabaseInitializer.EnsureSeededAsync(connectionString, app.Environment.ContentRootPath, app.Logger);
 
 app.Run();

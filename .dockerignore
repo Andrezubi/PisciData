@@ -1,0 +1,12 @@
+.git
+.gitignore
+PisciDataFrontend
+PisciDataChat
+PisciDataMCP
+DumpPisciData
+DumpPisciData.zip
+docs
+scripts
+*.pdf
+**/bin
+**/obj
