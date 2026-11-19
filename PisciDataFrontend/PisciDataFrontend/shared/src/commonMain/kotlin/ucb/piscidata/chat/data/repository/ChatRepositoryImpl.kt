@@ -47,4 +47,8 @@ class ChatRepositoryImpl(
     override suspend fun sendMessage(conversationId: Int, text: String): Result<ChatMessageModel> {
         return dataSource.sendMessage(conversationId, text)
     }
+
+    override suspend fun transcribeAudio(audioBytes: ByteArray): Result<String> {
+        return dataSource.transcribeAudio(audioBytes)
+    }
 }

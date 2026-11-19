@@ -79,6 +79,13 @@ ollama list
 
 ### 3.2. Restauración y compilación
 
+> [!NOTE]
+> **Voz (Whisper STT):** el endpoint `POST /api/AiConversations/transcribe` necesita el modelo local `PisciDataBackend/models/ggml-base.bin` (ignorado por git). Descárgalo una vez:
+> ```bash
+> mkdir -p PisciDataBackend/models
+> curl -L -o PisciDataBackend/models/ggml-base.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin
+> ```
+
 Desde la raíz del repositorio:
 
 ```bash

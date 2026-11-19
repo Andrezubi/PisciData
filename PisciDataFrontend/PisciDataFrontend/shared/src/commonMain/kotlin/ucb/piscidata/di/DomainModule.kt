@@ -6,6 +6,7 @@ import ucb.piscidata.auth.domain.usecase.RegisterUseCase
 import ucb.piscidata.chat.domain.usecase.SendMessageUseCase
 import ucb.piscidata.database.domain.usecase.*
 import ucb.piscidata.tasks.domain.usecase.*
+import ucb.piscidata.farm.domain.usecase.CreateFarmUseCase
 import ucb.piscidata.farm.domain.usecase.GetMyFarmsUseCase
 import ucb.piscidata.profile.domain.usecase.GetUserProfileUseCase
 import ucb.piscidata.profile.domain.usecase.UpdateUserProfileUseCase
@@ -18,18 +19,25 @@ val domainModule = module {
     // Database use cases
     factory { GetFarmsUseCase(get()) }
     factory { GetCiclosUseCase(get()) }
+    factory { CreateProductionCycleUseCase(get()) }
+    factory { FinalizeProductionCycleUseCase(get()) }
     factory { SaveCicloUseCase(get()) }
     factory { DeleteCicloUseCase(get()) }
     factory { ToggleCicloExpandUseCase(get()) }
     factory { GetPondsUseCase(get()) }
+    factory { CreatePondUseCase(get()) }
     factory { GetInventoryUseCase(get()) }
+    factory { CreateFeedUseCase(get()) }
+    factory { CreateSupplyUseCase(get()) }
     factory { UpdateInventoryQtyUseCase(get()) }
+    factory { GetSpeciesUseCase(get()) }
 
     factory { GetTasksUseCase(get()) }
     factory { ToggleTaskUseCase(get()) }
     factory { AddTaskUseCase(get()) }
 
     factory { GetMyFarmsUseCase(get()) }
+    factory { CreateFarmUseCase(get()) }
     factory { GetUserProfileUseCase(get()) }
     factory { UpdateUserProfileUseCase(get()) }
 }

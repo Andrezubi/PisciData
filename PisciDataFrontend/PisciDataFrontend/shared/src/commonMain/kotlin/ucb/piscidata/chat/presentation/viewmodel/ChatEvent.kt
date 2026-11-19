@@ -10,6 +10,7 @@ sealed interface ChatEvent {
     data class OnInputChanged(val text: String) : ChatEvent
     object OnSendText : ChatEvent
     object OnStartRecording : ChatEvent
-    data class OnStopRecording(val duration: Int) : ChatEvent
+    object OnCancelRecording : ChatEvent
+    data class OnAudioRecorded(val audioBytes: ByteArray) : ChatEvent
     object OnConfirmAction : ChatEvent
 }

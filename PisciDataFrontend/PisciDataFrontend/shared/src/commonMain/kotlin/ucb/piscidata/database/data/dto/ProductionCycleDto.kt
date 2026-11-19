@@ -23,3 +23,26 @@ data class ProductionCycleResponseDto(
     val currentAgeDays: Int? = null,
     val status: String
 )
+
+@Serializable
+data class CreateProductionCycleRequestDto(
+    val pondId: Int,
+    val speciesId: Int,
+    val startDate: String,
+    val initialFishCount: Int? = null,
+    val initialAverageWeightGrams: Double? = null,
+    val initialAgeDays: Int? = null,
+    val observations: String? = null
+)
+
+@Serializable
+data class UpdateProductionCycleRequestDto(
+    val pondId: Int,
+    val speciesId: Int,
+    val startDate: String,
+    val endDate: String? = null,
+    val initialFishCount: Int? = null,
+    val initialAverageWeightGrams: Double? = null,
+    val initialAgeDays: Int? = null,
+    val observations: String? = null
+)

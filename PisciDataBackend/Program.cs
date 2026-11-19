@@ -32,8 +32,14 @@ builder.Services.Configure<OllamaOptions>(
 builder.Services.Configure<McpOptions>(
     builder.Configuration.GetSection("AI:MCP"));
 
+builder.Services.Configure<WhisperOptions>(
+    builder.Configuration.GetSection("AI:Whisper"));
+
 // MCP client: one shared connection to the stdio server.
 builder.Services.AddSingleton<McpToolService>();
+
+// Whisper STT service: singleton to share loaded model instance.
+builder.Services.AddSingleton<IWhisperService, WhisperService>();
 
 // Ollama client: HTTP client with MCP integration.
 builder.Services.AddHttpClient<OllamaApiClient>((serviceProvider, client) =>

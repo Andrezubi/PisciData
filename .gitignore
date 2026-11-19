@@ -457,3 +457,5 @@ FodyWeavers.xsd
 
 # Personal manual
 docs/00-my-technical-defense-guide-es.md
+# AI Models
+PisciDataBackend/models/*.bin

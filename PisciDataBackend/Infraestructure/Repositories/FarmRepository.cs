@@ -23,6 +23,13 @@ namespace PisciDataBackend.Infraestructure.Repositories
                 .ToListAsync();
         }
 
+        public async Task<Farm?> GetByIdForOwnerAsync(int id, int userId)
+        {
+            return await _dbSet.FirstOrDefaultAsync(farm => farm.Id == id
+                && farm.IsActive != false
+                && farm.OwnerUserId == userId);
+        }
+
         public override async Task DeleteAsync(Farm entity)
         {
             entity.IsActive = false;

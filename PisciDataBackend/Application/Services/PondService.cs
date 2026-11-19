@@ -42,10 +42,13 @@ namespace PisciDataBackend.Application.Services
             if (!await _pondRepository.FarmBelongsToOwnerAsync(dto.FarmId, userId))
                 return (null, new List<string> { "La granja no existe o no pertenece al usuario." });
 
+            if (await _pondRepository.CodeExistsAsync(dto.FarmId, dto.Code.Trim()))
+                return (null, new List<string> { "Ya existe un estanque con ese código en la granja seleccionada." });
+
             var pond = new Pond
             {
                 FarmId = dto.FarmId,
-                Code = dto.Code,
+                Code = dto.Code.Trim(),
                 Name = dto.Name,
                 Shape = dto.Shape,
                 Width = dto.Width,
@@ -55,11 +58,17 @@ namespace PisciDataBackend.Application.Services
                 Area = dto.Area,
                 Description = dto.Description,
                 CreatedAt = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                UserId = userId
             };
 
             await _pondRepository.AddAsync(pond);
-            return (MapToDto(pond, Array.Empty<Waterqualityreference>()), errors);
+            var created = await _pondRepository.GetByIdForOwnerAsync(pond.Id, userId);
+            if (created == null)
+                return (null, new List<string> { "No se pudo recuperar el estanque creado." });
+
+            var references = await _pondRepository.GetActiveWaterQualityReferencesAsync();
+            return (MapToDto(created, references), errors);
         }
 
         public async Task<(PondDto? Dto, List<string> Errors)> UpdateAsync(
@@ -76,8 +85,11 @@ namespace PisciDataBackend.Application.Services
             if (!await _pondRepository.FarmBelongsToOwnerAsync(dto.FarmId, userId))
                 return (null, new List<string> { "La granja no existe o no pertenece al usuario." });
 
+            if (await _pondRepository.CodeExistsAsync(dto.FarmId, dto.Code.Trim(), id))
+                return (null, new List<string> { "Ya existe un estanque con ese código en la granja seleccionada." });
+
             pond.FarmId = dto.FarmId;
-            pond.Code = dto.Code;
+            pond.Code = dto.Code.Trim();
             pond.Name = dto.Name;
             pond.Shape = dto.Shape;
             pond.Width = dto.Width;
@@ -87,9 +99,15 @@ namespace PisciDataBackend.Application.Services
             pond.Area = dto.Area;
             pond.Description = dto.Description;
             pond.UpdatedAt = DateTime.UtcNow;
+            pond.UserId = userId;
 
             await _pondRepository.UpdateAsync(pond);
-            return (MapToDto(pond, Array.Empty<Waterqualityreference>()), errors);
+            var updated = await _pondRepository.GetByIdForOwnerAsync(id, userId);
+            if (updated == null)
+                return (null, new List<string> { "No se pudo recuperar el estanque actualizado." });
+
+            var references = await _pondRepository.GetActiveWaterQualityReferencesAsync();
+            return (MapToDto(updated, references), errors);
         }
 
         public async Task<bool> DeleteAsync(int id, int userId)
@@ -120,6 +138,7 @@ namespace PisciDataBackend.Application.Services
             {
                 Id = pond.Id,
                 FarmId = pond.FarmId,
+                FarmName = pond.Farm.Name,
                 Code = pond.Code,
                 Name = pond.Name,
                 Shape = pond.Shape,

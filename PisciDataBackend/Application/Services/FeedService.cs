@@ -41,7 +41,7 @@ namespace PisciDataBackend.Application.Services
             var feed = new Feed
             {
                 FarmId = dto.FarmId,
-                Brand = dto.Brand,
+                Brand = dto.Brand.Trim(),
                 ProductName = dto.ProductName,
                 Phase = dto.Phase,
                 ProteinPercentage = dto.ProteinPercentage,
@@ -49,7 +49,8 @@ namespace PisciDataBackend.Application.Services
                 StockKg = dto.StockKg,
                 MinimumStockKg = dto.MinimumStockKg,
                 CreatedAt = DateTime.UtcNow,
-                IsActive = true
+                IsActive = true,
+                UserId = userId
             };
 
             await _feedRepository.AddAsync(feed);
@@ -71,7 +72,7 @@ namespace PisciDataBackend.Application.Services
                 return (null, new List<string> { "La granja no existe o no pertenece al usuario." });
 
             feed.FarmId = dto.FarmId;
-            feed.Brand = dto.Brand;
+            feed.Brand = dto.Brand.Trim();
             feed.ProductName = dto.ProductName;
             feed.Phase = dto.Phase;
             feed.ProteinPercentage = dto.ProteinPercentage;
@@ -79,6 +80,7 @@ namespace PisciDataBackend.Application.Services
             feed.StockKg = dto.StockKg;
             feed.MinimumStockKg = dto.MinimumStockKg;
             feed.UpdatedAt = DateTime.UtcNow;
+            feed.UserId = userId;
 
             await _feedRepository.UpdateAsync(feed);
             return (MapToDto(feed), errors);

@@ -1,17 +1,19 @@
 package ucb.piscidata.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import ucb.piscidata.auth.presentation.screen.LoginScreen
 import ucb.piscidata.auth.presentation.screen.RegisterScreen
 import ucb.piscidata.data.remote.ApiClient
 import ucb.piscidata.farm.domain.usecase.GetMyFarmsUseCase
+import ucb.piscidata.farm.presentation.screen.RegisterFarmScreen
 import ucb.piscidata.session.SessionManager
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 
 @Composable
 fun AppNavHost() {
@@ -45,13 +47,25 @@ fun AppNavHost() {
         }
         composable<NavRoute.Register> {
             RegisterScreen(
-                onRegisterSuccess = {
-                    navController.navigate(NavRoute.Login) {
-                        popUpTo(NavRoute.Register) { inclusive = true }
-                    }
+                onRegisterSuccess = { userId, phone, pass ->
+                    navController.navigate(NavRoute.RegisterFarm(userId, phone, pass))
                 },
                 onBackToLogin = {
                     navController.popBackStack()
+                }
+            )
+        }
+        composable<NavRoute.RegisterFarm> { backStackEntry ->
+            val route = backStackEntry.toRoute<NavRoute.RegisterFarm>()
+            RegisterFarmScreen(
+                userId = route.userId,
+                phone = route.phone,
+                pass = route.pass,
+                onFarmRegisteredSuccess = {
+                    ApiClient.sessionManager = sessionManager
+                    navController.navigate(NavRoute.Main) {
+                        popUpTo(NavRoute.Login) { inclusive = true }
+                    }
                 }
             )
         }

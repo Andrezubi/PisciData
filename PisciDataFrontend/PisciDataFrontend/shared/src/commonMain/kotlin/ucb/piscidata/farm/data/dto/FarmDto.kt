@@ -11,3 +11,13 @@ data class FarmDto(
     val latitude: Double? = null,
     val longitude: Double? = null
 )
+
+@Serializable
+data class CreateFarmRequestDto(
+    val ownerUserId: Int,
+    val name: String,
+    val description: String? = null,
+    val address: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null
+)

@@ -33,7 +33,8 @@ class ChatViewModel(
             is ChatEvent.OnInputChanged -> _state.update { it.copy(inputMessage = event.text) }
             ChatEvent.OnSendText -> sendMessage()
             ChatEvent.OnStartRecording -> _state.update { it.copy(isRecording = true, recordSeconds = 0) }
-            is ChatEvent.OnStopRecording -> sendAudio(event.duration)
+            ChatEvent.OnCancelRecording -> _state.update { it.copy(isRecording = false, recordSeconds = 0) }
+            is ChatEvent.OnAudioRecorded -> handleAudioRecorded(event.audioBytes)
             ChatEvent.OnConfirmAction -> confirmAction()
         }
     }
@@ -166,9 +167,25 @@ class ChatViewModel(
         }
     }
 
-    private fun sendAudio(duration: Int) {
-        _state.update { it.copy(isRecording = false, recordSeconds = 0) }
-        sendMessage()
+    private fun handleAudioRecorded(audioBytes: ByteArray) {
+        _state.update { it.copy(isRecording = false, isTranscribing = true, recordSeconds = 0) }
+        viewModelScope.launch {
+            _effect.emit(ChatEffect.ShowToast("Transcribiendo audio con Whisper..."))
+            chatRepository.transcribeAudio(audioBytes).onSuccess { text ->
+                _state.update { it.copy(isTranscribing = false) }
+                val cleanText = text.trim()
+                if (cleanText.isNotBlank()) {
+                    // Autosend: establece el texto y envía inmediatamente
+                    _state.update { it.copy(inputMessage = cleanText) }
+                    sendMessage()
+                } else {
+                    _effect.emit(ChatEffect.ShowToast("No se detectó voz en el audio grabado"))
+                }
+            }.onFailure { err ->
+                _state.update { it.copy(isTranscribing = false) }
+                _effect.emit(ChatEffect.ShowToast(err.message ?: "Error al transcribir audio"))
+            }
+        }
     }
 
     private fun confirmAction() {

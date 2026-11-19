@@ -1,7 +1,7 @@
 # 08. Estado Actual del Sistema (Current State)
 
-**Última actualización:** 03 de noviembre de 2026
-**Commit de referencia:** `a146b9f` (rama `main`)  
+**Última actualización:** 19 de noviembre de 2026
+**Commit de referencia:** `19f5ddf` (rama `main`, PR #7 `FrontUpdates`) + integración de identidad de marca móvil  
 **Propósito:** Este documento registra el inventario exhaustivo, auditable y verificable del código existente en el repositorio frente a la línea base oficial de **109 Historias de Usuario (HU-01 a HU-109)**. Sirve como base empírica para la especificación formal del sistema y la priorización del **MVP Inicial**.
 
 ---
@@ -46,14 +46,14 @@ A continuación se detalla su presencia en cada capa arquitectónica:
 | 9 | **Biometricssample** (Muestras) | `biometricssample` | Sí | Sí | Sí | Sí | Sí (Llama a `_dbSet.Remove()`) | Sí | **IMPLEMENTED / NOT VERIFIED** |
 | 10 | **Waterquality** (Calidad de agua) | `waterquality` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
 | 11 | **Mortality** (Mortalidad) | `mortality` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
-| 12 | **Species** (Especies) | `species` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
+| 12 | **Species** (Especies) | `species` | Sí | Sí (`SpeciesOptionDto`) | No | Vía `ProductioncycleService` | Vía ciclos | Solo lectura: `GET /api/Productioncycles/species` | **IMPLEMENTED (solo lectura) / NOT VERIFIED** |
 | 13 | **Harvest** (Cosechas) | `harvest` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
 | 14 | **Task** (Tareas operativas) | `task` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
 | 15 | **Feedingbyage** (Guía por edad) | `feedingbyage` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
 | 16 | **Feedingbyweight** (Guía por peso) | `feedingbyweight` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
 | 17 | **Supplymovement** (Kardex/Mov.) | `supplymovement` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
-| 18 | **Aiconversation** (Conversaciones) | `aiconversation` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
-| 19 | **Aimessage** (Mensajes IA) | `aimessage` | Sí | No | No | No | No | No | **SPECIFIED → PARTIAL** |
+| 18 | **Aiconversation** (Conversaciones) | `aiconversation` | Sí | Sí | No | `AiChatService` | Sí | `AiConversationsController` | **IMPLEMENTED / VERIFIED MANUALLY** |
+| 19 | **Aimessage** (Mensajes IA) | `aimessage` | Sí | Sí | No | `AiChatService` | Sí | `AiConversationsController` | **IMPLEMENTED / VERIFIED MANUALLY** |
 | - | **Decisión Soft Delete** | `IsActive` presente en las 19 tablas (DDL) | - | - | - | - | Repositorios difieren en su uso. | - | Rationale: **UNKNOWN / REQUIRES HUMAN VALIDATION** |
 
 *\* Nota sobre User:* Aunque tiene todas las capas, no posee lógica de login/autenticación ni hasheo de contraseñas.
@@ -116,10 +116,15 @@ PisciDataFrontend/
 ### 4.2. Estado de pantallas y chat móvil
 
 * La app incluye pantallas de autenticación, asistente, base de datos, tareas, reportes y perfil; el alcance implementado varía por módulo.
-* El chat móvil recupera o crea una conversación en `/api/AiConversations`, envía mensajes al backend y muestra la respuesta de Ollama.
+* El chat móvil recupera o crea una conversación en `/api/AiConversations`, envía mensajes al backend y muestra la respuesta de Ollama renderizada en **Markdown** (`MarkdownContent.kt`).
+* **Voz (STT):** el botón de micrófono graba audio (`AudioRecorder` / `PlatformAudioRecorder` Android e iOS) y lo envía a `POST /api/AiConversations/transcribe`, que usa Whisper (`WhisperService`, modelo local `models/ggml-base.bin`, idioma `es`). El modelo `.bin` está en `.gitignore` y debe descargarse en cada máquina.
+* **Registro de granja:** tras registrar un usuario se muestra `RegisterFarmScreen` con selector de ubicación en mapa (`PlatformMapPicker`); requiere permisos de ubicación.
+* **Base de Datos:** formularios separados para ciclos (`CicloFormScreen`), estanques (`PondFormScreen`), alimentos (`FeedFormScreen`) e insumos (`SupplyFormScreen`), con selectores reales de estanques/especies y acción de finalizar ciclo (`POST /api/Productioncycles/{id}/finalize`).
+* **Identidad de marca:** logo oficial PisciData (claro/oscuro) en login, registro, cabecera de granja, avatar del asistente e ícono del launcher Android/iOS; paleta oficial (`#1577C8`, `#0B2B3B`, `#4EC5C1`, `#19A974`).
+* **Pendiente con datos fijos:** `TasksScreen`, `ReportsScreen` y parte de `ProfileService` aún usan datos simulados.
 * El backend usa el modelo `piscidata-ai` en Ollama. La respuesta móvil no usa herramientas MCP; por lo tanto, no debe presentarse como consulta de datos vivos de granjas.
-* **Verificación manual:** el usuario confirmó una respuesta real de la IA en un teléfono Android el 03 de noviembre de 2026. No hay pruebas automatizadas de esta integración.
-* **Estado SDD:** chat móvil **IMPLEMENTED + VERIFIED MANUALLY**; conexión móvil con MCP **MISSING**.
+* **Verificación manual:** chat verificado en Android el 03/11/2026; compilación `assembleDebug` y `dotnet build` verificadas el 19/11/2026 tras integrar `main`. STT, mapa y formularios no tienen verificación documentada.
+* **Estado SDD:** chat móvil **IMPLEMENTED + VERIFIED MANUALLY**; STT **IMPLEMENTED / NOT VERIFIED**; conexión móvil con MCP **MISSING**.
 
 ---
 
@@ -175,7 +180,25 @@ Actualmente, las piezas codificadas proporcionan una base técnica (entidades, r
 | **UI y chat móvil Android** | Sí | Sí | Parcial | Sí (chat manual) | **IMPLEMENTED / PARTIAL; CHAT VERIFIED MANUALLY** |
 | **Servidor MCP** | Sí | Sí | Sí | No | **IMPLEMENTED / NOT VERIFIED; NO INTEGRACIÓN MÓVIL** |
 | **LLM (Ollama) desde app móvil** | Sí | Sí | Sí | Sí (manual) | **IMPLEMENTED / VERIFIED MANUALLY** |
-| **STT (Whisper)** | Sí | Sí | No | No | **SPECIFIED → MISSING** |
+| **STT (Whisper)** | Sí | Sí | Sí | No | **IMPLEMENTED / NOT VERIFIED** |
 | **Base de Datos DDL vs EF**| Sí | Sí | Sí | No | **SPECIFIED → DIVERGENT** |
 
 La matriz de trazabilidad detallada a nivel de requisitos se mantiene en `02-requirements/system-requirements.md`.
+
+---
+
+## 9. Pendientes para cerrar el proyecto (al 19/11/2026)
+
+| Prioridad | Módulo | Backend | Frontend | Qué falta |
+|---|---|---|---|---|
+| 1 | **Tareas** (`Task`) | ❌ Sin DTO/Repo/Service/Controller | ⚠️ Datos simulados | CRUD por `FarmId` con validación de propiedad y conectar `TasksScreen`. |
+| 2 | **Reportes / KPIs** | ❌ Sin endpoints agregados | ⚠️ Valores fijos | Endpoint de KPIs (biomasa, mortalidad %, FCR, ciclos activos) y conectar `ReportsScreen`. |
+| 3 | **Calidad de agua** (`Waterquality`) | ❌ Solo tabla | ⚠️ Solo visualización en estanque | Registro de mediciones (pH, O₂, temperatura, transparencia) contra `waterqualityreference`. |
+| 4 | **Alimentación diaria** (`Feeding`, guías por edad/peso) | ⚠️ CRUD de `Feeding` sin guías | ❌ Sin pantalla | Registro de raciones y cálculo recomendado según `feedingbyage`/`feedingbyweight`. |
+| 5 | **Biometrías** | ⚠️ CRUD básico | ❌ Sin pantalla | Registro de muestreo por cubetas y biomasa estimada. |
+| 6 | **Mortalidad y Cosecha** | ❌ Solo tablas | ❌ Sin pantalla | Registro de bajas y cosechas; alimentar KPIs. |
+| 7 | **Kardex de insumos** (`Supplymovement`) | ❌ Solo tabla | ❌ | Entradas/salidas de stock. |
+| 8 | **IA + MCP en móvil** | ⚠️ `McpToolService` existe | — | Que el chat móvil consulte datos reales de la granja vía herramientas MCP. |
+| 9 | **Verificación** | 0 tests | 0 tests | Pruebas de validadores (`BR-*`) y verificación manual de STT, mapa y formularios. |
+
+> Corregido durante la integración del 19/11/2026: `FarmsController.Create` tenía dos versiones superpuestas tras el merge del PR #6/#7 y no compilaba (CS0128/CS7036). Se conservó la versión que toma el propietario desde el JWT.

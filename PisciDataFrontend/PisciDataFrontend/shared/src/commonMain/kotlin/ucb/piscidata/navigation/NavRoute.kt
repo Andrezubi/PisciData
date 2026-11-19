@@ -11,5 +11,12 @@ sealed class NavRoute {
     object Register : NavRoute()
 
     @Serializable
+    data class RegisterFarm(
+        val userId: Int,
+        val phone: String,
+        val pass: String
+    ) : NavRoute()
+
+    @Serializable
     object Main : NavRoute()
 }

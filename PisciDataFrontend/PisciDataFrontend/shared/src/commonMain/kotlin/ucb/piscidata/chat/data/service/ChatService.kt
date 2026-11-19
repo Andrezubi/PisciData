@@ -6,12 +6,14 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.content.ByteArrayContent
 import io.ktor.http.contentType
 import ucb.piscidata.chat.data.datasource.ChatRemoteDataSource
 import ucb.piscidata.chat.data.dto.AiConversationDto
 import ucb.piscidata.chat.data.dto.AiMessageDto
 import ucb.piscidata.chat.data.dto.CreateAiConversationDto
 import ucb.piscidata.chat.data.dto.SendAiMessageDto
+import ucb.piscidata.chat.data.dto.TranscriptionResponseDto
 import ucb.piscidata.chat.data.mapper.toDomain
 import ucb.piscidata.chat.domain.model.ChatMessageModel
 import ucb.piscidata.data.remote.ApiClient
@@ -81,6 +83,28 @@ class ChatService : ChatRemoteDataSource {
             }
         } catch (e: Exception) {
             Result.failure(Exception("Fallo de comunicación con la IA: ${e.message ?: e.toString()}"))
+        }
+    }
+
+    override suspend fun transcribeAudio(audioBytes: ByteArray): Result<String> {
+        return try {
+            val response = client.post(ApiEndpoints.AiChat.TRANSCRIBE) {
+                // Use ByteArrayContent to bypass Ktor's ContentNegotiation JSON serializer
+                // and send the raw WAV binary bytes directly
+                setBody(ByteArrayContent(audioBytes, ContentType.parse("audio/wav")))
+                timeout {
+                    requestTimeoutMillis = 60_000
+                    socketTimeoutMillis = 60_000
+                }
+            }
+            if (response.status.value in 200..299) {
+                val dto = response.body<TranscriptionResponseDto>()
+                Result.success(dto.text)
+            } else {
+                Result.failure(Exception("Error al transcribir audio (${response.status.value})"))
+            }
+        } catch (e: Exception) {
+            Result.failure(Exception("Fallo al transcribir audio: ${e.message ?: e.toString()}"))
         }
     }
 }

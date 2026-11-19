@@ -4,6 +4,7 @@ namespace PisciDataBackend.Application.DTOs
     {
         public int Id { get; set; }
         public int FarmId { get; set; }
+        public string FarmName { get; set; } = null!;
         public string Code { get; set; } = null!;
         public string? Name { get; set; }
         public string? Shape { get; set; }

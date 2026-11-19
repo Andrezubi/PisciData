@@ -12,10 +12,12 @@ namespace PisciDataBackend.Controllers
     public class AiConversationsController : ControllerBase
     {
         private readonly AiChatService _chatService;
+        private readonly IWhisperService _whisperService;
 
-        public AiConversationsController(AiChatService chatService)
+        public AiConversationsController(AiChatService chatService, IWhisperService whisperService)
         {
             _chatService = chatService;
+            _whisperService = whisperService;
         }
 
         // obtiene el id del usuario desde el jwt
@@ -65,7 +67,7 @@ namespace PisciDataBackend.Controllers
 
         // POST: api/AiConversations/{id}/messages (envia un mensaje y obtiene respuesta de la ia)
         [HttpPost("{id}/messages")]
-        public async Task<ActionResult<AimessageDto>> SendMessage(int id,[FromBody] SendAiMessageDto dto, CancellationToken cancellationToken)
+        public async Task<ActionResult<AimessageDto>> SendMessage(int id, [FromBody] SendAiMessageDto dto, CancellationToken cancellationToken)
         {
             var userId = GetCurrentUserId();
 
@@ -74,10 +76,8 @@ namespace PisciDataBackend.Controllers
 
             var authorizationHeader = Request.Headers.Authorization.ToString();
 
-
             if (string.IsNullOrWhiteSpace(authorizationHeader))
                 return Unauthorized(new { message = "No se encontró el token de autenticación." });
-
 
             var (responseMsg, error) = await _chatService.SendMessageAsync(
                 id,
@@ -98,6 +98,67 @@ namespace PisciDataBackend.Controllers
             }
 
             return Ok(responseMsg);
+        }
+
+        // POST: api/AiConversations/transcribe (transcribe audio en español usando whisper.cpp)
+        [HttpPost("transcribe")]
+        [RequestSizeLimit(30 * 1024 * 1024)]
+        public async Task<ActionResult<TranscriptionResponseDto>> Transcribe(
+            [FromQuery] string? language = "es",
+            CancellationToken cancellationToken = default)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == null) return Unauthorized(new { message = "No se pudo identificar al usuario." });
+
+            Stream? audioStream = null;
+            MemoryStream? memoryStream = null;
+
+            if (Request.HasFormContentType && Request.Form.Files.Count > 0)
+            {
+                var file = Request.Form.Files[0];
+                memoryStream = new MemoryStream();
+                await file.CopyToAsync(memoryStream, cancellationToken);
+                memoryStream.Position = 0;
+                audioStream = memoryStream;
+            }
+            else if (Request.Body != null)
+            {
+                memoryStream = new MemoryStream();
+                await Request.Body.CopyToAsync(memoryStream, cancellationToken);
+                memoryStream.Position = 0;
+                if (memoryStream.Length > 0)
+                {
+                    audioStream = memoryStream;
+                }
+            }
+
+            if (audioStream == null || audioStream.Length == 0)
+            {
+                return BadRequest(new { message = "No se recibió archivo o flujo de audio válido." });
+            }
+
+            try
+            {
+                var targetLanguage = string.IsNullOrWhiteSpace(language) ? "es" : language;
+                var text = await _whisperService.TranscribeAsync(audioStream, targetLanguage, cancellationToken);
+                return Ok(new TranscriptionResponseDto
+                {
+                    Text = text,
+                    Language = targetLanguage
+                });
+            }
+            catch (FileNotFoundException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Error en transcripción Whisper: {ex.Message}" });
+            }
+            finally
+            {
+                memoryStream?.Dispose();
+            }
         }
     }
 }

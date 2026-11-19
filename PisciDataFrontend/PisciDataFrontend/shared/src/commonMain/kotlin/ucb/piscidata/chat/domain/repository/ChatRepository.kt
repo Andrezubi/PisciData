@@ -9,4 +9,5 @@ interface ChatRepository {
     suspend fun getOrCreateActiveConversation(): Result<Int>
     suspend fun getMessages(conversationId: Int): Result<List<ChatMessageModel>>
     suspend fun sendMessage(conversationId: Int, text: String): Result<ChatMessageModel>
+    suspend fun transcribeAudio(audioBytes: ByteArray): Result<String>
 }
