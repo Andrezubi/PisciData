@@ -15,8 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
-import ucb.piscidata.database.domain.model.BadgeVariant
-import ucb.piscidata.database.domain.model.CicloRecord
 import ucb.piscidata.database.presentation.screen.alimentacion.AlimentacionTab
 import ucb.piscidata.database.presentation.screen.ciclos.CicloFormScreen
 import ucb.piscidata.database.presentation.screen.ciclos.CiclosTab
@@ -108,29 +106,33 @@ fun DatabaseScreen(
                                         DbTab.CICLOS -> "Administra los ciclos productivos de tu granja"
                                         DbTab.ESTANQUES -> "Administra los estanques e infraestructura"
                                         DbTab.INVENTARIO -> "Administra alimentos y suministros de tu granja"
+                                        DbTab.ALIMENTACION -> "Administra los registros de alimentación"
                                     },
                                     fontSize = 12.sp,
                                     color = Color(0xFF6B818B)
                                 )
                             }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = { viewModel.emitEvent(DatabaseEvent.ClickNuevo) },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
-                                shape = RoundedCornerShape(10.dp),
-                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-                                elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-                            ) {
-                                Text(
-                                    text = when (state.tab) {
-                                        DbTab.CICLOS -> "+ Nuevo Ciclo"
-                                        DbTab.ESTANQUES -> "+ Nuevo Estanque"
-                                        DbTab.INVENTARIO -> "+ Nuevo Registro"
-                                    },
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                            if (state.tab != DbTab.ALIMENTACION) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Button(
+                                    onClick = { viewModel.emitEvent(DatabaseEvent.ClickNuevo) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
+                                    shape = RoundedCornerShape(10.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+                                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
+                                ) {
+                                    Text(
+                                        text = when (state.tab) {
+                                            DbTab.CICLOS -> "+ Nuevo Ciclo"
+                                            DbTab.ESTANQUES -> "+ Nuevo Estanque"
+                                            DbTab.INVENTARIO -> "+ Nuevo Registro"
+                                            DbTab.ALIMENTACION -> ""
+                                        },
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
                             }
                         }
 
@@ -146,13 +148,16 @@ fun DatabaseScreen(
 
                         // Tabs
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             listOf(
                                 DbTab.CICLOS to "Ciclos productivos",
                                 DbTab.ESTANQUES to "Estanques",
-                                DbTab.INVENTARIO to "Inventario"
+                                DbTab.INVENTARIO to "Inventario",
+                                DbTab.ALIMENTACION to "Alimentación"
                             ).forEach { (tab, label) ->
                                 val selected = state.tab == tab
                                 TextButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeTab(tab)) }) {
@@ -169,46 +174,21 @@ fun DatabaseScreen(
 
                     HorizontalDivider(color = Color(0xFFDCE8ED))
 
-                    // Tabs
-                    Row(
+                    // Content based on tab
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            .weight(1f)
                     ) {
-                        listOf(
-                            DbTab.CICLOS to "Ciclos activos",
-                            DbTab.ESTANQUES to "Estanques",
-                            DbTab.INVENTARIO to "Inventario",
-                            DbTab.ALIMENTACION to "Alimentación"
-                        ).forEach { (tab, label) ->
-                            val selected = state.tab == tab
-                            TextButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeTab(tab)) }) {
-                                Text(
-                                    text = label,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (selected) Color(0xFF1577C8) else Color(0xFF6B818B)
-                                )
-                            }
+                        when (state.tab) {
+                            DbTab.CICLOS -> CiclosTab(state, viewModel)
+                            DbTab.ESTANQUES -> EstanquesTab(state)
+                            DbTab.INVENTARIO -> InventarioTab(state, viewModel)
+                            DbTab.ALIMENTACION -> AlimentacionTab(state, viewModel)
                         }
                     }
                 }
 
-                HorizontalDivider(color = Color(0xFFDCE8ED))
-
-                // Content based on tab
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .weight(1f)
-                ) {
-                    when (state.tab) {
-                        DbTab.CICLOS -> CiclosTab(state, viewModel)
-                        DbTab.ESTANQUES -> EstanquesTab(state)
-                        DbTab.INVENTARIO -> InventarioTab(state, viewModel)
-                        DbTab.ALIMENTACION -> AlimentacionTab(state, viewModel)
-                    }
                 // Inventory Type Choice Dialog
                 if (state.showInventoryTypeDialog) {
                     AlertDialog(

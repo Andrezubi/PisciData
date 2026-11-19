@@ -65,6 +65,7 @@ class DatabaseViewModel(
             DbTab.CICLOS -> _state.update { it.copy(view = DbView.NuevoCiclo) }
             DbTab.ESTANQUES -> _state.update { it.copy(view = DbView.NuevoEstanque) }
             DbTab.INVENTARIO -> _state.update { it.copy(showInventoryTypeDialog = true) }
+            DbTab.ALIMENTACION -> {}
         }
     }
 

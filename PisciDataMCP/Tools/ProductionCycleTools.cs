@@ -75,7 +75,7 @@ public class ProductionCycleTools
             return "{\"error\":\"No se recibió la autenticación de la sesión.\"}";
 
         return await _apiClient.GetAsync(
-            $"Productioncycle/farm/{farmId}",
+            $"Productioncycles/farm/{farmId}",
             authorization);
     }
 

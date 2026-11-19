@@ -26,6 +26,8 @@ builder.Services
     .WithTools<PondTools>()
     .WithTools<ProductionCycleTools>()
     .WithTools<BiometricTools>()
-    .WithTools<FeedingTools>();
+    .WithTools<FeedingTools>()
+    .WithTools<FeedTools>()
+    .WithTools<SupplyTools>();
 
 await builder.Build().RunAsync();
