@@ -14,3 +14,7 @@ class ToggleTaskUseCase(private val repository: TaskRepository) {
 class AddTaskUseCase(private val repository: TaskRepository) {
     suspend operator fun invoke(task: TaskModel): Result<List<TaskModel>> = repository.addTask(task)
 }
+
+class DeleteTaskUseCase(private val repository: TaskRepository) {
+    suspend operator fun invoke(id: Long): Result<List<TaskModel>> = repository.deleteTask(id)
+}

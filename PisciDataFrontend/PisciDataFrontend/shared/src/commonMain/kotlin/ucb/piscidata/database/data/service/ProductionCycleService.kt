@@ -10,6 +10,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.data.remote.RemoteBackendConfig
 import ucb.piscidata.database.data.dto.CreateProductionCycleRequestDto
 import ucb.piscidata.database.data.dto.ProductionCycleResponseDto
 import ucb.piscidata.database.data.dto.UpdateProductionCycleRequestDto
@@ -23,10 +24,7 @@ class ProductionCycleService {
     private val sessionManager: SessionManager by lazy { KoinPlatform.getKoin().get() }
     private val loadedCiclos = mutableListOf<CicloRecord>()
 
-    private fun cyclesUrls(farmId: Int) = listOf(
-        "https://127.0.0.1:7190/api/productioncycles/farm/$farmId",
-        "http://127.0.0.1:5007/api/productioncycles/farm/$farmId"
-    )
+    private fun cyclesUrls(farmId: Int) = RemoteBackendConfig.urlsFor("/api/productioncycles/farm/$farmId")
 
     suspend fun getCiclos(farmId: Int): Result<List<CicloRecord>> {
         val token = sessionManager.token.value
@@ -78,10 +76,7 @@ class ProductionCycleService {
             initialAgeDays = initialAgeDays,
             observations = observations
         )
-        val urls = listOf(
-            "https://127.0.0.1:7190/api/productioncycles",
-            "http://127.0.0.1:5007/api/productioncycles"
-        )
+        val urls = RemoteBackendConfig.urlsFor("/api/productioncycles")
         for (url in urls) {
             try {
                 val response = client.post(url) {
@@ -104,10 +99,7 @@ class ProductionCycleService {
             startDate = startDate,
             endDate = today
         )
-        val urls = listOf(
-            "https://127.0.0.1:7190/api/productioncycles/$cycleId",
-            "http://127.0.0.1:5007/api/productioncycles/$cycleId"
-        )
+        val urls = RemoteBackendConfig.urlsFor("/api/productioncycles/$cycleId")
         for (url in urls) {
             try {
                 val response = client.put(url) {

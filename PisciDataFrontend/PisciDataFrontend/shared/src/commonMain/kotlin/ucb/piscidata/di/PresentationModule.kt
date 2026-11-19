@@ -8,6 +8,7 @@ import ucb.piscidata.chat.presentation.viewmodel.ChatViewModel
 import ucb.piscidata.database.presentation.viewmodel.DatabaseViewModel
 import ucb.piscidata.farm.presentation.viewmodel.RegisterFarmViewModel
 import ucb.piscidata.profile.presentation.viewmodel.ProfileViewModel
+import ucb.piscidata.reports.presentation.viewmodel.ReportsViewModel
 import ucb.piscidata.tasks.presentation.viewmodel.TaskViewModel
 
 val presentationModule = module {
@@ -17,5 +18,6 @@ val presentationModule = module {
     viewModelOf(::ChatViewModel)
     viewModelOf(::DatabaseViewModel)
     viewModelOf(::TaskViewModel)
+    viewModelOf(::ReportsViewModel)
     viewModelOf(::ProfileViewModel)
 }

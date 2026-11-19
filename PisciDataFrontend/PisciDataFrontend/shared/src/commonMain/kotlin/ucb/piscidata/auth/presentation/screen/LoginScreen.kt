@@ -1,5 +1,9 @@
 package ucb.piscidata.auth.presentation.screen
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,6 +25,7 @@ import piscidatafrontend.shared.generated.resources.Res
 import piscidatafrontend.shared.generated.resources.img_login_bg
 import ucb.piscidata.auth.presentation.viewmodel.AuthEvent
 import ucb.piscidata.auth.presentation.viewmodel.AuthViewModel
+import ucb.piscidata.data.remote.RemoteBackendConfig
 import ucb.piscidata.ui.components.PisciDataLogo
 
 @Composable
@@ -30,6 +35,14 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    var visible by remember { mutableStateOf(false) }
+    var showServerDialog by remember { mutableStateOf(false) }
+    val activeRemoteUrl by RemoteBackendConfig.remoteBaseUrl.collectAsState()
+    var serverInput by remember(activeRemoteUrl) { mutableStateOf(activeRemoteUrl) }
+
+    LaunchedEffect(Unit) {
+        visible = true
+    }
 
     LaunchedEffect(state.isAuthenticated) {
         if (state.isAuthenticated) {
@@ -79,35 +92,59 @@ fun LoginScreen(
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
+                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            PisciDataLogo(darkTheme = true, modifier = Modifier.size(42.dp))
-                            Text(
-                                text = "PisciData",
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.ExtraBold,
-                                color = Color.White
-                            )
-                        }
-                        Card(
-                            colors = CardDefaults.cardColors(containerColor = Color(0xDD073044)),
-                            shape = RoundedCornerShape(16.dp)
-                        ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                PisciDataLogo(darkTheme = true, modifier = Modifier.size(42.dp))
                                 Text(
-                                    text = "PRODUCCIÓN INTELIGENTE",
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF4EC5C1)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Cultiva con precisión. Crece con confianza.",
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    text = "PisciData",
+                                    fontSize = 22.sp,
+                                    fontWeight = FontWeight.ExtraBold,
                                     color = Color.White
                                 )
+                            }
+                            Surface(
+                                onClick = { showServerDialog = true },
+                                color = Color(0x66073044),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Text(
+                                    text = if (activeRemoteUrl.isNotBlank()) "🌐 Remoto" else "⚙ Servidor",
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF4EC5C1)
+                                )
+                            }
+                        }
+                        AnimatedVisibility(
+                            visible = visible,
+                            enter = fadeIn(tween(450)) + slideInVertically(tween(450)) { it / 3 }
+                        ) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xDD073044)),
+                                shape = RoundedCornerShape(16.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = "PRODUCCIÓN INTELIGENTE",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF4EC5C1)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Cultiva con precisión. Crece con confianza.",
+                                        fontSize = 20.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
                             }
                         }
                     }
@@ -229,6 +266,55 @@ fun LoginScreen(
                     )
                 }
             }
+        }
+
+        if (showServerDialog) {
+            AlertDialog(
+                onDismissRequest = { showServerDialog = false },
+                containerColor = Color.White,
+                shape = RoundedCornerShape(20.dp),
+                title = {
+                    Text(
+                        "Conexión remota",
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0B2B3B)
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            "Pega tu URL de ngrok (ej. https://xxxx.ngrok-free.app) o déjalo vacío para usar 127.0.0.1:5007.",
+                            fontSize = 12.sp,
+                            color = Color(0xFF6B818B)
+                        )
+                        OutlinedTextField(
+                            value = serverInput,
+                            onValueChange = { serverInput = it },
+                            label = { Text("URL del servidor") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            RemoteBackendConfig.setRemoteBaseUrl(serverInput)
+                            showServerDialog = false
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Guardar", color = Color.White)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showServerDialog = false }) {
+                        Text("Cancelar", color = Color(0xFF6B818B))
+                    }
+                }
+            )
         }
     }
 }

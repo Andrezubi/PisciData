@@ -15,7 +15,9 @@ data class TaskState(
     val newTitle: String = "",
     val newDetail: String = "",
     val newCategory: TaskCategory = TaskCategory.ALIMENTACION,
-    val newEstanque: String = "Estanque 1",
+    val newEstanque: String = "General",
     val newPriority: TaskPriority = TaskPriority.MEDIA,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
+    val error: String? = null
 )

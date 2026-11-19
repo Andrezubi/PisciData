@@ -33,6 +33,7 @@ import ucb.piscidata.profile.data.datasource.ProfileRemoteDataSource
 import ucb.piscidata.profile.data.repository.ProfileRepositoryImpl
 import ucb.piscidata.profile.data.service.ProfileService
 import ucb.piscidata.profile.domain.repository.ProfileRepository
+import ucb.piscidata.reports.data.service.ReportService
 
 val dataModule = module {
     single { SessionManager() }
@@ -63,4 +64,6 @@ val dataModule = module {
 
     single<ProfileRemoteDataSource> { ProfileService() }
     single<ProfileRepository> { ProfileRepositoryImpl(get()) }
+
+    single { ReportService() }
 }

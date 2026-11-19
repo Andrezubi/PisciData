@@ -35,6 +35,7 @@ val domainModule = module {
     factory { GetTasksUseCase(get()) }
     factory { ToggleTaskUseCase(get()) }
     factory { AddTaskUseCase(get()) }
+    factory { DeleteTaskUseCase(get()) }
 
     factory { GetMyFarmsUseCase(get()) }
     factory { CreateFarmUseCase(get()) }

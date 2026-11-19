@@ -9,6 +9,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.data.remote.RemoteBackendConfig
 import ucb.piscidata.database.data.dto.CreateFeedRequestDto
 import ucb.piscidata.database.data.dto.CreateSupplyRequestDto
 import ucb.piscidata.database.data.dto.FeedResponseDto
@@ -21,15 +22,11 @@ class InventoryService {
     private val client = ApiClient.client
     private val sessionManager: SessionManager by lazy { KoinPlatform.getKoin().get() }
 
-    private val feedUrls = listOf(
-        "https://127.0.0.1:7190/api/feeds",
-        "http://127.0.0.1:5007/api/feeds"
-    )
+    private val feedUrls: List<String>
+        get() = RemoteBackendConfig.urlsFor("/api/feeds")
 
-    private val supplyUrls = listOf(
-        "https://127.0.0.1:7190/api/supplies",
-        "http://127.0.0.1:5007/api/supplies"
-    )
+    private val supplyUrls: List<String>
+        get() = RemoteBackendConfig.urlsFor("/api/supplies")
 
     suspend fun getInventory(): Result<List<InvItem>> {
         val token = sessionManager.token.value

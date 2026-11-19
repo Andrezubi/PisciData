@@ -136,6 +136,7 @@ builder.Services.AddScoped<BiometricRepository>();
 builder.Services.AddScoped<BiometricssampleRepository>();
 builder.Services.AddScoped<AiconversationRepository>();
 builder.Services.AddScoped<AimessageRepository>();
+builder.Services.AddScoped<TaskRepository>();
 
 // Services
 builder.Services.AddScoped<FarmService>();
@@ -148,6 +149,8 @@ builder.Services.AddScoped<SupplyService>();
 builder.Services.AddScoped<BiometricService>();
 builder.Services.AddScoped<BiometricssampleService>();
 builder.Services.AddScoped<AiChatService>();
+builder.Services.AddScoped<TaskService>();
+builder.Services.AddScoped<ReportService>();
 
 
 

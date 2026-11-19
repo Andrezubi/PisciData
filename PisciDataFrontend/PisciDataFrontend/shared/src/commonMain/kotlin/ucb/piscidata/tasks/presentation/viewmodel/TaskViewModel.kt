@@ -4,15 +4,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import ucb.piscidata.session.SessionManager
 import ucb.piscidata.tasks.domain.model.TaskModel
 import ucb.piscidata.tasks.domain.usecase.AddTaskUseCase
+import ucb.piscidata.tasks.domain.usecase.DeleteTaskUseCase
 import ucb.piscidata.tasks.domain.usecase.GetTasksUseCase
 import ucb.piscidata.tasks.domain.usecase.ToggleTaskUseCase
 
 class TaskViewModel(
     private val getTasksUseCase: GetTasksUseCase,
     private val toggleTaskUseCase: ToggleTaskUseCase,
-    private val addTaskUseCase: AddTaskUseCase
+    private val addTaskUseCase: AddTaskUseCase,
+    private val deleteTaskUseCase: DeleteTaskUseCase,
+    private val sessionManager: SessionManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TaskState())
@@ -22,15 +26,20 @@ class TaskViewModel(
     val effect = _effect.asSharedFlow()
 
     init {
-        loadTasks()
+        viewModelScope.launch {
+            sessionManager.selectedFarmId.collectLatest {
+                loadTasks()
+            }
+        }
     }
 
     fun emitEvent(event: TaskEvent) {
         when (event) {
             TaskEvent.LoadTasks -> loadTasks()
             is TaskEvent.ToggleTask -> toggleTask(event.id)
+            is TaskEvent.DeleteTask -> deleteTask(event.id)
             is TaskEvent.ChangeFilter -> _state.update { it.copy(filter = event.filter) }
-            is TaskEvent.ShowAddDialog -> _state.update { it.copy(showAddDialog = event.show) }
+            is TaskEvent.ShowAddDialog -> _state.update { it.copy(showAddDialog = event.show, error = null) }
             is TaskEvent.UpdateNewTitle -> _state.update { it.copy(newTitle = event.title) }
             is TaskEvent.UpdateNewDetail -> _state.update { it.copy(newDetail = event.detail) }
             is TaskEvent.UpdateNewCategory -> _state.update { it.copy(newCategory = event.category) }
@@ -42,25 +51,64 @@ class TaskViewModel(
 
     private fun loadTasks() {
         viewModelScope.launch {
-            getTasksUseCase().onSuccess { tasks ->
-                _state.update { it.copy(tasks = tasks) }
-            }
+            _state.update { it.copy(isLoading = true, error = null) }
+            getTasksUseCase()
+                .onSuccess { tasks ->
+                    _state.update { it.copy(tasks = tasks, isLoading = false, error = null) }
+                }
+                .onFailure { err ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            error = err.message ?: "No se pudieron cargar las tareas"
+                        )
+                    }
+                }
         }
     }
 
     private fun toggleTask(id: Long) {
+        // Optimistic update for snappy UI
+        val previous = _state.value.tasks
+        _state.update { s ->
+            s.copy(tasks = s.tasks.map { if (it.id == id) it.copy(done = !it.done) else it })
+        }
         viewModelScope.launch {
-            toggleTaskUseCase(id).onSuccess { tasks ->
-                _state.update { it.copy(tasks = tasks) }
-            }
+            toggleTaskUseCase(id)
+                .onSuccess { tasks ->
+                    _state.update { it.copy(tasks = tasks, error = null) }
+                }
+                .onFailure { err ->
+                    _state.update {
+                        it.copy(
+                            tasks = previous,
+                            error = err.message ?: "Error al actualizar la tarea"
+                        )
+                    }
+                }
+        }
+    }
+
+    private fun deleteTask(id: Long) {
+        viewModelScope.launch {
+            deleteTaskUseCase(id)
+                .onSuccess { tasks ->
+                    _state.update { it.copy(tasks = tasks, error = null) }
+                }
+                .onFailure { err ->
+                    _state.update { it.copy(error = err.message ?: "No se pudo eliminar la tarea") }
+                }
         }
     }
 
     private fun addTask() {
         val s = _state.value
-        if (s.newTitle.isBlank()) return
+        if (s.newTitle.isBlank()) {
+            _state.update { it.copy(error = "Escribe un título para la tarea") }
+            return
+        }
         val task = TaskModel(
-            id = kotlin.random.Random.nextLong(1000L, 999999L),
+            id = 0L,
             done = false,
             category = s.newCategory,
             title = s.newTitle.trim(),
@@ -69,16 +117,28 @@ class TaskViewModel(
             priority = s.newPriority
         )
         viewModelScope.launch {
-            addTaskUseCase(task).onSuccess { tasks ->
-                _state.update {
-                    it.copy(
-                        tasks = tasks,
-                        showAddDialog = false,
-                        newTitle = "",
-                        newDetail = ""
-                    )
+            _state.update { it.copy(isSaving = true, error = null) }
+            addTaskUseCase(task)
+                .onSuccess { tasks ->
+                    _state.update {
+                        it.copy(
+                            tasks = tasks,
+                            showAddDialog = false,
+                            newTitle = "",
+                            newDetail = "",
+                            isSaving = false,
+                            error = null
+                        )
+                    }
                 }
-            }
+                .onFailure { err ->
+                    _state.update {
+                        it.copy(
+                            isSaving = false,
+                            error = err.message ?: "No se pudo guardar la tarea"
+                        )
+                    }
+                }
         }
     }
 }

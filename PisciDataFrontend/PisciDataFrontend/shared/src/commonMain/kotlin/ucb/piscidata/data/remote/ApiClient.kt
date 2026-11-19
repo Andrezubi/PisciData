@@ -37,6 +37,7 @@ object ApiClient {
             level = LogLevel.ALL
         }
         defaultRequest {
+            header("ngrok-skip-browser-warning", "true")
             if (headers[HttpHeaders.Authorization] == null) {
                 val token = sessionManager?.getToken()
                 if (!token.isNullOrBlank()) {

@@ -1,11 +1,19 @@
 package ucb.piscidata.navigation
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ucb.piscidata.chat.presentation.screen.ChatScreen
 import ucb.piscidata.database.presentation.screen.DatabaseScreen
@@ -25,22 +33,31 @@ fun MainTabScreen(
     var currentTab by remember { mutableStateOf(MainTab.CHAT) }
 
     Scaffold(
+        containerColor = Color(0xFFF5F8FA),
         bottomBar = {
             NavigationBar(
-                containerColor = Color.White
+                containerColor = Color.White,
+                tonalElevation = 8.dp
             ) {
                 listOf(
-                    MainTab.CHAT to "Asistente IA",
-                    MainTab.DB to "Base de datos",
+                    MainTab.CHAT to "Asistente",
+                    MainTab.DB to "Base datos",
                     MainTab.TAREAS to "Tareas",
                     MainTab.REPORTES to "Reportes",
                     MainTab.PERFIL to "Perfil"
                 ).forEach { (tab, label) ->
                     val selected = currentTab == tab
-                    val tint = if (selected) Color(0xFF1577C8) else Color(0xFF91A5AD)
+                    val tint = if (selected) Color(0xFF1577C8) else Color(0xFF8AA0AA)
                     NavigationBarItem(
                         selected = selected,
                         onClick = { currentTab = tab },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = Color(0xFF1577C8),
+                            selectedTextColor = Color(0xFF1577C8),
+                            indicatorColor = Color(0xFFE3F2FD),
+                            unselectedIconColor = Color(0xFF8AA0AA),
+                            unselectedTextColor = Color(0xFF8AA0AA)
+                        ),
                         icon = {
                             when (tab) {
                                 MainTab.CHAT -> ChatIcon(color = tint)
@@ -53,7 +70,8 @@ fun MainTabScreen(
                         label = {
                             Text(
                                 text = label,
-                                fontSize = 9.sp,
+                                fontSize = 10.sp,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                 maxLines = 1,
                                 softWrap = false,
                                 overflow = TextOverflow.Clip,
@@ -70,12 +88,22 @@ fun MainTabScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            when (currentTab) {
-                MainTab.CHAT -> ChatScreen()
-                MainTab.DB -> DatabaseScreen()
-                MainTab.TAREAS -> TasksScreen()
-                MainTab.REPORTES -> ReportsScreen()
-                MainTab.PERFIL -> ProfileScreen(onLogout = onLogout)
+            AnimatedContent(
+                targetState = currentTab,
+                transitionSpec = {
+                    (fadeIn(animationSpec = tween(220)) +
+                        slideInVertically(animationSpec = tween(220)) { it / 28 })
+                        .togetherWith(fadeOut(animationSpec = tween(160)))
+                },
+                label = "MainTabTransition"
+            ) { tab ->
+                when (tab) {
+                    MainTab.CHAT -> ChatScreen()
+                    MainTab.DB -> DatabaseScreen()
+                    MainTab.TAREAS -> TasksScreen()
+                    MainTab.REPORTES -> ReportsScreen()
+                    MainTab.PERFIL -> ProfileScreen(onLogout = onLogout)
+                }
             }
         }
     }

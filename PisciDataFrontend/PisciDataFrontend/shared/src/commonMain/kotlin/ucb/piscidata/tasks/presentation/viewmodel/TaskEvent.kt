@@ -1,12 +1,12 @@
 package ucb.piscidata.tasks.presentation.viewmodel
 
 import ucb.piscidata.tasks.domain.model.TaskCategory
-import ucb.piscidata.tasks.domain.model.TaskModel
 import ucb.piscidata.tasks.domain.model.TaskPriority
 
 sealed interface TaskEvent {
     object LoadTasks : TaskEvent
     data class ToggleTask(val id: Long) : TaskEvent
+    data class DeleteTask(val id: Long) : TaskEvent
     data class ChangeFilter(val filter: TaskFilter) : TaskEvent
     data class ShowAddDialog(val show: Boolean) : TaskEvent
     data class UpdateNewTitle(val title: String) : TaskEvent

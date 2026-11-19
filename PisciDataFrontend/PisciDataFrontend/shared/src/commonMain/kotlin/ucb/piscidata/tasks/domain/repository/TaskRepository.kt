@@ -6,4 +6,5 @@ interface TaskRepository {
     suspend fun getTasks(): Result<List<TaskModel>>
     suspend fun toggleTask(id: Long): Result<List<TaskModel>>
     suspend fun addTask(task: TaskModel): Result<List<TaskModel>>
+    suspend fun deleteTask(id: Long): Result<List<TaskModel>>
 }

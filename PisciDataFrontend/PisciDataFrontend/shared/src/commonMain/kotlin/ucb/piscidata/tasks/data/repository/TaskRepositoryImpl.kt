@@ -10,4 +10,5 @@ class TaskRepositoryImpl(
     override suspend fun getTasks(): Result<List<TaskModel>> = service.getTasks()
     override suspend fun toggleTask(id: Long): Result<List<TaskModel>> = service.toggleTask(id)
     override suspend fun addTask(task: TaskModel): Result<List<TaskModel>> = service.addTask(task)
+    override suspend fun deleteTask(id: Long): Result<List<TaskModel>> = service.deleteTask(id)
 }

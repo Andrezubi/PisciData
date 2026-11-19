@@ -1,5 +1,10 @@
 package ucb.piscidata.chat.presentation.screen
 
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -13,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -404,15 +410,26 @@ fun ChatScreen(
                         enabled = !state.isLoading && !state.isTranscribing
                     )
                     if (state.inputMessage.isBlank()) {
-                        // Botón Push-to-Talk para grabación de audio y transcripción con Whisper
+                        // Botón Push-to-Talk con pulso animado al grabar
+                        val pulseTransition = rememberInfiniteTransition(label = "MicPulse")
+                        val micScale by pulseTransition.animateFloat(
+                            initialValue = 1f,
+                            targetValue = if (state.isRecording) 1.16f else 1f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(550),
+                                repeatMode = RepeatMode.Reverse
+                            ),
+                            label = "MicScale"
+                        )
                         Box(
                             modifier = Modifier
-                                .size(46.dp)
+                                .size(48.dp)
+                                .scale(micScale)
                                 .clip(CircleShape)
                                 .background(
                                     if (state.isRecording) Color(0xFFE53935)
                                     else if (state.isLoading || state.isTranscribing) Color(0xFFECEFF1)
-                                    else Color(0xFFE8F4FC)
+                                    else Color(0xFFE3F2FD)
                                 )
                                 .pointerInput(state.isLoading, state.isTranscribing) {
                                     if (state.isLoading || state.isTranscribing) return@pointerInput

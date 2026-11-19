@@ -9,6 +9,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.data.remote.RemoteBackendConfig
 import ucb.piscidata.profile.data.datasource.ProfileRemoteDataSource
 import ucb.piscidata.profile.data.dto.UpdateUserRequestDto
 import ucb.piscidata.profile.data.dto.UserProfileDto
@@ -20,10 +21,8 @@ class ProfileService : ProfileRemoteDataSource {
     private val client = ApiClient.client
     private val sessionManager: SessionManager by lazy { KoinPlatform.getKoin().get() }
 
-    private val userUrls = listOf(
-        "https://127.0.0.1:7190/api/users",
-        "http://127.0.0.1:5007/api/users"
-    )
+    private val userUrls: List<String>
+        get() = RemoteBackendConfig.urlsFor("/api/users")
 
     override suspend fun getUserProfile(id: Int): Result<UserProfileModel> {
         val token = sessionManager.token.value

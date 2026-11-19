@@ -121,10 +121,10 @@ PisciDataFrontend/
 * **Registro de granja:** tras registrar un usuario se muestra `RegisterFarmScreen` con selector de ubicación en mapa (`PlatformMapPicker`); requiere permisos de ubicación.
 * **Base de Datos:** formularios separados para ciclos (`CicloFormScreen`), estanques (`PondFormScreen`), alimentos (`FeedFormScreen`) e insumos (`SupplyFormScreen`), con selectores reales de estanques/especies y acción de finalizar ciclo (`POST /api/Productioncycles/{id}/finalize`).
 * **Identidad de marca:** logo oficial PisciData (claro/oscuro) en login, registro, cabecera de granja, avatar del asistente e ícono del launcher Android/iOS; paleta oficial (`#1577C8`, `#0B2B3B`, `#4EC5C1`, `#19A974`).
-* **Pendiente con datos fijos:** `TasksScreen`, `ReportsScreen` y parte de `ProfileService` aún usan datos simulados.
-* El backend usa el modelo `piscidata-ai` en Ollama. La respuesta móvil no usa herramientas MCP; por lo tanto, no debe presentarse como consulta de datos vivos de granjas.
-* **Verificación manual:** chat verificado en Android el 03/11/2026; compilación `assembleDebug` y `dotnet build` verificadas el 19/11/2026 tras integrar `main`. STT, mapa y formularios no tienen verificación documentada.
-* **Estado SDD:** chat móvil **IMPLEMENTED + VERIFIED MANUALLY**; STT **IMPLEMENTED / NOT VERIFIED**; conexión móvil con MCP **MISSING**.
+* **Pendiente con datos fijos:** `TasksScreen` (`TaskService.kt`) y `ReportsScreen` usan datos simulados. `ProfileService` sí consume `/api/users/{id}` (con fallback offline), pero aún tiene URLs `127.0.0.1` hardcodeadas igual que otros 6 servicios.
+* El backend usa `piscidata-ai` en Ollama y **sí integra herramientas MCP desde el chat móvil** mediante `OllamaApiClient.ChatAsync` → `McpToolService` (con el JWT del usuario). Nota: en `appsettings.json`, `AI:MCP:ServerDll` apunta a `win-x64/PisciDataMCP.dll` (ruta de Windows).
+* **Verificación manual:** chat verificado en Android el 03/11/2026; compilación `assembleDebug` y `dotnet build` verificadas el 19/11/2026 tras integrar `main`. STT, mapa, formularios y tool-calling MCP desde móvil no tienen verificación documentada.
+* **Estado SDD:** chat móvil **IMPLEMENTED + VERIFIED MANUALLY**; STT y MCP móvil **IMPLEMENTED / NOT VERIFIED**.
 
 ---
 
@@ -191,14 +191,14 @@ La matriz de trazabilidad detallada a nivel de requisitos se mantiene en `02-req
 
 | Prioridad | Módulo | Backend | Frontend | Qué falta |
 |---|---|---|---|---|
-| 1 | **Tareas** (`Task`) | ❌ Sin DTO/Repo/Service/Controller | ⚠️ Datos simulados | CRUD por `FarmId` con validación de propiedad y conectar `TasksScreen`. |
-| 2 | **Reportes / KPIs** | ❌ Sin endpoints agregados | ⚠️ Valores fijos | Endpoint de KPIs (biomasa, mortalidad %, FCR, ciclos activos) y conectar `ReportsScreen`. |
-| 3 | **Calidad de agua** (`Waterquality`) | ❌ Solo tabla | ⚠️ Solo visualización en estanque | Registro de mediciones (pH, O₂, temperatura, transparencia) contra `waterqualityreference`. |
+| 1 | **Tareas** (`Task`) | ✅ `TasksController` + `TaskService` + `TaskRepository` | ✅ `TasksScreen` conectado (CRUD + toggle) | Verificar en runtime con datos reales. |
+| 2 | **Reportes / KPIs** | ✅ `ReportsController` + `ReportService` | ✅ `ReportsScreen` conectado a KPIs reales | Verificar en runtime con datos reales. |
+| 3 | **Calidad de agua** (`Waterquality`) | ⚠️ Lectura + referencia en `PondService` (falta POST) | ⚠️ Visualización en `EstanquesTab` | Falta endpoint y formulario para registrar nuevas mediciones (pH, O₂, temperatura, transparencia). |
 | 4 | **Alimentación diaria** (`Feeding`, guías por edad/peso) | ⚠️ CRUD de `Feeding` sin guías | ❌ Sin pantalla | Registro de raciones y cálculo recomendado según `feedingbyage`/`feedingbyweight`. |
 | 5 | **Biometrías** | ⚠️ CRUD básico | ❌ Sin pantalla | Registro de muestreo por cubetas y biomasa estimada. |
 | 6 | **Mortalidad y Cosecha** | ❌ Solo tablas | ❌ Sin pantalla | Registro de bajas y cosechas; alimentar KPIs. |
 | 7 | **Kardex de insumos** (`Supplymovement`) | ❌ Solo tabla | ❌ | Entradas/salidas de stock. |
-| 8 | **IA + MCP en móvil** | ⚠️ `McpToolService` existe | — | Que el chat móvil consulte datos reales de la granja vía herramientas MCP. |
+| 8 | **IA + MCP en móvil** | ✅ Loop Ollama ↔ MCP en `OllamaApiClient` | ✅ Vía `ChatScreen` | Verificar en runtime y corregir `ServerDll` multiplataforma (hoy apunta a `win-x64`). |
 | 9 | **Verificación** | 0 tests | 0 tests | Pruebas de validadores (`BR-*`) y verificación manual de STT, mapa y formularios. |
 
 > Corregido durante la integración del 19/11/2026: `FarmsController.Create` tenía dos versiones superpuestas tras el merge del PR #6/#7 y no compilaba (CS0128/CS7036). Se conservó la versión que toma el propietario desde el JWT.

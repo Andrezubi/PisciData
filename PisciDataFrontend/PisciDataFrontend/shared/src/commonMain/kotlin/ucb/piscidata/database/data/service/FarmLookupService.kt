@@ -5,6 +5,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.data.remote.RemoteBackendConfig
 import ucb.piscidata.database.data.dto.FarmResponseDto
 import ucb.piscidata.database.domain.model.FarmModel
 import ucb.piscidata.session.SessionManager
@@ -13,10 +14,8 @@ class FarmLookupService {
     private val client = ApiClient.client
     private val sessionManager: SessionManager by lazy { KoinPlatform.getKoin().get() }
 
-    private val farmUrls = listOf(
-        "https://127.0.0.1:7190/api/farms/my",
-        "http://127.0.0.1:5007/api/farms/my"
-    )
+    private val farmUrls: List<String>
+        get() = RemoteBackendConfig.urlsFor("/api/farms/my")
 
     suspend fun getFarms(): Result<List<FarmModel>> {
         val token = sessionManager.token.value

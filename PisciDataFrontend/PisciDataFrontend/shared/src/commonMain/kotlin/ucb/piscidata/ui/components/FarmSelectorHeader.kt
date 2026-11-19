@@ -1,11 +1,14 @@
 package ucb.piscidata.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -22,10 +25,14 @@ fun FarmSelectorHeader(
     val currentFarmName = farms.find { it.id == selectedFarmId }?.name ?: "Piscigranja Default"
     var expanded by remember { mutableStateOf(false) }
 
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = Color.White,
-        shadowElevation = 3.dp
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                Brush.horizontalGradient(
+                    colors = listOf(Color(0xFF0B2B3B), Color(0xFF103F58))
+                )
+            )
     ) {
         Row(
             modifier = Modifier
@@ -37,9 +44,15 @@ fun FarmSelectorHeader(
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                PisciDataLogo(darkTheme = true, modifier = Modifier.size(38.dp))
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .border(1.dp, Color(0x554EC5C1), RoundedCornerShape(10.dp))
+                ) {
+                    PisciDataLogo(darkTheme = true, modifier = Modifier.fillMaxSize())
+                }
                 Column(
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
@@ -47,14 +60,14 @@ fun FarmSelectorHeader(
                         text = "PISCIDATA · GRANJA ACTUAL",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF6B818B),
-                        letterSpacing = 0.5.sp
+                        color = Color(0xFF4EC5C1),
+                        letterSpacing = 0.8.sp
                     )
                     Text(
                         text = currentFarmName,
-                        fontSize = 15.sp,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0B2B3B),
+                        color = Color.White,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -66,7 +79,7 @@ fun FarmSelectorHeader(
                     onClick = { expanded = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(12.dp),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
                 ) {
                     Text(

@@ -14,21 +14,18 @@ import ucb.piscidata.auth.data.dto.UserResponseDto
 import ucb.piscidata.auth.data.mapper.toModel
 import ucb.piscidata.auth.domain.model.UserModel
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.data.remote.RemoteBackendConfig
 import ucb.piscidata.session.SessionManager
 
 class AuthService : AuthRemoteDataSource {
     private val client = ApiClient.client
     private val sessionManager: SessionManager by lazy { KoinPlatform.getKoin().get() }
 
-    private val loginUrls = listOf(
-        "https://127.0.0.1:7190/api/users/login",
-        "http://127.0.0.1:5007/api/users/login"
-    )
+    private val loginUrls: List<String>
+        get() = RemoteBackendConfig.urlsFor("/api/users/login")
 
-    private val registerUrls = listOf(
-        "https://127.0.0.1:7190/api/users",
-        "http://127.0.0.1:5007/api/users"
-    )
+    private val registerUrls: List<String>
+        get() = RemoteBackendConfig.urlsFor("/api/users")
 
     override suspend fun login(phone: String, pass: String): Result<UserModel> {
         if (phone.isBlank() || pass.isBlank()) {
