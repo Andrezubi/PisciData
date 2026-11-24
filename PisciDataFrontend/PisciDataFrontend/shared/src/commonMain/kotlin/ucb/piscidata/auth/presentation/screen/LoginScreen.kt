@@ -7,7 +7,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -19,14 +18,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.painterResource
 import org.koin.compose.viewmodel.koinViewModel
 import piscidatafrontend.shared.generated.resources.Res
 import piscidatafrontend.shared.generated.resources.img_login_bg
 import ucb.piscidata.auth.presentation.viewmodel.AuthEvent
 import ucb.piscidata.auth.presentation.viewmodel.AuthViewModel
-import ucb.piscidata.data.remote.RemoteBackendConfig
+import ucb.piscidata.ui.components.FloatingNotificationBanner
+import ucb.piscidata.ui.components.NotificationKind
 import ucb.piscidata.ui.components.PisciDataLogo
+import ucb.piscidata.ui.components.classifyNotification
 
 @Composable
 fun LoginScreen(
@@ -36,12 +38,18 @@ fun LoginScreen(
 ) {
     val state by viewModel.state.collectAsState()
     var visible by remember { mutableStateOf(false) }
-    var showServerDialog by remember { mutableStateOf(false) }
-    val activeRemoteUrl by RemoteBackendConfig.remoteBaseUrl.collectAsState()
-    var serverInput by remember(activeRemoteUrl) { mutableStateOf(activeRemoteUrl) }
+    var bannerMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         visible = true
+    }
+
+    LaunchedEffect(state.error) {
+        bannerMessage = state.error
+        if (state.error != null) {
+            delay(5000)
+            bannerMessage = null
+        }
     }
 
     LaunchedEffect(state.isAuthenticated) {
@@ -50,11 +58,12 @@ fun LoginScreen(
         }
     }
 
+    val isCredentialWarning = state.error != null && classifyNotification(state.error) == NotificationKind.WARNING
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F8FA)),
-        contentAlignment = Alignment.Center
+            .background(Color(0xFFF5F8FA))
     ) {
         Card(
             modifier = Modifier
@@ -66,13 +75,12 @@ fun LoginScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .statusBarsPadding()
+                    .navigationBarsPadding()
             ) {
-                // Login Hero Section with background image and overlay
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(260.dp)
+                        .height(280.dp)
                 ) {
                     Image(
                         painter = painterResource(Res.drawable.img_login_bg),
@@ -88,39 +96,21 @@ fun LoginScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(24.dp),
+                            .statusBarsPadding()
+                            .padding(horizontal = 24.dp, vertical = 20.dp),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                PisciDataLogo(darkTheme = true, modifier = Modifier.size(42.dp))
-                                Text(
-                                    text = "PisciData",
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color.White
-                                )
-                            }
-                            Surface(
-                                onClick = { showServerDialog = true },
-                                color = Color(0x66073044),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Text(
-                                    text = if (activeRemoteUrl.isNotBlank()) "🌐 Remoto" else "⚙ Servidor",
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF4EC5C1)
-                                )
-                            }
+                            PisciDataLogo(darkTheme = true, modifier = Modifier.size(42.dp))
+                            Text(
+                                text = "PisciData",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color.White
+                            )
                         }
                         AnimatedVisibility(
                             visible = visible,
@@ -150,7 +140,6 @@ fun LoginScreen(
                     }
                 }
 
-                // Login Content Form
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -176,61 +165,45 @@ fun LoginScreen(
                             )
                         }
 
-                        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(
-                                    text = "Número de Teléfono",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF16313D)
-                                )
-                                OutlinedTextField(
-                                    value = state.phone,
-                                    onValueChange = { viewModel.emitEvent(AuthEvent.OnPhoneChanged(it)) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    singleLine = true
-                                )
-                            }
+                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                            OutlinedTextField(
+                                value = state.phone,
+                                onValueChange = { viewModel.emitEvent(AuthEvent.OnPhoneChanged(it)) },
+                                label = { Text("Número de Teléfono") },
+                                isError = isCredentialWarning,
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
+                            )
 
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(
-                                    text = "Contraseña",
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF16313D)
-                                )
-                                OutlinedTextField(
-                                    value = state.password,
-                                    onValueChange = { viewModel.emitEvent(AuthEvent.OnPasswordChanged(it)) },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(12.dp),
-                                    singleLine = true,
-                                    visualTransformation = PasswordVisualTransformation()
-                                )
-                            }
-                        }
-
-                        if (state.error != null) {
-                            Text(
-                                text = state.error!!,
-                                color = MaterialTheme.colorScheme.error,
-                                fontSize = 12.sp
+                            OutlinedTextField(
+                                value = state.password,
+                                onValueChange = { viewModel.emitEvent(AuthEvent.OnPasswordChanged(it)) },
+                                label = { Text("Contraseña") },
+                                isError = isCredentialWarning,
+                                visualTransformation = PasswordVisualTransformation(),
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp)
                             )
                         }
 
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(
                                 onClick = { viewModel.emitEvent(AuthEvent.OnLoginClicked) },
+                                enabled = !state.isLoading,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .height(52.dp),
+                                    .height(50.dp),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
-                                enabled = !state.isLoading
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8))
                             ) {
                                 if (state.isLoading) {
-                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp,
+                                        color = Color.White
+                                    )
                                 } else {
                                     Text(
                                         text = "Iniciar sesión",
@@ -268,53 +241,13 @@ fun LoginScreen(
             }
         }
 
-        if (showServerDialog) {
-            AlertDialog(
-                onDismissRequest = { showServerDialog = false },
-                containerColor = Color.White,
-                shape = RoundedCornerShape(20.dp),
-                title = {
-                    Text(
-                        "Conexión remota",
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0B2B3B)
-                    )
-                },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            "Pega tu URL de ngrok (ej. https://xxxx.ngrok-free.app) o déjalo vacío para usar 127.0.0.1:5007.",
-                            fontSize = 12.sp,
-                            color = Color(0xFF6B818B)
-                        )
-                        OutlinedTextField(
-                            value = serverInput,
-                            onValueChange = { serverInput = it },
-                            label = { Text("URL del servidor") },
-                            singleLine = true,
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            RemoteBackendConfig.setRemoteBaseUrl(serverInput)
-                            showServerDialog = false
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text("Guardar", color = Color.White)
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showServerDialog = false }) {
-                        Text("Cancelar", color = Color(0xFF6B818B))
-                    }
-                }
-            )
-        }
+        // Notificación flotante superior diferenciada (Ámbar para datos / Coral para red)
+        FloatingNotificationBanner(
+            message = bannerMessage,
+            onDismiss = { bannerMessage = null },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+        )
     }
 }

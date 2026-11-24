@@ -9,6 +9,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import org.koin.mp.KoinPlatform
 import ucb.piscidata.data.remote.ApiClient
+import ucb.piscidata.data.remote.RemoteBackendConfig
 import ucb.piscidata.database.data.dto.CreateFeedingRequestDto
 import ucb.piscidata.database.data.dto.FeedResponseDto
 import ucb.piscidata.database.data.dto.FeedingDetailResponseDto
@@ -23,9 +24,8 @@ class FeedingService {
     private val client = ApiClient.client
     private val sessionManager: SessionManager by lazy { KoinPlatform.getKoin().get() }
 
-    private val baseUrls = listOf(
-        "http://127.0.0.1:5007"
-    )
+    private val baseUrls: List<String>
+        get() = RemoteBackendConfig.baseUrls()
 
     suspend fun getFeedingsByCycle(cycleId: Int): Result<List<FeedingRecord>> {
         val token = sessionManager.token.value

@@ -60,6 +60,9 @@ namespace PisciDataBackend.Controllers
             if (!TryGetUserId(out var userId))
                 return Unauthorized(new { message = "No se pudo identificar al usuario." });
 
+            if (dto.OwnerUserId <= 0)
+                dto.OwnerUserId = userId;
+
             var (created, errors) = await _farmService.CreateAsync(dto, userId);
             if (errors.Count > 0)
                 return BadRequest(errors);

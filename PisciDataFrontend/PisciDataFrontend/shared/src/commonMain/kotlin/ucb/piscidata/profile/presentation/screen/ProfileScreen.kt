@@ -1,6 +1,10 @@
 package ucb.piscidata.profile.presentation.screen
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -10,7 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -32,9 +36,7 @@ fun ProfileScreen(
     val state by viewModel.state.collectAsState()
     val farms by sessionManager.farms.collectAsState()
     val selectedFarmId by sessionManager.selectedFarmId.collectAsState()
-    val activeRemoteUrl by RemoteBackendConfig.remoteBaseUrl.collectAsState()
-    var remoteUrlInput by remember(activeRemoteUrl) { mutableStateOf(activeRemoteUrl) }
-    var remoteStatusMsg by remember { mutableStateOf<String?>(null) }
+    val useLocalOnly by RemoteBackendConfig.useLocalOnly.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.emitEvent(ProfileEvent.LoadProfile(1))
@@ -43,12 +45,13 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F8FA))
+            .background(Color(0xFFF8FAFC))
     ) {
         FarmSelectorHeader(
             farms = farms,
             selectedFarmId = selectedFarmId,
-            onSelectFarm = { sessionManager.selectFarm(it) }
+            onSelectFarm = { sessionManager.selectFarm(it) },
+            subtitle = "Cuenta y conexión"
         )
 
         Column(
@@ -56,72 +59,93 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Hero header with brand gradient
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(20.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+            // Tarjeta compacta horizontal de identidad (ahorra ~110dp verticales)
+            Surface(
+                color = Color.White,
+                shape = RoundedCornerShape(18.dp),
+                border = BorderStroke(1.dp, Color(0xFFE5ECF2)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(
-                            Brush.linearGradient(
-                                colors = listOf(Color(0xFF0B2B3B), Color(0xFF1577C8))
-                            )
-                        )
-                        .padding(24.dp),
-                    contentAlignment = Alignment.Center
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    Surface(
+                        modifier = Modifier.size(56.dp),
+                        shape = CircleShape,
+                        color = Color(0xFFEFF6FF),
+                        border = BorderStroke(1.dp, Color(0xFFBFDBFE))
                     ) {
-                        Surface(
-                            modifier = Modifier.size(76.dp),
-                            shape = CircleShape,
-                            color = Color(0xFF4EC5C1)
+                        Box(contentAlignment = Alignment.Center) {
+                            val initials = if (state.firstName.isNotBlank() && state.lastName.isNotBlank()) {
+                                "${state.firstName.first()}${state.lastName.first()}"
+                            } else {
+                                "PD"
+                            }
+                            Text(
+                                initials.uppercase(),
+                                color = Color(0xFF1577C8),
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        val fullName = if (state.firstName.isNotBlank()) {
+                            "${state.firstName} ${state.lastName}"
+                        } else {
+                            "Cargando perfil…"
+                        }
+                        Text(
+                            text = fullName,
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF0B2B3B)
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                val initials = if (state.firstName.isNotBlank() && state.lastName.isNotBlank()) {
-                                    "${state.firstName.first()}${state.lastName.first()}"
-                                } else {
-                                    "PD"
-                                }
+                            Surface(
+                                color = Color(0xFFF1F5F9),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
                                 Text(
-                                    initials.uppercase(),
-                                    color = Color(0xFF0B2B3B),
-                                    fontSize = 26.sp,
-                                    fontWeight = FontWeight.ExtraBold
+                                    text = state.role.ifBlank { "Productor" },
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF475569)
                                 )
                             }
-                        }
-                        val fullName = if (state.firstName.isNotBlank()) "${state.firstName} ${state.lastName}" else "Cargando..."
-                        Text(fullName, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        Surface(
-                            color = Color(0x33FFFFFF),
-                            shape = RoundedCornerShape(20.dp)
-                        ) {
-                            Text(
-                                text = "Rol: ${state.role}",
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 5.dp),
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
+                            if (state.phone.isNotBlank()) {
+                                Text(
+                                    text = "· ${state.phone}",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
                         }
                     }
                 }
             }
 
-            // Personal info card
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+            // Datos personales editables
+            Surface(
+                color = Color.White,
                 shape = RoundedCornerShape(18.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                border = BorderStroke(1.dp, Color(0xFFE5ECF2)),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier
@@ -134,18 +158,32 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Datos personales", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B2B3B))
-                        TextButton(onClick = { viewModel.emitEvent(ProfileEvent.ToggleEditMode) }) {
+                        Text(
+                            "Datos personales",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0B2B3B)
+                        )
+                        Surface(
+                            onClick = { viewModel.emitEvent(ProfileEvent.ToggleEditMode) },
+                            color = if (state.editMode) Color(0xFFF1F5F9) else Color(0xFFEFF6FF),
+                            shape = RoundedCornerShape(16.dp)
+                        ) {
                             Text(
-                                if (state.editMode) "Cancelar" else "Editar",
-                                color = Color(0xFF1577C8),
+                                text = if (state.editMode) "Cancelar" else "Editar",
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 5.dp),
+                                fontSize = 12.sp,
+                                color = if (state.editMode) Color(0xFF64748B) else Color(0xFF1577C8),
                                 fontWeight = FontWeight.Bold
                             )
                         }
                     }
 
                     if (state.isLoading) {
-                        Box(modifier = Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().height(90.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             CircularProgressIndicator(color = Color(0xFF1577C8))
                         }
                     } else {
@@ -155,6 +193,7 @@ fun ProfileScreen(
                                 onValueChange = { viewModel.emitEvent(ProfileEvent.UpdateFirstName(it)) },
                                 label = { Text("Nombre") },
                                 enabled = state.editMode,
+                                singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -163,22 +202,16 @@ fun ProfileScreen(
                                 onValueChange = { viewModel.emitEvent(ProfileEvent.UpdateLastName(it)) },
                                 label = { Text("Apellido") },
                                 enabled = state.editMode,
+                                singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             )
                             OutlinedTextField(
                                 value = state.phone,
                                 onValueChange = { viewModel.emitEvent(ProfileEvent.UpdatePhone(it)) },
-                                label = { Text("Teléfono / Celular") },
+                                label = { Text("Teléfono") },
                                 enabled = state.editMode,
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            OutlinedTextField(
-                                value = state.role,
-                                onValueChange = {},
-                                label = { Text("Rol (Solo lectura)") },
-                                enabled = false,
+                                singleLine = true,
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -187,9 +220,9 @@ fun ProfileScreen(
                         if (state.editMode) {
                             Button(
                                 onClick = { viewModel.emitEvent(ProfileEvent.SaveProfile) },
-                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                modifier = Modifier.fillMaxWidth().height(46.dp),
                                 shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF19A974))
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8))
                             ) {
                                 Text("Guardar cambios", fontWeight = FontWeight.Bold, color = Color.White)
                             }
@@ -197,19 +230,20 @@ fun ProfileScreen(
                     }
 
                     if (state.error != null) {
-                        Text(state.error!!, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                        Text(state.error!!, color = Color(0xFFDC2626), fontSize = 12.sp)
                     }
                     if (state.successMessage != null) {
-                        Text(state.successMessage!!, color = Color(0xFF19A974), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(state.successMessage!!, color = Color(0xFF059669), fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
 
-            // Remote Backend Connection Card (ngrok / Cloudflare / LAN)
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+            // Modo de conexión híbrida Nube (Railway) vs Local (USB)
+            Surface(
+                color = Color.White,
                 shape = RoundedCornerShape(18.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                border = BorderStroke(1.dp, Color(0xFFE5ECF2)),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(16.dp),
@@ -220,78 +254,97 @@ fun ProfileScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Conexión al servidor", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B2B3B))
+                        Text(
+                            "Servidor de datos",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0B2B3B)
+                        )
                         Surface(
-                            color = if (activeRemoteUrl.isNotBlank()) Color(0xFFE6F7F0) else Color(0xFFE8F4FC),
-                            shape = RoundedCornerShape(12.dp)
+                            color = if (!useLocalOnly) Color(0xFFECFDF5) else Color(0xFFEFF6FF),
+                            shape = RoundedCornerShape(20.dp)
                         ) {
                             Text(
-                                text = if (activeRemoteUrl.isNotBlank()) "Remoto activo" else "Local 127.0.0.1",
+                                text = if (!useLocalOnly) "Híbrido · Nube 24/7" else "Solo Local USB",
                                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (activeRemoteUrl.isNotBlank()) Color(0xFF19A974) else Color(0xFF1577C8)
+                                color = if (!useLocalOnly) Color(0xFF059669) else Color(0xFF1577C8)
                             )
                         }
                     }
                     Text(
-                        "Pega tu URL de ngrok o túnel HTTPS para usar PisciData sin cable USB. Los puertos locales quedan como respaldo automático.",
-                        fontSize = 11.sp,
-                        color = Color(0xFF6B818B)
+                        "En modo Híbrido detecta tu PC local al instante si está conectada y usa la nube 24/7 cuando estás en campo.",
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp,
+                        color = Color(0xFF64748B)
                     )
-                    OutlinedTextField(
-                        value = remoteUrlInput,
-                        onValueChange = { remoteUrlInput = it },
-                        label = { Text("URL remota (ej. https://xxxx.ngrok-free.app)") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = {
-                                RemoteBackendConfig.setRemoteBaseUrl(remoteUrlInput)
-                                remoteStatusMsg = if (remoteUrlInput.isBlank()) {
-                                    "Usando conexión local (127.0.0.1:5007)."
-                                } else {
-                                    "Servidor remoto aplicado: ${RemoteBackendConfig.activeBaseUrl}"
-                                }
-                            },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8))
+
+                    Surface(
+                        color = Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
-                            Text("Aplicar URL", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                        }
-                        if (activeRemoteUrl.isNotBlank()) {
-                            OutlinedButton(
-                                onClick = {
-                                    remoteUrlInput = ""
-                                    RemoteBackendConfig.setRemoteBaseUrl("")
-                                    remoteStatusMsg = "Vuelto a modo local (127.0.0.1:5007)."
-                                },
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Text("Local", fontSize = 12.sp, color = Color(0xFF6B818B))
+                            listOf(
+                                false to "Nube 24/7 + Local",
+                                true to "Solo Local USB"
+                            ).forEach { (localOnlyOption, label) ->
+                                val selected = useLocalOnly == localOnlyOption
+                                val bg by animateColorAsState(
+                                    targetValue = if (selected) Color.White else Color.Transparent,
+                                    animationSpec = tween(180),
+                                    label = "ConnModeBg"
+                                )
+                                Surface(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(9.dp))
+                                        .clickable { RemoteBackendConfig.setUseLocalOnly(localOnlyOption) },
+                                    color = bg,
+                                    shape = RoundedCornerShape(9.dp),
+                                    shadowElevation = if (selected) 1.dp else 0.dp
+                                ) {
+                                    Box(
+                                        modifier = Modifier.padding(vertical = 9.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = label,
+                                            fontSize = 12.sp,
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (selected) Color(0xFF0B2B3B) else Color(0xFF64748B)
+                                        )
+                                    }
+                                }
                             }
                         }
-                    }
-                    if (remoteStatusMsg != null) {
-                        Text(remoteStatusMsg!!, fontSize = 11.sp, color = Color(0xFF19A974), fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
 
-            // Logout
-            Button(
+            // Botón limpio de cierre de sesión
+            Surface(
                 onClick = onLogout,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFEEEE)),
-                shape = RoundedCornerShape(14.dp)
+                color = Color(0xFFFEF2F2),
+                shape = RoundedCornerShape(16.dp),
+                border = BorderStroke(1.dp, Color(0xFFFECACA)),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Cerrar sesión", color = Color(0xFFE05A5A), fontWeight = FontWeight.Bold)
+                Box(
+                    modifier = Modifier.padding(vertical = 14.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "Cerrar sesión",
+                        color = Color(0xFFDC2626),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

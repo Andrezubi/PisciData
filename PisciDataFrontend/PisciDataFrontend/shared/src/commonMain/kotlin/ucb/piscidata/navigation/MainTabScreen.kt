@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -33,52 +32,60 @@ fun MainTabScreen(
     var currentTab by remember { mutableStateOf(MainTab.CHAT) }
 
     Scaffold(
-        containerColor = Color(0xFFF5F8FA),
+        containerColor = Color(0xFFF8FAFC),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            NavigationBar(
-                containerColor = Color.White,
-                tonalElevation = 8.dp
-            ) {
-                listOf(
-                    MainTab.CHAT to "Asistente",
-                    MainTab.DB to "Base datos",
-                    MainTab.TAREAS to "Tareas",
-                    MainTab.REPORTES to "Reportes",
-                    MainTab.PERFIL to "Perfil"
-                ).forEach { (tab, label) ->
-                    val selected = currentTab == tab
-                    val tint = if (selected) Color(0xFF1577C8) else Color(0xFF8AA0AA)
-                    NavigationBarItem(
-                        selected = selected,
-                        onClick = { currentTab = tab },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Color(0xFF1577C8),
-                            selectedTextColor = Color(0xFF1577C8),
-                            indicatorColor = Color(0xFFE3F2FD),
-                            unselectedIconColor = Color(0xFF8AA0AA),
-                            unselectedTextColor = Color(0xFF8AA0AA)
-                        ),
-                        icon = {
-                            when (tab) {
-                                MainTab.CHAT -> ChatIcon(color = tint)
-                                MainTab.DB -> DatabaseIcon(color = tint)
-                                MainTab.TAREAS -> TasksIcon(color = tint)
-                                MainTab.REPORTES -> ReportsIcon(color = tint)
-                                MainTab.PERFIL -> ProfileIcon(color = tint)
-                            }
-                        },
-                        label = {
-                            Text(
-                                text = label,
-                                fontSize = 10.sp,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                maxLines = 1,
-                                softWrap = false,
-                                overflow = TextOverflow.Clip,
-                                color = tint
+            Surface(color = Color.White) {
+                Column(modifier = Modifier.fillMaxWidth().navigationBarsPadding()) {
+                    HorizontalDivider(thickness = 1.dp, color = Color(0xFFEDF2F7))
+                    NavigationBar(
+                        containerColor = Color.White,
+                        tonalElevation = 0.dp,
+                        windowInsets = WindowInsets(0, 0, 0, 0),
+                        modifier = Modifier.height(64.dp)
+                    ) {
+                        listOf(
+                            MainTab.CHAT to "Chat",
+                            MainTab.DB to "Granja",
+                            MainTab.TAREAS to "Tareas",
+                            MainTab.REPORTES to "Reportes",
+                            MainTab.PERFIL to "Perfil"
+                        ).forEach { (tab, label) ->
+                            val selected = currentTab == tab
+                            val tint = if (selected) Color(0xFF1577C8) else Color(0xFF94A3B8)
+                            NavigationBarItem(
+                                selected = selected,
+                                onClick = { currentTab = tab },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = Color(0xFF1577C8),
+                                    selectedTextColor = Color(0xFF1577C8),
+                                    indicatorColor = Color(0xFFEFF6FF),
+                                    unselectedIconColor = Color(0xFF94A3B8),
+                                    unselectedTextColor = Color(0xFF94A3B8)
+                                ),
+                                icon = {
+                                    when (tab) {
+                                        MainTab.CHAT -> ChatIcon(color = tint)
+                                        MainTab.DB -> DatabaseIcon(color = tint)
+                                        MainTab.TAREAS -> TasksIcon(color = tint)
+                                        MainTab.REPORTES -> ReportsIcon(color = tint)
+                                        MainTab.PERFIL -> ProfileIcon(color = tint)
+                                    }
+                                },
+                                label = {
+                                    Text(
+                                        text = label,
+                                        fontSize = 10.sp,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Clip,
+                                        color = tint
+                                    )
+                                }
                             )
                         }
-                    )
+                    }
                 }
             }
         }
@@ -91,9 +98,7 @@ fun MainTabScreen(
             AnimatedContent(
                 targetState = currentTab,
                 transitionSpec = {
-                    (fadeIn(animationSpec = tween(220)) +
-                        slideInVertically(animationSpec = tween(220)) { it / 28 })
-                        .togetherWith(fadeOut(animationSpec = tween(160)))
+                    fadeIn(animationSpec = tween(180)).togetherWith(fadeOut(animationSpec = tween(140)))
                 },
                 label = "MainTabTransition"
             ) { tab ->

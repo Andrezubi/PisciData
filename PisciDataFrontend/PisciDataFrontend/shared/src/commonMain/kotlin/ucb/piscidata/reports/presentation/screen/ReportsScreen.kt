@@ -4,9 +4,11 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -24,6 +26,7 @@ import ucb.piscidata.reports.presentation.viewmodel.ReportsViewModel
 import ucb.piscidata.session.SessionManager
 import ucb.piscidata.ui.components.FarmSelectorHeader
 import ucb.piscidata.ui.components.PisciDataLogo
+import ucb.piscidata.ui.components.RefreshIcon
 import kotlin.math.roundToInt
 
 @Composable
@@ -38,12 +41,27 @@ fun ReportsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F8FA))
+            .background(Color(0xFFF8FAFC))
     ) {
+        // Barra superior unificada con acción de actualización integrada
         FarmSelectorHeader(
             farms = farms,
             selectedFarmId = selectedFarmId,
-            onSelectFarm = { sessionManager.selectFarm(it) }
+            onSelectFarm = { sessionManager.selectFarm(it) },
+            subtitle = "Indicadores en tiempo real",
+            trailingActions = {
+                Surface(
+                    onClick = { viewModel.refresh() },
+                    color = Color(0xFFF4F7FA),
+                    shape = CircleShape,
+                    border = BorderStroke(1.dp, Color(0xFFE5ECF2)),
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        RefreshIcon(color = Color(0xFF475569), modifier = Modifier.size(17.dp))
+                    }
+                }
+            }
         )
 
         Column(
@@ -51,82 +69,55 @@ fun ReportsScreen(
                 .fillMaxSize()
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+                .padding(14.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        "Reportes",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color(0xFF0B2B3B)
-                    )
-                    Text(
-                        "Indicadores reales en tiempo real",
-                        fontSize = 12.sp,
-                        color = Color(0xFF6B818B)
-                    )
-                }
-                OutlinedButton(
-                    onClick = { viewModel.refresh() },
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                ) {
-                    Text("↻ Actualizar", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1577C8))
-                }
-            }
-
             if (state.isLoading && state.report == null) {
                 Box(
-                    modifier = Modifier.fillMaxWidth().height(240.dp),
+                    modifier = Modifier.fillMaxWidth().height(260.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(color = Color(0xFF1577C8))
                 }
             } else if (state.error != null && state.report == null) {
                 Surface(
-                    color = Color(0xFFFFF0F0),
-                    shape = RoundedCornerShape(14.dp)
+                    color = Color(0xFFFEF2F2),
+                    border = BorderStroke(1.dp, Color(0xFFFECACA)),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(
                         modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
                             "No se pudo cargar el reporte",
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFE05A5A)
+                            color = Color(0xFFB91C1C)
                         )
-                        Text(state.error!!, fontSize = 12.sp, color = Color(0xFF6B818B))
+                        Text(state.error!!, fontSize = 12.sp, color = Color(0xFF64748B))
                     }
                 }
             } else {
                 val report = state.report
                 AnimatedVisibility(
                     visible = report != null,
-                    enter = fadeIn(tween(320)) + slideInVertically(tween(320)) { it / 12 }
+                    enter = fadeIn(tween(280)) + slideInVertically(tween(280)) { it / 14 }
                 ) {
                     if (report != null) {
-                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                            // Hero Biomass Card
+                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                            // Tarjeta Hero de Biomasa refinada estilo Linear / Stripe
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .background(
                                         Brush.linearGradient(
-                                            colors = listOf(Color(0xFF0B2B3B), Color(0xFF1577C8))
+                                            colors = listOf(Color(0xFF0F172A), Color(0xFF1577C8))
                                         ),
                                         shape = RoundedCornerShape(20.dp)
                                     )
                                     .padding(20.dp)
                             ) {
-                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -136,11 +127,11 @@ fun ReportsScreen(
                                             "BIOMASA ESTIMADA",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF4EC5C1),
-                                            letterSpacing = 1.sp
+                                            color = Color(0xFF7DD3FC),
+                                            letterSpacing = 0.8.sp
                                         )
                                         Surface(
-                                            color = Color(0x334EC5C1),
+                                            color = Color(0x26FFFFFF),
                                             shape = RoundedCornerShape(20.dp)
                                         ) {
                                             Text(
@@ -152,6 +143,7 @@ fun ReportsScreen(
                                             )
                                         }
                                     }
+
                                     val biomassLabel = if (report.estimatedBiomassKg >= 1000.0) {
                                         "${formatOneDecimal(report.estimatedBiomassKg / 1000.0)} t"
                                     } else {
@@ -159,10 +151,13 @@ fun ReportsScreen(
                                     }
                                     Text(
                                         text = biomassLabel,
-                                        fontSize = 34.sp,
+                                        fontSize = 36.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = Color.White
                                     )
+
+                                    HorizontalDivider(color = Color(0x24FFFFFF))
+
                                     Row(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
@@ -170,32 +165,34 @@ fun ReportsScreen(
                                         Text(
                                             "${report.totalActiveFishCount} peces activos",
                                             fontSize = 12.sp,
-                                            color = Color(0xFFD6EAF8)
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFFE0F2FE)
                                         )
                                         Text(
-                                            "${report.totalPondsCount} estanques",
+                                            "${report.totalPondsCount} estanques totales",
                                             fontSize = 12.sp,
-                                            color = Color(0xFFD6EAF8)
+                                            fontWeight = FontWeight.Medium,
+                                            color = Color(0xFFE0F2FE)
                                         )
                                     }
                                 }
                             }
 
-                            // 2x2 KPI Grid
+                            // Cuadrícula KPI 2x2 con bordes finos
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 KpiTile(
                                     modifier = Modifier.weight(1f),
                                     label = "Mortalidad",
                                     value = "${formatOneDecimal(report.mortalityRatePercent)}%",
-                                    subtitle = "${report.totalMortalityCount} bajas",
-                                    accent = if (report.mortalityRatePercent > 5.0) Color(0xFFE05A5A) else Color(0xFF19A974)
+                                    subtitle = "${report.totalMortalityCount} bajas registradas",
+                                    accent = if (report.mortalityRatePercent > 5.0) Color(0xFFDC2626) else Color(0xFF059669)
                                 )
                                 KpiTile(
                                     modifier = Modifier.weight(1f),
-                                    label = "FCR estimado",
+                                    label = "Conversión (FCR)",
                                     value = report.estimatedFcr?.let { formatTwoDecimals(it) } ?: "—",
                                     subtitle = "${formatOneDecimal(report.totalFeedConsumedKg)} kg alimento",
                                     accent = Color(0xFF1577C8)
@@ -204,67 +201,79 @@ fun ReportsScreen(
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
                             ) {
                                 KpiTile(
                                     modifier = Modifier.weight(1f),
-                                    label = "Alertas stock",
+                                    label = "Alertas de stock",
                                     value = "${report.lowStockAlertsCount}",
-                                    subtitle = if (report.lowStockAlertsCount == 0) "Inventario óptimo" else "Bajo mínimo",
-                                    accent = if (report.lowStockAlertsCount > 0) Color(0xFFE08B00) else Color(0xFF19A974)
+                                    subtitle = if (report.lowStockAlertsCount == 0) "Inventario óptimo" else "Ítems bajo mínimo",
+                                    accent = if (report.lowStockAlertsCount > 0) Color(0xFFD97706) else Color(0xFF059669)
                                 )
                                 KpiTile(
                                     modifier = Modifier.weight(1f),
-                                    label = "Tareas",
+                                    label = "Tareas operativas",
                                     value = "${report.completedTasksCount}/${report.pendingTasksCount + report.completedTasksCount}",
                                     subtitle = "${report.pendingTasksCount} pendientes",
                                     accent = Color(0xFF0B2B3B)
                                 )
                             }
 
-                            // Water quality snapshot if present
+                            // Parámetros de agua recientes
                             if (report.latestOxygenMgL != null || report.latestPh != null || report.latestTemperatureC != null) {
-                                Card(
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                Surface(
+                                    color = Color.White,
                                     shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                                    border = BorderStroke(1.dp, Color(0xFFE5ECF2)),
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Column(
                                         modifier = Modifier.fillMaxWidth().padding(16.dp),
                                         verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         Text(
-                                            "Última medición de agua",
+                                            "Última medición de calidad de agua",
                                             fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF0B2B3B)
                                         )
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        Surface(
+                                            color = Color(0xFFF8FAFC),
+                                            shape = RoundedCornerShape(12.dp),
+                                            border = BorderStroke(1.dp, Color(0xFFEDF2F7)),
+                                            modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            WaterChip("O₂", report.latestOxygenMgL?.let { "${formatOneDecimal(it)} mg/L" } ?: "—")
-                                            WaterChip("pH", report.latestPh?.let { formatOneDecimal(it) } ?: "—")
-                                            WaterChip("Temp", report.latestTemperatureC?.let { "${formatOneDecimal(it)} °C" } ?: "—")
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 10.dp, horizontal = 14.dp),
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                WaterMetricItem("OXÍGENO", report.latestOxygenMgL?.let { "${formatOneDecimal(it)} mg/L" } ?: "—", Modifier.weight(1f))
+                                                WaterMetricItem("NIVEL pH", report.latestPh?.let { formatOneDecimal(it) } ?: "—", Modifier.weight(1f))
+                                                WaterMetricItem("TEMP.", report.latestTemperatureC?.let { "${formatOneDecimal(it)} °C" } ?: "—", Modifier.weight(1f))
+                                            }
                                         }
                                     }
                                 }
                             }
 
-                            // AI / System Insight Card
+                            // Diagnóstico inteligente PisciData
                             Surface(
-                                color = Color(0xFFE6F4FA),
-                                shape = RoundedCornerShape(16.dp)
+                                color = Color(0xFFEFF6FF),
+                                shape = RoundedCornerShape(16.dp),
+                                border = BorderStroke(1.dp, Color(0xFFBFDBFE)),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
-                                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                    modifier = Modifier.fillMaxWidth().padding(14.dp),
                                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.Top
                                 ) {
-                                    PisciDataLogo(darkTheme = true, modifier = Modifier.size(36.dp))
-                                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                    PisciDataLogo(darkTheme = false, modifier = Modifier.size(32.dp))
+                                    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                                         Text(
-                                            "Diagnóstico PisciData",
+                                            "Diagnóstico operativo",
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF0B2B3B)
@@ -272,26 +281,28 @@ fun ReportsScreen(
                                         Text(
                                             text = report.insightMessage,
                                             fontSize = 12.sp,
-                                            color = Color(0xFF155D96),
+                                            color = Color(0xFF1E40AF),
                                             lineHeight = 17.sp
                                         )
                                     }
                                 }
                             }
 
-                            // Active cycles performance breakdown
+                            // Desglose por ciclo activo
                             if (report.activeCycles.isNotEmpty()) {
                                 Text(
-                                    "Rendimiento por ciclo activo",
-                                    fontSize = 14.sp,
+                                    "Desglose por ciclo activo",
+                                    fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF0B2B3B)
+                                    color = Color(0xFF475569),
+                                    modifier = Modifier.padding(top = 4.dp, start = 2.dp)
                                 )
                                 report.activeCycles.forEach { c ->
-                                    Card(
-                                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                                        shape = RoundedCornerShape(14.dp),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                                    Surface(
+                                        color = Color.White,
+                                        shape = RoundedCornerShape(16.dp),
+                                        border = BorderStroke(1.dp, Color(0xFFE5ECF2)),
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Row(
                                             modifier = Modifier.fillMaxWidth().padding(14.dp),
@@ -306,9 +317,9 @@ fun ReportsScreen(
                                                     color = Color(0xFF0B2B3B)
                                                 )
                                                 Text(
-                                                    "Peso prom.: ${formatOneDecimal(c.latestAverageWeightGrams)} g · ${c.healthStatus}",
-                                                    fontSize = 11.sp,
-                                                    color = Color(0xFF6B818B)
+                                                    "Peso prom. ${formatOneDecimal(c.latestAverageWeightGrams)} g · ${c.healthStatus}",
+                                                    fontSize = 12.sp,
+                                                    color = Color(0xFF64748B)
                                                 )
                                             }
                                             Column(horizontalAlignment = Alignment.End) {
@@ -320,8 +331,8 @@ fun ReportsScreen(
                                                 )
                                                 Text(
                                                     "${c.deadFishCount} bajas",
-                                                    fontSize = 10.sp,
-                                                    color = Color(0xFF8AA0AA)
+                                                    fontSize = 11.sp,
+                                                    color = Color(0xFF94A3B8)
                                                 )
                                             }
                                         }
@@ -344,36 +355,31 @@ private fun KpiTile(
     subtitle: String,
     accent: Color
 ) {
-    Card(
+    Surface(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        color = Color.White,
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = BorderStroke(1.dp, Color(0xFFE5ECF2))
     ) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF6B818B))
-            Text(value, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, color = accent)
-            Text(subtitle, fontSize = 11.sp, color = Color(0xFF8AA0AA))
+            Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF64748B))
+            Text(value, fontSize = 23.sp, fontWeight = FontWeight.ExtraBold, color = accent)
+            Text(subtitle, fontSize = 11.sp, color = Color(0xFF94A3B8))
         }
     }
 }
 
 @Composable
-private fun WaterChip(title: String, value: String) {
-    Surface(
-        color = Color(0xFFF0F7FA),
-        shape = RoundedCornerShape(12.dp)
+private fun WaterMetricItem(title: String, value: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF6B818B))
-            Text(value, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B2B3B))
-        }
+        Text(title, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF94A3B8), letterSpacing = 0.4.sp)
+        Text(value, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFF0B2B3B))
     }
 }
 

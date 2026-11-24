@@ -14,6 +14,8 @@ data class ChatState(
     val recordSeconds: Int = 0,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
+    val lastFailedPrompt: String? = null,
+    val showHistorySheet: Boolean = false,
     val showNewConversationDialog: Boolean = false,
     val newConversationTitleInput: String = ""
 )

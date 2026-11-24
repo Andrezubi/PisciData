@@ -5,63 +5,40 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * Configuración centralizada para conexión remota al backend de PisciData.
+ * Configuración unificada de conexión al backend (compatible con el flujo local del equipo y nube 24/7):
  *
- * Cómo usarla sin cable USB ni `adb reverse`:
- *  1) Coloca aquí tu URL remota (túnel Cloudflare/ngrok, IP Wi-Fi local o VPS),
- *     por ejemplo: "https://mi-tunel.trycloudflare.com" o "http://192.168.1.50:5007"
- *  2) O cámbiala en tiempo real desde la pantalla de Perfil -> "Conexión remota".
- *
- * Los puertos locales (`https://127.0.0.1:7190` y `http://127.0.0.1:5007`) se mantienen
- * siempre como respaldo automático si no hay URL remota configurada o si falla.
+ * - Intenta primero `127.0.0.1:5007` (si un compañero tiene `adb reverse tcp:5007 tcp:5007` activo,
+ *   conecta en <2 ms a su propio backend local).
+ * - Si no hay cable USB / `adb reverse` (falla instantáneo con Connection Refused en <2 ms),
+ *   usa automáticamente el servidor en la nube 24/7 en Railway (`CLOUD_BASE_URL`).
  */
 object RemoteBackendConfig {
-    // URL remota en Railway (producción 24/7). Si falla o se borra, cae automáticamente a 127.0.0.1:5007
-    const val DEFAULT_REMOTE_URL: String = "https://piscidatabackend-production.up.railway.app"
+    const val CLOUD_BASE_URL: String = "https://piscidatabackend-production.up.railway.app"
 
-    val LOCAL_FALLBACK_URLS: List<String> = listOf(
-        "https://127.0.0.1:7190",
-        "http://127.0.0.1:5007"
+    val LOCAL_URLS: List<String> = listOf(
+        "http://127.0.0.1:5007",
+        "https://127.0.0.1:7190"
     )
 
-    private val _remoteBaseUrl = MutableStateFlow(normalizeUrl(DEFAULT_REMOTE_URL))
-    val remoteBaseUrl: StateFlow<String> = _remoteBaseUrl.asStateFlow()
-
-    val isRemoteEnabled: Boolean
-        get() = _remoteBaseUrl.value.isNotBlank()
+    private val _useLocalOnly = MutableStateFlow(false)
+    val useLocalOnly: StateFlow<Boolean> = _useLocalOnly.asStateFlow()
 
     val activeBaseUrl: String
-        get() = _remoteBaseUrl.value.ifBlank { "http://127.0.0.1:5007" }
+        get() = if (_useLocalOnly.value) "http://127.0.0.1:5007" else CLOUD_BASE_URL
 
-    fun setRemoteBaseUrl(url: String) {
-        _remoteBaseUrl.value = normalizeUrl(url)
+    fun setUseLocalOnly(localOnly: Boolean) {
+        _useLocalOnly.value = localOnly
     }
 
-    /**
-     * Devuelve la lista ordenada de URLs candidatas para un endpoint (ej. "/api/tasks").
-     * Si hay URL remota configurada, se intenta primero y se conservan los puertos locales como fallback.
-     */
+    fun baseUrls(): List<String> = buildList {
+        LOCAL_URLS.forEach { add(it) }
+        if (!_useLocalOnly.value && CLOUD_BASE_URL.isNotBlank()) {
+            add(CLOUD_BASE_URL)
+        }
+    }
+
     fun urlsFor(path: String): List<String> {
         val cleanPath = if (path.startsWith("/")) path else "/$path"
-        val remote = _remoteBaseUrl.value
-        return buildList {
-            if (remote.isNotBlank()) {
-                add("$remote$cleanPath")
-            }
-            LOCAL_FALLBACK_URLS.forEach { base ->
-                add("$base$cleanPath")
-            }
-        }
-    }
-
-    private fun normalizeUrl(raw: String): String {
-        val trimmed = raw.trim().trimEnd('/')
-        if (trimmed.isBlank()) return ""
-        return if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-            trimmed
-        } else {
-            "https://$trimmed"
-        }
+        return baseUrls().map { "$it$cleanPath" }
     }
 }
-

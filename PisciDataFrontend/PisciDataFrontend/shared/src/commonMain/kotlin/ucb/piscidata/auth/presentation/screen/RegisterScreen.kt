@@ -17,7 +17,9 @@ import androidx.compose.ui.unit.sp
 import org.koin.compose.viewmodel.koinViewModel
 import ucb.piscidata.auth.presentation.viewmodel.RegisterEvent
 import ucb.piscidata.auth.presentation.viewmodel.RegisterViewModel
+import ucb.piscidata.ui.components.FloatingNotificationBanner
 import ucb.piscidata.ui.components.PisciDataLogo
+import kotlinx.coroutines.delay
 
 @Composable
 fun RegisterScreen(
@@ -26,6 +28,15 @@ fun RegisterScreen(
     onBackToLogin: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    var bannerMessage by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(state.error) {
+        bannerMessage = state.error
+        if (state.error != null) {
+            delay(5000)
+            bannerMessage = null
+        }
+    }
 
     LaunchedEffect(state.isRegistered) {
         if (state.isRegistered) {
@@ -172,14 +183,6 @@ fun RegisterScreen(
                     }
                 }
 
-                if (state.error != null) {
-                    Text(
-                        text = state.error!!,
-                        color = MaterialTheme.colorScheme.error,
-                        fontSize = 12.sp
-                    )
-                }
-
                 Button(
                     onClick = { viewModel.emitEvent(RegisterEvent.OnRegisterClicked) },
                     modifier = Modifier
@@ -202,5 +205,13 @@ fun RegisterScreen(
                 }
             }
         }
+
+        FloatingNotificationBanner(
+            message = bannerMessage,
+            onDismiss = { bannerMessage = null },
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .statusBarsPadding()
+        )
     }
 }

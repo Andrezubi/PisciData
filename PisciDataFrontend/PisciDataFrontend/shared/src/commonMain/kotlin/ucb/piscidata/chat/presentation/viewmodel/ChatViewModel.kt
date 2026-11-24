@@ -25,14 +25,27 @@ class ChatViewModel(
     fun emitEvent(event: ChatEvent) {
         when (event) {
             ChatEvent.OnLoadMessages -> loadConversationsAndMessages()
+            is ChatEvent.OnToggleHistorySheet -> _state.update { it.copy(showHistorySheet = event.show) }
             is ChatEvent.OnSelectConversation -> selectConversation(event.conversationId)
-            ChatEvent.OnOpenNewConversationDialog -> _state.update { it.copy(showNewConversationDialog = true, newConversationTitleInput = "") }
+            ChatEvent.OnOpenNewConversationDialog -> _state.update {
+                it.copy(showHistorySheet = false, showNewConversationDialog = true, newConversationTitleInput = "")
+            }
             ChatEvent.OnCloseNewConversationDialog -> _state.update { it.copy(showNewConversationDialog = false) }
             is ChatEvent.OnNewConversationTitleChanged -> _state.update { it.copy(newConversationTitleInput = event.title) }
             ChatEvent.OnCreateConversation -> createNewConversation()
             is ChatEvent.OnInputChanged -> _state.update { it.copy(inputMessage = event.text) }
-            ChatEvent.OnSendText -> sendMessage()
-            ChatEvent.OnStartRecording -> _state.update { it.copy(isRecording = true, recordSeconds = 0) }
+            ChatEvent.OnSendText -> sendMessage(_state.value.inputMessage)
+            is ChatEvent.OnSendQuickPrompt -> sendMessage(event.prompt)
+            ChatEvent.OnRetryLastMessage -> {
+                val retryText = _state.value.lastFailedPrompt
+                if (!retryText.isNullOrBlank()) {
+                    _state.update { it.copy(errorMessage = null, lastFailedPrompt = null) }
+                    sendPromptToCurrentConversation(retryText, appendUserBubble = false)
+                }
+            }
+            ChatEvent.OnDismissError -> _state.update { it.copy(errorMessage = null) }
+            ChatEvent.OnStartRecording -> _state.update { it.copy(isRecording = true, recordSeconds = 0, errorMessage = null) }
+            ChatEvent.OnTickRecording -> _state.update { if (it.isRecording) it.copy(recordSeconds = it.recordSeconds + 1) else it }
             ChatEvent.OnCancelRecording -> _state.update { it.copy(isRecording = false, recordSeconds = 0) }
             is ChatEvent.OnAudioRecorded -> handleAudioRecorded(event.audioBytes)
             ChatEvent.OnConfirmAction -> confirmAction()
@@ -40,22 +53,35 @@ class ChatViewModel(
     }
 
     private fun loadConversationsAndMessages() {
-        _state.update { it.copy(isLoading = true) }
+        _state.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch {
             val convsResult = chatRepository.getConversations()
             convsResult.onSuccess { convs ->
                 if (convs.isEmpty()) {
-                    chatRepository.createConversation("Conversación PisciData").onSuccess { newConv ->
+                    chatRepository.createConversation("Consulta general").onSuccess { newConv ->
                         val updatedConvs = listOf(newConv)
-                        _state.update { it.copy(conversations = updatedConvs, selectedConversation = newConv, conversationId = newConv.id) }
+                        _state.update {
+                            it.copy(
+                                conversations = updatedConvs,
+                                selectedConversation = newConv,
+                                conversationId = newConv.id
+                            )
+                        }
                         loadMessagesForConversation(newConv.id)
                     }.onFailure { err ->
                         _state.update { it.copy(isLoading = false, errorMessage = err.message) }
-                        _effect.emit(ChatEffect.ShowToast(err.message ?: "Error al crear conversación inicial"))
+                        _effect.emit(ChatEffect.ShowToast(err.message ?: "Error al iniciar conversación"))
                     }
                 } else {
-                    val activeConv = convs.first()
-                    _state.update { it.copy(conversations = convs, selectedConversation = activeConv, conversationId = activeConv.id) }
+                    val currentId = _state.value.conversationId
+                    val activeConv = convs.find { it.id == currentId } ?: convs.first()
+                    _state.update {
+                        it.copy(
+                            conversations = convs,
+                            selectedConversation = activeConv,
+                            conversationId = activeConv.id
+                        )
+                    }
                     loadMessagesForConversation(activeConv.id)
                 }
             }.onFailure { err ->
@@ -63,7 +89,7 @@ class ChatViewModel(
                     loadConversationsAndMessagesOnly(convId)
                 }.onFailure { err2 ->
                     _state.update { it.copy(isLoading = false, errorMessage = err2.message) }
-                    _effect.emit(ChatEffect.ShowToast(err2.message ?: "Error al conectar con el chat"))
+                    _effect.emit(ChatEffect.ShowToast(err2.message ?: "Error al conectar con el asistente"))
                 }
             }
         }
@@ -81,7 +107,15 @@ class ChatViewModel(
 
     private fun selectConversation(conversationId: Int) {
         val selected = _state.value.conversations.find { it.id == conversationId }
-        _state.update { it.copy(conversationId = conversationId, selectedConversation = selected) }
+        _state.update {
+            it.copy(
+                conversationId = conversationId,
+                selectedConversation = selected,
+                showHistorySheet = false,
+                errorMessage = null,
+                lastFailedPrompt = null
+            )
+        }
         loadMessagesForConversation(conversationId)
     }
 
@@ -94,13 +128,13 @@ class ChatViewModel(
                         ChatMessageModel(
                             id = "welcome",
                             sender = MessageSender.IA,
-                            text = "¡Hola! Soy tu asistente PisciData. ¿En qué puedo ayudarte hoy con tu piscigranja?"
+                            text = "¡Hola! Soy tu asistente **PisciData**. ¿En qué puedo ayudarte hoy con tu piscigranja?"
                         )
                     )
                 } else {
                     msgs
                 }
-                _state.update { it.copy(messages = finalMessages, isLoading = false) }
+                _state.update { it.copy(messages = finalMessages, isLoading = false, errorMessage = null) }
             }.onFailure { err ->
                 _state.update { it.copy(isLoading = false, errorMessage = err.message) }
                 _effect.emit(ChatEffect.ShowToast(err.message ?: "Error al cargar mensajes"))
@@ -110,12 +144,12 @@ class ChatViewModel(
 
     private fun createNewConversation() {
         val title = _state.value.newConversationTitleInput.trim()
-        val finalTitle = if (title.isEmpty()) "Nueva Conversación" else title
-        _state.update { it.copy(showNewConversationDialog = false, isLoading = true) }
+        val finalTitle = if (title.isEmpty()) "Consulta #${_state.value.conversations.size + 1}" else title
+        _state.update { it.copy(showNewConversationDialog = false, showHistorySheet = false, isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
             chatRepository.createConversation(finalTitle).onSuccess { newConv ->
-                val updatedConvs = _state.value.conversations + newConv
+                val updatedConvs = listOf(newConv) + _state.value.conversations.filterNot { it.id == newConv.id }
                 _state.update {
                     it.copy(
                         conversations = updatedConvs,
@@ -126,63 +160,80 @@ class ChatViewModel(
                 }
                 loadMessagesForConversation(newConv.id)
             }.onFailure { err ->
-                _state.update { it.copy(isLoading = false) }
+                _state.update { it.copy(isLoading = false, errorMessage = err.message) }
                 _effect.emit(ChatEffect.ShowToast(err.message ?: "Error al crear conversación"))
             }
         }
     }
 
-    private fun sendMessage() {
-        val text = _state.value.inputMessage.trim()
+    private fun sendMessage(rawText: String) {
+        val text = rawText.trim()
         if (text.isEmpty() || _state.value.isLoading) return
+        sendPromptToCurrentConversation(text, appendUserBubble = true)
+    }
 
+    private fun sendPromptToCurrentConversation(text: String, appendUserBubble: Boolean) {
         val convId = _state.value.conversationId
         if (convId == null) {
             loadConversationsAndMessages()
             return
         }
 
-        // 1. Optimistic UI: El mensaje del usuario se muestra de inmediato en pantalla
-        val userMsg = ChatMessageModel(
-            id = "user_${io.ktor.util.date.getTimeMillis()}",
-            sender = MessageSender.USER,
-            text = text
-        )
-        _state.update {
-            it.copy(
-                inputMessage = "",
-                messages = it.messages + userMsg,
-                isLoading = true
+        if (appendUserBubble) {
+            val userMsg = ChatMessageModel(
+                id = "user_${io.ktor.util.date.getTimeMillis()}",
+                sender = MessageSender.USER,
+                text = text
             )
+            _state.update {
+                it.copy(
+                    inputMessage = "",
+                    messages = it.messages + userMsg,
+                    isLoading = true,
+                    errorMessage = null,
+                    lastFailedPrompt = null
+                )
+            }
+        } else {
+            _state.update { it.copy(isLoading = true, errorMessage = null) }
         }
 
-        // 2. Llamada asíncrona al backend
         viewModelScope.launch {
             chatRepository.sendMessage(convId, text).onSuccess { aiMsg ->
-                _state.update { it.copy(messages = it.messages + aiMsg, isLoading = false) }
+                _state.update {
+                    it.copy(
+                        messages = it.messages + aiMsg,
+                        isLoading = false,
+                        errorMessage = null,
+                        lastFailedPrompt = null
+                    )
+                }
             }.onFailure { err ->
-                _state.update { it.copy(isLoading = false) }
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = err.message ?: "No se pudo obtener respuesta del asistente",
+                        lastFailedPrompt = text
+                    )
+                }
                 _effect.emit(ChatEffect.ShowToast(err.message ?: "No se pudo obtener respuesta"))
             }
         }
     }
 
     private fun handleAudioRecorded(audioBytes: ByteArray) {
-        _state.update { it.copy(isRecording = false, isTranscribing = true, recordSeconds = 0) }
+        _state.update { it.copy(isRecording = false, isTranscribing = true, recordSeconds = 0, errorMessage = null) }
         viewModelScope.launch {
-            _effect.emit(ChatEffect.ShowToast("Transcribiendo audio con Whisper..."))
             chatRepository.transcribeAudio(audioBytes).onSuccess { text ->
                 _state.update { it.copy(isTranscribing = false) }
                 val cleanText = text.trim()
                 if (cleanText.isNotBlank()) {
-                    // Autosend: establece el texto y envía inmediatamente
-                    _state.update { it.copy(inputMessage = cleanText) }
-                    sendMessage()
+                    sendMessage(cleanText)
                 } else {
                     _effect.emit(ChatEffect.ShowToast("No se detectó voz en el audio grabado"))
                 }
             }.onFailure { err ->
-                _state.update { it.copy(isTranscribing = false) }
+                _state.update { it.copy(isTranscribing = false, errorMessage = err.message) }
                 _effect.emit(ChatEffect.ShowToast(err.message ?: "Error al transcribir audio"))
             }
         }

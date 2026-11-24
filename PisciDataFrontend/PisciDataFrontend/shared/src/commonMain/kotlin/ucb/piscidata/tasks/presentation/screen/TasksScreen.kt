@@ -3,7 +3,9 @@ package ucb.piscidata.tasks.presentation.screen
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,6 +20,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import org.koin.compose.koinInject
@@ -27,7 +30,10 @@ import ucb.piscidata.tasks.domain.model.TaskPriority
 import ucb.piscidata.tasks.presentation.viewmodel.TaskEvent
 import ucb.piscidata.tasks.presentation.viewmodel.TaskFilter
 import ucb.piscidata.tasks.presentation.viewmodel.TaskViewModel
+import ucb.piscidata.ui.components.DeleteIcon
 import ucb.piscidata.ui.components.FarmSelectorHeader
+import ucb.piscidata.ui.components.PlusIcon
+import ucb.piscidata.ui.components.RefreshIcon
 
 @Composable
 fun TasksScreen(
@@ -51,304 +57,120 @@ fun TasksScreen(
     val targetProgress = if (totalCount > 0) doneCount.toFloat() / totalCount else 0f
     val animatedProgress by animateFloatAsState(
         targetValue = targetProgress,
-        animationSpec = tween(durationMillis = 450),
+        animationSpec = tween(durationMillis = 420),
         label = "TaskProgress"
     )
     val percentInt = (animatedProgress * 100).toInt()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F8FA))
+            .background(Color(0xFFF8FAFC))
     ) {
-        FarmSelectorHeader(
-            farms = farms,
-            selectedFarmId = selectedFarmId,
-            onSelectFarm = { sessionManager.selectFarm(it) }
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(1f)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                // Header
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            "Tareas del día",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = Color(0xFF0B2B3B)
-                        )
-                        Text(
-                            "Gestión operativa sincronizada",
-                            fontSize = 12.sp,
-                            color = Color(0xFF6B818B)
-                        )
-                    }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(
-                            onClick = { viewModel.emitEvent(TaskEvent.LoadTasks) },
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
-                        ) {
-                            Text("↻", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1577C8))
-                        }
-                        Button(
-                            onClick = { viewModel.emitEvent(TaskEvent.ShowAddDialog(true)) },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
-                            shape = RoundedCornerShape(12.dp),
-                            elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
-                        ) {
-                            Text("+ Nueva", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color.White)
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Barra superior unificada con contador operativo y botón discreto de refresco
+            FarmSelectorHeader(
+                farms = farms,
+                selectedFarmId = selectedFarmId,
+                onSelectFarm = { sessionManager.selectFarm(it) },
+                subtitle = if (totalCount > 0) "$doneCount de $totalCount tareas listas" else "Sin tareas hoy",
+                trailingActions = {
+                    Surface(
+                        onClick = { viewModel.emitEvent(TaskEvent.LoadTasks) },
+                        color = Color(0xFFF4F7FA),
+                        shape = CircleShape,
+                        border = BorderStroke(1.dp, Color(0xFFE5ECF2)),
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            RefreshIcon(color = Color(0xFF475569), modifier = Modifier.size(17.dp))
                         }
                     }
                 }
+            )
 
-                // Progress Hero Card
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            // Sub-barra blanca: barra de progreso compacta + filtros segmentados uniformes
+            Surface(color = Color.White) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Progreso operativo",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0B2B3B)
+                                text = "Progreso del día",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF475569)
                             )
-                            Surface(
-                                color = Color(0xFFE6F7F0),
-                                shape = RoundedCornerShape(20.dp)
-                            ) {
-                                Text(
-                                    text = "$percentInt% · $doneCount de $totalCount",
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF19A974)
-                                )
-                            }
+                            Text(
+                                text = "$percentInt% completado",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF059669)
+                            )
                         }
                         LinearProgressIndicator(
                             progress = { animatedProgress },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(10.dp)
-                                .clip(RoundedCornerShape(6.dp)),
-                            color = Color(0xFF19A974),
-                            trackColor = Color(0xFFE3EDF2)
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(4.dp)),
+                            color = Color(0xFF10B981),
+                            trackColor = Color(0xFFF1F5F9)
                         )
                     }
-                }
 
-                // Filter segmented pills
-                Surface(
-                    color = Color(0xFFE9F0F4),
-                    shape = RoundedCornerShape(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        listOf(
-                            TaskFilter.TODAS to "Todas",
-                            TaskFilter.PENDIENTES to "Pendientes",
-                            TaskFilter.COMPLETADAS to "Completadas"
-                        ).forEach { (f, label) ->
-                            val selected = state.filter == f
-                            val bg by animateColorAsState(
-                                targetValue = if (selected) Color(0xFF1577C8) else Color.Transparent,
-                                animationSpec = tween(220),
-                                label = "FilterBg"
-                            )
-                            Surface(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .clickable { viewModel.emitEvent(TaskEvent.ChangeFilter(f)) },
-                                color = bg,
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier.padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = label,
-                                        fontSize = 12.sp,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (selected) Color.White else Color(0xFF5A707A)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (state.error != null) {
+                    // Selector segmentado limpio de 3 estados (sin sombras grises incoherentes)
                     Surface(
-                        color = Color(0xFFFFF0F0),
-                        shape = RoundedCornerShape(12.dp)
+                        color = Color(0xFFF1F5F9),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(
-                            text = state.error!!,
-                            modifier = Modifier.fillMaxWidth().padding(12.dp),
-                            fontSize = 12.sp,
-                            color = Color(0xFFE05A5A)
-                        )
-                    }
-                }
-
-                if (state.isLoading && state.tasks.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator(color = Color(0xFF1577C8))
-                    }
-                } else if (filtered.isEmpty()) {
-                    Box(
-                        modifier = Modifier.fillMaxSize().weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
                         ) {
-                            Text(
-                                text = "Sin tareas en esta vista",
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0B2B3B)
-                            )
-                            Text(
-                                text = "Presiona \"+ Nueva\" para registrar una actividad.",
-                                fontSize = 12.sp,
-                                color = Color(0xFF6B818B)
-                            )
-                        }
-                    }
-                } else {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize().weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        items(filtered, key = { it.id }) { task ->
-                            val priorityColor = when (task.priority) {
-                                TaskPriority.ALTA -> Color(0xFFE05A5A)
-                                TaskPriority.MEDIA -> Color(0xFFE08B00)
-                                TaskPriority.BAJA -> Color(0xFF19A974)
-                            }
-                            val cardBg by animateColorAsState(
-                                targetValue = if (task.done) Color(0xFFF7FAF8) else Color.White,
-                                animationSpec = tween(240),
-                                label = "TaskCardBg"
-                            )
-
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = cardBg),
-                                shape = RoundedCornerShape(14.dp),
-                                elevation = CardDefaults.cardElevation(defaultElevation = if (task.done) 0.dp else 2.dp)
-                            ) {
-                                Row(
+                            listOf(
+                                TaskFilter.TODAS to "Todas ($totalCount)",
+                                TaskFilter.PENDIENTES to "Pendientes (${totalCount - doneCount})",
+                                TaskFilter.COMPLETADAS to "Hechas ($doneCount)"
+                            ).forEach { (f, label) ->
+                                val selected = state.filter == f
+                                val pillBg by animateColorAsState(
+                                    targetValue = if (selected) Color.White else Color.Transparent,
+                                    animationSpec = tween(180),
+                                    label = "TaskFilterBg"
+                                )
+                                Surface(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(IntrinsicSize.Min)
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(9.dp))
+                                        .clickable { viewModel.emitEvent(TaskEvent.ChangeFilter(f)) },
+                                    color = pillBg,
+                                    shape = RoundedCornerShape(9.dp),
+                                    shadowElevation = if (selected) 1.dp else 0.dp
                                 ) {
-                                    // Priority indicator bar
                                     Box(
-                                        modifier = Modifier
-                                            .width(5.dp)
-                                            .fillMaxHeight()
-                                            .background(if (task.done) Color(0xFF19A974) else priorityColor)
-                                    )
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 12.dp, vertical = 14.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                                        modifier = Modifier.padding(vertical = 8.dp, horizontal = 4.dp),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Checkbox(
-                                            checked = task.done,
-                                            onCheckedChange = { viewModel.emitEvent(TaskEvent.ToggleTask(task.id)) },
-                                            colors = CheckboxDefaults.colors(
-                                                checkedColor = Color(0xFF19A974),
-                                                uncheckedColor = Color(0xFF91A5AD)
-                                            )
+                                        Text(
+                                            text = label,
+                                            fontSize = 11.sp,
+                                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                            color = if (selected) Color(0xFF0B2B3B) else Color(0xFF64748B),
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
                                         )
-                                        Column(
-                                            modifier = Modifier.weight(1f),
-                                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            Text(
-                                                text = task.title,
-                                                fontSize = 14.sp,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (task.done) Color(0xFF8AA0AA) else Color(0xFF0B2B3B),
-                                                textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None
-                                            )
-                                            if (task.detail.isNotBlank()) {
-                                                Text(
-                                                    text = task.detail,
-                                                    fontSize = 12.sp,
-                                                    color = Color(0xFF6B818B)
-                                                )
-                                            }
-                                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                                Surface(
-                                                    color = Color(0xFFE6F2FB),
-                                                    shape = RoundedCornerShape(8.dp)
-                                                ) {
-                                                    Text(
-                                                        text = task.estanque,
-                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                                        fontSize = 10.sp,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        color = Color(0xFF1577C8)
-                                                    )
-                                                }
-                                                Surface(
-                                                    color = priorityColor.copy(alpha = 0.12f),
-                                                    shape = RoundedCornerShape(8.dp)
-                                                ) {
-                                                    Text(
-                                                        text = task.priority.name,
-                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                                        fontSize = 10.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = priorityColor
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        IconButton(
-                                            onClick = { viewModel.emitEvent(TaskEvent.DeleteTask(task.id)) },
-                                            modifier = Modifier.size(32.dp)
-                                        ) {
-                                            Text("✕", fontSize = 13.sp, color = Color(0xFF91A5AD))
-                                        }
                                     }
                                 }
                             }
@@ -357,69 +179,293 @@ fun TasksScreen(
                 }
             }
 
-            if (state.showAddDialog) {
-                AlertDialog(
-                    onDismissRequest = { viewModel.emitEvent(TaskEvent.ShowAddDialog(false)) },
-                    containerColor = Color.White,
-                    shape = RoundedCornerShape(20.dp),
-                    title = {
+            HorizontalDivider(thickness = 1.dp, color = Color(0xFFEDF2F7))
+
+            if (state.error != null) {
+                Surface(
+                    color = Color(0xFFFEF2F2),
+                    border = BorderStroke(1.dp, Color(0xFFFECACA)),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = state.error!!,
+                        modifier = Modifier.fillMaxWidth().padding(12.dp),
+                        fontSize = 12.sp,
+                        color = Color(0xFFB91C1C)
+                    )
+                }
+            }
+
+            if (state.isLoading && state.tasks.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color(0xFF1577C8))
+                }
+            } else if (filtered.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxSize().weight(1f).padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
                         Text(
-                            "Nueva Tarea",
+                            text = "Todo despejado por aquí",
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF0B2B3B)
                         )
-                    },
-                    text = {
-                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            OutlinedTextField(
-                                value = state.newTitle,
-                                onValueChange = { viewModel.emitEvent(TaskEvent.UpdateNewTitle(it)) },
-                                label = { Text("Título de la tarea") },
-                                singleLine = true,
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            OutlinedTextField(
-                                value = state.newDetail,
-                                onValueChange = { viewModel.emitEvent(TaskEvent.UpdateNewDetail(it)) },
-                                label = { Text("Detalle (ej. 5 kg F1, 30 peces)") },
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Text("Prioridad", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF6B818B))
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                listOf(
-                                    TaskPriority.ALTA to "Alta",
-                                    TaskPriority.MEDIA to "Normal",
-                                    TaskPriority.BAJA to "Baja"
-                                ).forEach { (p, label) ->
-                                    val selected = state.newPriority == p
-                                    FilterChip(
-                                        selected = selected,
-                                        onClick = { viewModel.emitEvent(TaskEvent.UpdateNewPriority(p)) },
-                                        label = { Text(label, fontSize = 11.sp) }
+                        Text(
+                            text = "Toca «+ Nueva tarea» para programar una actividad.",
+                            fontSize = 12.sp,
+                            color = Color(0xFF64748B)
+                        )
+                    }
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize().weight(1f),
+                    contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 88.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    items(filtered, key = { it.id }) { task ->
+                        val priorityColor = when (task.priority) {
+                            TaskPriority.ALTA -> Color(0xFFDC2626)
+                            TaskPriority.MEDIA -> Color(0xFFD97706)
+                            TaskPriority.BAJA -> Color(0xFF059669)
+                        }
+                        val priorityLabel = when (task.priority) {
+                            TaskPriority.ALTA -> "Alta"
+                            TaskPriority.MEDIA -> "Media"
+                            TaskPriority.BAJA -> "Baja"
+                        }
+                        val cardBg by animateColorAsState(
+                            targetValue = if (task.done) Color(0xFFF8FAFC) else Color.White,
+                            animationSpec = tween(220),
+                            label = "TaskCardBg"
+                        )
+
+                        // Toda la tarjeta es táctil para marcar/desmarcar con una sola mano
+                        Surface(
+                            onClick = { viewModel.emitEvent(TaskEvent.ToggleTask(task.id)) },
+                            color = cardBg,
+                            shape = RoundedCornerShape(16.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                if (task.done) Color(0xFFEDF2F7) else Color(0xFFE5ECF2)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                verticalAlignment = Alignment.Top
+                            ) {
+                                // Check circular minimalista estilo Linear / Things 3
+                                Box(
+                                    modifier = Modifier
+                                        .padding(top = 1.dp)
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .then(
+                                            if (task.done) {
+                                                Modifier.background(Color(0xFF10B981))
+                                            } else {
+                                                Modifier.border(
+                                                    width = 1.8.dp,
+                                                    color = Color(0xFFCBD5E1),
+                                                    shape = CircleShape
+                                                )
+                                            }
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (task.done) {
+                                        Text(
+                                            text = "✓",
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = Color.White
+                                        )
+                                    }
+                                }
+
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(5.dp)
+                                ) {
+                                    Text(
+                                        text = task.title,
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (task.done) Color(0xFF94A3B8) else Color(0xFF0B2B3B),
+                                        textDecoration = if (task.done) TextDecoration.LineThrough else TextDecoration.None
                                     )
+                                    if (task.detail.isNotBlank()) {
+                                        Text(
+                                            text = task.detail,
+                                            fontSize = 12.sp,
+                                            lineHeight = 17.sp,
+                                            color = if (task.done) Color(0xFFCBD5E1) else Color(0xFF64748B)
+                                        )
+                                    }
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Surface(
+                                            color = Color(0xFFF1F5F9),
+                                            shape = RoundedCornerShape(6.dp)
+                                        ) {
+                                            Text(
+                                                text = task.estanque,
+                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                color = Color(0xFF475569)
+                                            )
+                                        }
+                                        Surface(
+                                            color = priorityColor.copy(alpha = 0.10f),
+                                            shape = RoundedCornerShape(6.dp)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(5.dp)
+                                                        .clip(CircleShape)
+                                                        .background(priorityColor)
+                                                )
+                                                Text(
+                                                    text = priorityLabel,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = priorityColor
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Surface(
+                                    onClick = { viewModel.emitEvent(TaskEvent.DeleteTask(task.id)) },
+                                    color = Color.Transparent,
+                                    shape = CircleShape,
+                                    modifier = Modifier.size(30.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        DeleteIcon(color = Color(0xFF94A3B8), modifier = Modifier.size(15.dp))
+                                    }
                                 }
                             }
                         }
-                    },
-                    confirmButton = {
-                        Button(
-                            onClick = { viewModel.emitEvent(TaskEvent.AddTask) },
-                            enabled = !state.isSaving,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Text(if (state.isSaving) "Guardando..." else "Agregar", color = Color.White)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { viewModel.emitEvent(TaskEvent.ShowAddDialog(false)) }) {
-                            Text("Cancelar", color = Color(0xFF6B818B))
+                    }
+                }
+            }
+        }
+
+        // FAB ergonómico al alcance del pulgar
+        ExtendedFloatingActionButton(
+            onClick = { viewModel.emitEvent(TaskEvent.ShowAddDialog(true)) },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 18.dp, bottom = 18.dp),
+            containerColor = Color(0xFF1577C8),
+            contentColor = Color.White,
+            shape = RoundedCornerShape(20.dp),
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 4.dp,
+                pressedElevation = 6.dp
+            ),
+            icon = { PlusIcon(Color.White, modifier = Modifier.size(16.dp)) },
+            text = {
+                Text("Nueva tarea", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
+        )
+
+        if (state.showAddDialog) {
+            AlertDialog(
+                onDismissRequest = { viewModel.emitEvent(TaskEvent.ShowAddDialog(false)) },
+                containerColor = Color.White,
+                shape = RoundedCornerShape(22.dp),
+                title = {
+                    Text(
+                        "Nueva tarea",
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(0xFF0B2B3B)
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedTextField(
+                            value = state.newTitle,
+                            onValueChange = { viewModel.emitEvent(TaskEvent.UpdateNewTitle(it)) },
+                            label = { Text("Actividad a realizar") },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        OutlinedTextField(
+                            value = state.newDetail,
+                            onValueChange = { viewModel.emitEvent(TaskEvent.UpdateNewDetail(it)) },
+                            label = { Text("Detalle opcional (ej. 5 kg F1)") },
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Text(
+                            "Prioridad",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF64748B)
+                        )
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            listOf(
+                                TaskPriority.ALTA to "Alta",
+                                TaskPriority.MEDIA to "Media",
+                                TaskPriority.BAJA to "Baja"
+                            ).forEach { (p, label) ->
+                                val selected = state.newPriority == p
+                                FilterChip(
+                                    selected = selected,
+                                    onClick = { viewModel.emitEvent(TaskEvent.UpdateNewPriority(p)) },
+                                    label = { Text(label, fontSize = 12.sp) }
+                                )
+                            }
                         }
                     }
-                )
-            }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { viewModel.emitEvent(TaskEvent.AddTask) },
+                        enabled = !state.isSaving,
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1577C8)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(
+                            if (state.isSaving) "Guardando…" else "Guardar",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { viewModel.emitEvent(TaskEvent.ShowAddDialog(false)) }) {
+                        Text("Cancelar", color = Color(0xFF64748B))
+                    }
+                }
+            )
         }
     }
 }

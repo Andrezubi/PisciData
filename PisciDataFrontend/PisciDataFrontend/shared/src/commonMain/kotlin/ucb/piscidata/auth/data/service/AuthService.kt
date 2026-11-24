@@ -54,11 +54,17 @@ class AuthService : AuthRemoteDataSource {
                         )
                     )
                 }
+                if (response.status.value == 401) {
+                    return Result.failure(Exception("El número de teléfono o la contraseña no coinciden."))
+                }
+                if (response.status.value in 400..499) {
+                    return Result.failure(Exception("Revisa el formato de tu número y contraseña."))
+                }
             } catch (e: Exception) {
                 lastException = e
             }
         }
-        return Result.failure(Exception("No se pudo conectar con el servidor (HTTPS/HTTP). Verifique que el backend esté encendido (${lastException?.message})"))
+        return Result.failure(Exception("No pudimos conectar con el servidor. Revisa tu conexión a internet e inténtalo de nuevo."))
     }
 
     override suspend fun register(firstName: String, lastName: String, phone: String, pass: String, role: String): Result<UserModel> {
@@ -77,10 +83,13 @@ class AuthService : AuthRemoteDataSource {
                     val userDto: UserResponseDto = response.body()
                     return Result.success(userDto.toModel())
                 }
+                if (response.status.value in 400..499) {
+                    return Result.failure(Exception("No se pudo registrar: verifica que el teléfono no exista y la contraseña tenga al menos 6 caracteres."))
+                }
             } catch (e: Exception) {
                 lastException = e
             }
         }
-        return Result.failure(Exception("No se pudo registrar en el servidor (HTTPS/HTTP) (${lastException?.message})"))
+        return Result.failure(Exception("No pudimos conectar con el servidor para crear tu cuenta. Revisa tu conexión a internet."))
     }
 }

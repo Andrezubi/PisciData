@@ -2,7 +2,6 @@
 .gitignore
 PisciDataFrontend
 PisciDataChat
-PisciDataMCP
 DumpPisciData
 DumpPisciData.zip
 docs
