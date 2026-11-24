@@ -80,19 +80,29 @@ class ChatViewModel(
     }
 
     private fun selectConversation(conversationId: Int) {
+        if (conversationId == _state.value.conversationId && _state.value.messages.isNotEmpty()) {
+            return
+        }
         val selected = _state.value.conversations.find { it.id == conversationId }
-        _state.update { it.copy(conversationId = conversationId, selectedConversation = selected) }
+        _state.update {
+            it.copy(
+                conversationId = conversationId,
+                selectedConversation = selected,
+                messages = emptyList(),
+                errorMessage = null
+            )
+        }
         loadMessagesForConversation(conversationId)
     }
 
     private fun loadMessagesForConversation(conversationId: Int) {
-        _state.update { it.copy(isLoading = true) }
+        _state.update { it.copy(isLoading = true, errorMessage = null) }
         viewModelScope.launch {
             chatRepository.getMessages(conversationId).onSuccess { msgs ->
                 val finalMessages = if (msgs.isEmpty()) {
                     listOf(
                         ChatMessageModel(
-                            id = "welcome",
+                            id = "welcome_$conversationId",
                             sender = MessageSender.IA,
                             text = "¡Hola! Soy tu asistente PisciData. ¿En qué puedo ayudarte hoy con tu piscigranja?"
                         )
@@ -100,7 +110,7 @@ class ChatViewModel(
                 } else {
                     msgs
                 }
-                _state.update { it.copy(messages = finalMessages, isLoading = false) }
+                _state.update { it.copy(messages = finalMessages, isLoading = false, errorMessage = null) }
             }.onFailure { err ->
                 _state.update { it.copy(isLoading = false, errorMessage = err.message) }
                 _effect.emit(ChatEffect.ShowToast(err.message ?: "Error al cargar mensajes"))
@@ -111,20 +121,28 @@ class ChatViewModel(
     private fun createNewConversation() {
         val title = _state.value.newConversationTitleInput.trim()
         val finalTitle = if (title.isEmpty()) "Nueva Conversación" else title
-        _state.update { it.copy(showNewConversationDialog = false, isLoading = true) }
+        _state.update { it.copy(showNewConversationDialog = false, isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
             chatRepository.createConversation(finalTitle).onSuccess { newConv ->
-                val updatedConvs = _state.value.conversations + newConv
+                val updatedConvs = listOf(newConv) + _state.value.conversations.filterNot { it.id == newConv.id }
                 _state.update {
                     it.copy(
                         conversations = updatedConvs,
                         selectedConversation = newConv,
                         conversationId = newConv.id,
-                        newConversationTitleInput = ""
+                        messages = listOf(
+                            ChatMessageModel(
+                                id = "welcome_${newConv.id}",
+                                sender = MessageSender.IA,
+                                text = "¡Hola! Conversación \"${newConv.title}\" lista. ¿En qué puedo ayudarte?"
+                            )
+                        ),
+                        isLoading = false,
+                        newConversationTitleInput = "",
+                        errorMessage = null
                     )
                 }
-                loadMessagesForConversation(newConv.id)
             }.onFailure { err ->
                 _state.update { it.copy(isLoading = false) }
                 _effect.emit(ChatEffect.ShowToast(err.message ?: "Error al crear conversación"))

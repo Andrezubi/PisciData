@@ -119,7 +119,12 @@ fun ChatScreen(
                     // Conversation Selector Box
                     Box {
                         Surface(
-                            onClick = { expandedDropdown = true },
+                            onClick = {
+                                if (state.conversations.isEmpty()) {
+                                    viewModel.emitEvent(ChatEvent.OnLoadMessages)
+                                }
+                                expandedDropdown = true
+                            },
                             color = Color(0xFFE8F4FC),
                             shape = RoundedCornerShape(8.dp),
                             modifier = Modifier.fillMaxWidth()
@@ -149,11 +154,31 @@ fun ChatScreen(
 
                         DropdownMenu(
                             expanded = expandedDropdown,
-                            onDismissRequest = { expandedDropdown = false }
+                            onDismissRequest = { expandedDropdown = false },
+                            modifier = Modifier
+                                .background(Color.White)
+                                .widthIn(min = 220.dp)
+                                .heightIn(max = 320.dp)
                         ) {
-                            state.conversations.forEach { conv ->
-                                DropMenuItem(conv, state, viewModel) {
-                                    expandedDropdown = false
+                            if (state.conversations.isEmpty()) {
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            text = if (state.isLoading) "Cargando conversaciones..." else "Recargar conversaciones",
+                                            fontSize = 13.sp,
+                                            color = Color(0xFF6B818B)
+                                        )
+                                    },
+                                    onClick = {
+                                        expandedDropdown = false
+                                        viewModel.emitEvent(ChatEvent.OnLoadMessages)
+                                    }
+                                )
+                            } else {
+                                state.conversations.forEach { conv ->
+                                    DropMenuItem(conv, state, viewModel) {
+                                        expandedDropdown = false
+                                    }
                                 }
                             }
                         }
