@@ -1,492 +1,355 @@
-# Tasks.md — Implementación Frontend de Formularios de Base de Datos (PisciData)
+# TASKS.md — Implementación de la sección Calidad del Agua (Frontend) — PisciData
 
-## Objetivo general
+## Objetivo
 
-Modificar y completar la pantalla **Base de Datos** de PisciData para que las secciones de ciclos activos, estanques e inventario funcionen completamente con información real del backend.
+Agregar una nueva sección de **Calidad del Agua** dentro de la pantalla Base de Datos de PisciData, manteniendo la estructura visual, identidad y navegación existente.
 
-Actualmente se necesita implementar correctamente los formularios de registro y las operaciones de cada sección.
+Esta sección debe permitir consultar, visualizar, registrar y gestionar las mediciones de calidad del agua de los estanques de las granjas del usuario, conectándose completamente con el backend.
 
-Cada botón de registro debe abrir el formulario correspondiente a la sección desde la que se presiona.
+La implementación debe incluir las nuevas vistas, listados, tarjetas, filtros, formularios, historial, detalles y visualización de parámetros, según las funcionalidades reales disponibles en backend.
 
-Ejemplos:
-
-- Si el usuario está en Ciclos activos y presiona Nuevo, debe abrir el formulario de registro de ciclos.
-- Si está en Estanques y presiona Nuevo, debe abrir el formulario de registro de estanques.
-- Si está en Inventario y presiona Nuevo, debe permitir registrar el tipo de elemento correspondiente, respetando la separación entre alimentos y suministros.
-
-No debe existir un formulario genérico que mezcle campos de distintas entidades.
-
-**El backend es la única fuente de verdad. No debe existir información hardcodeada en la pantalla ni en los formularios.**
+**No debe existir absolutamente ningún dato hardcodeado. Todo lo mostrado debe obtenerse de los endpoints reales y de la base de datos.**
 
 ---
 
-## 1. Inspección inicial
+## 1. Análisis previo
 
-Antes de modificar el frontend:
+Antes de implementar:
 
-- Revisar la arquitectura completa del frontend.
-- Identificar la pantalla Base de Datos.
-- Revisar sus componentes y secciones.
-- Identificar todos los botones de registro.
-- Revisar los formularios existentes.
-- Revisar los modelos y DTOs.
-- Revisar los servicios de comunicación con el backend.
-- Revisar el ApiClient.
-- Revisar la configuración de autenticación.
-- Revisar el manejo del token.
-- Revisar la navegación y los estados de pantalla.
-- Identificar toda la información hardcodeada.
-- Revisar el contrato real de los endpoints del backend.
+- Analiza la estructura actual del frontend.
+- Revisa la pantalla Base de Datos.
+- Analiza cómo están implementadas las secciones de ciclos productivos, estanques e inventario.
+- Revisa sus componentes visuales, navegación, formularios y manejo de estado.
+- Inspecciona la arquitectura de conexión con backend.
+- Revisa los servicios, repositorios, modelos y DTOs actuales.
+- Analiza los endpoints reales del módulo Calidad del Agua implementados en backend.
+- Identifica las funcionalidades existentes que pueden reutilizarse.
+- Revisa cómo se selecciona la granja y cómo se gestiona la autenticación.
 
-No modificar pantallas ajenas a la funcionalidad solicitada.
+La nueva sección debe integrarse siguiendo la arquitectura existente, sin crear estructuras innecesarias ni duplicar componentes.
 
-## 2. Conexión completa con backend
+---
 
-Revisar los endpoints que el backend haya implementado para las tres secciones.
+## 2. Nueva sección dentro de Base de Datos
 
-Conectar la pantalla utilizando los servicios y mecanismos existentes.
+Agrega **Calidad del Agua** como una sección independiente dentro de Base de Datos, al mismo nivel que:
 
-Eliminar:
+- Ciclos productivos.
+- Estanques.
+- Inventario.
+- Calidad del Agua.
 
-- Listas inventadas.
-- Ciclos de ejemplo.
-- Estanques de ejemplo.
-- Especies escritas directamente en el frontend.
-- Alimentos inventados.
-- Suministros inventados.
-- Cantidades de stock simuladas.
-- Estados calculados con valores ficticios.
-- Datos estáticos utilizados para completar tarjetas.
-- Respuestas simuladas que sustituyan las solicitudes reales.
+La nueva sección debe:
 
-Todos los datos deben obtenerse del backend.
+- Integrarse correctamente en la navegación existente.
+- Mantener el diseño original de PisciData.
+- Utilizar los mismos patrones visuales de las otras secciones.
+- Adaptarse correctamente a los tamaños de pantalla.
+- Permitir acceder a sus registros y formularios.
+- Mostrar información real de la granja seleccionada.
 
-No inventar endpoints ni propiedades.
+No reemplaces las secciones existentes ni alteres sus funcionalidades.
 
-Si falta una operación necesaria en el backend, documentar el endpoint requerido en lugar de simular su funcionamiento.
+---
 
-## 3. Organización de la pantalla Base de Datos
+## 3. Pantalla principal de Calidad del Agua
 
-Mantener las tres secciones principales:
+Implementa una pantalla clara, moderna y profesional que permita visualizar los registros de calidad del agua.
 
-1. Ciclos activos.
-2. Estanques.
-3. Inventario.
+Incluye, según la información disponible en backend:
 
-Cada sección debe mantener su propia información, formularios y operaciones.
+- Título y descripción de la sección.
+- Selector de granja, si corresponde a la navegación actual.
+- Resumen general.
+- Listado de mediciones.
+- Identificación del estanque asociado.
+- Fecha y hora de medición.
+- Parámetros registrados.
+- Estado de los parámetros.
+- Indicadores de valores fuera de rango.
+- Botón para registrar una nueva medición.
+- Acceso a detalles e historial.
 
-Los botones y acciones deben responder al contexto de la sección actual.
+Los datos deben organizarse de manera que sea sencillo comparar mediciones y detectar problemas.
 
-### Comportamiento de los botones Nuevo
+---
 
-**Ciclos activos:**
+## 4. Tarjetas de mediciones
 
-Al presionar Nuevo, abrir exclusivamente el formulario para registrar un ciclo productivo.
+Implementa tarjetas o un formato de listado apropiado para cada registro.
 
-**Estanques:**
-
-Al presionar Nuevo, abrir exclusivamente el formulario para registrar un estanque.
-
-**Inventario:**
-
-Al presionar Nuevo, permitir seleccionar o abrir el formulario correspondiente al tipo de registro:
-
-- Alimento para peces (`Feed`).
-- Suministro (`Supply`).
-
-No mezclar los campos de alimentos y suministros.
-
-Cada formulario debe enviar información al endpoint correspondiente.
-
-## 4. Formulario de ciclos productivos
-
-Modificar completamente el formulario de registro de ciclos para que corresponda a la estructura y reglas del backend.
-
-### Campos
-
-Mostrar los campos que el backend permita registrar, según el contrato real.
-
-Como mínimo, revisar los siguientes:
+Cada tarjeta debe mostrar, según los datos reales disponibles:
 
 - Estanque.
-- Especie.
-- Fecha de inicio.
-- Edad inicial en días.
-- Cantidad inicial de peces.
-- Peso promedio inicial.
+- Código o nombre del estanque.
+- Fecha y hora de medición.
+- Temperatura.
+- pH.
+- Oxígeno disuelto.
+- Transparencia.
+- Otros parámetros disponibles.
+- Estado de los parámetros.
+- Observaciones, si existen.
+
+Las tarjetas deben permitir identificar rápidamente si una medición presenta valores que requieren atención.
+
+Utiliza indicadores visuales consistentes para los estados:
+
+- Dentro del rango.
+- Por debajo del rango.
+- Por encima del rango.
+- Sin referencia disponible.
+
+Los estados deben provenir de la lógica de backend. No implementes rangos inventados ni evaluaciones basadas en valores estáticos.
+
+---
+
+## 5. Formulario de registro de calidad del agua
+
+Implementa un formulario específico para registrar mediciones de calidad del agua.
+
+Debe abrirse al presionar el botón **Nueva medición** o **Registrar calidad del agua** dentro de esta sección.
+
+El formulario debe contener exclusivamente los campos correspondientes al modelo y endpoints reales del backend.
+
+Contempla, según corresponda:
+
+- Selección del estanque.
+- Fecha y hora de medición.
+- Temperatura.
+- pH.
+- Oxígeno disuelto.
+- Transparencia.
+- Otros parámetros contemplados en la base de datos.
 - Observaciones.
 
-No mostrar un campo de fecha de finalización durante el registro.
+### Selección del estanque
 
-### Selector de estanques
+- Cargar los estanques disponibles desde backend.
+- Mostrar el nombre y código del estanque, si existen.
+- Permitir seleccionar únicamente estanques accesibles para el usuario.
+- No utilizar opciones hardcodeadas.
+- Validar que se haya seleccionado un estanque cuando sea obligatorio.
 
-El campo de estanque debe ser un dropdown o selector.
+### Campos de medición
 
-Debe obtener los estanques disponibles mediante el backend.
+- Utilizar campos adecuados para valores numéricos.
+- Mostrar las unidades correspondientes cuando estén disponibles.
+- Evitar permitir caracteres inválidos.
+- Validar los campos obligatorios.
+- Mostrar mensajes de error comprensibles.
+- Mantener los valores ingresados si ocurre un error de registro.
 
-Requisitos:
-
-- Mostrar los estanques pertenecientes a las granjas del usuario autenticado.
-- Mostrar información útil para distinguirlos, como código y nombre.
-- Guardar el identificador real del estanque seleccionado.
-- No permitir escribir identificadores manualmente.
-- No mostrar estanques inventados.
-- No mostrar estanques pertenecientes a otros usuarios.
-- Manejar correctamente la ausencia de estanques disponibles.
-
-### Selector de especies
-
-La especie también debe seleccionarse mediante un dropdown.
-
-Requisitos:
-
-- Obtener las especies desde el backend.
-- Mostrar los nombres reales.
-- Enviar el identificador correspondiente.
-- No utilizar listas estáticas.
-- Mostrar un estado apropiado mientras se cargan.
-- Manejar el caso en que no existan especies disponibles.
-
-### Fecha de finalización
-
-Eliminar completamente el campo de fecha de finalización del formulario de registro.
+### Registro
 
 Al guardar:
 
-- Enviar únicamente los campos necesarios.
-- No enviar una fecha de finalización inventada.
-- Mostrar el ciclo como activo.
-- Reflejar el estado que devuelva el backend.
-
-### Guardado
-
-Al presionar Guardar:
-
-1. Validar los campos.
-2. Construir el DTO esperado por el backend.
-3. Enviar la solicitud autenticada.
-4. Esperar la respuesta.
-5. Mostrar confirmación únicamente si se guardó correctamente.
-6. Cerrar el formulario cuando corresponda.
-7. Actualizar la lista de ciclos.
-8. Mostrar el ciclo recién registrado con sus datos reales.
-
-No agregar el ciclo únicamente a una lista local.
-
-## 5. Finalización de ciclos desde las tarjetas
-
-Modificar las tarjetas donde se muestran los ciclos productivos.
-
-Cada ciclo activo debe tener una acción para finalizarlo.
-
-Puede implementarse como un botón o una opción de menú, manteniendo coherencia con el diseño.
-
-Al seleccionar Finalizar ciclo:
-
-- Mostrar una confirmación para evitar finalizaciones accidentales.
-- Ejecutar el endpoint correspondiente del backend.
-- No cambiar el estado antes de recibir una respuesta exitosa.
-- Actualizar la tarjeta después de finalizar.
-- Reflejar el estado real devuelto por el backend.
-- Actualizar la lista de ciclos activos.
-- Mostrar un mensaje de confirmación.
-
-Si el backend devuelve ciclos finalizados en otra consulta o con otro estado, respetar ese comportamiento.
-
-No permitir que el usuario cambie manualmente la fecha de finalización.
-
-No simular la finalización modificando únicamente una variable local.
-
-Manejar errores si el ciclo ya está finalizado o no se puede modificar.
-
-## 6. Formulario de estanques
-
-Implementar el formulario específico de registro de estanques.
-
-Obtener los campos y tipos de datos del contrato real del backend.
-
-Revisar especialmente:
-
-- Código.
-- Nombre.
-- Forma.
-- Área.
-- Profundidad.
-- Transparencia.
-- Granja relacionada.
-- Cualquier otro campo existente y permitido.
-
-### Selección de granja
-
-Si el backend requiere seleccionar una granja:
-
-- Obtener las granjas disponibles del usuario autenticado.
-- Mostrar un selector.
-- Enviar el identificador real.
-- No mostrar granjas de otros usuarios.
-- No utilizar datos hardcodeados.
-
-Si el backend determina automáticamente la granja, no solicitarla innecesariamente en el formulario.
-
-### Validaciones
-
-- Campos obligatorios.
-- Valores numéricos.
-- Valores positivos cuando corresponda.
-- Longitudes máximas.
-- Código duplicado, si corresponde.
-- Tipos de datos.
-
-### Guardado
-
-Al guardar:
-
-- Enviar el DTO correcto.
-- Mostrar errores del backend.
-- Esperar confirmación.
-- Actualizar la lista de estanques desde el backend.
-- Mostrar el registro nuevo.
-
-No simular el registro localmente.
-
-## 7. Calidad del agua
-
-Revisar cómo el backend expone los datos de calidad del agua.
-
-Si corresponde mostrar o registrar mediciones desde esta pantalla, utilizar los endpoints y campos reales.
-
-No inventar valores para:
-
-- Transparencia.
-- pH.
-- Temperatura.
-- Oxígeno disuelto.
-
-Cuando no existan mediciones:
-
-- Mostrar un estado vacío.
-- No colocar valores ficticios.
-- No interpretar ausencia de datos como una medición normal.
-
-Si el backend proporciona estados o referencias de calidad del agua, utilizar sus resultados.
-
-No duplicar cálculos que correspondan al backend.
-
-## 8. Formulario de inventario
-
-La sección Inventario debe distinguir claramente los dos tipos de registros existentes.
-
-### 8.1. Alimentos para peces — Feed
-
-Crear un formulario para registrar alimentos.
-
-Utilizar los campos reales del backend, como:
-
-- Marca.
-- Nombre del producto.
-- Fase.
-- Porcentaje de proteína.
-- Tamaño del pellet.
-- Stock en kilogramos.
-- Stock mínimo en kilogramos.
-- Cualquier otro campo permitido.
-
-Diferenciar visualmente proteínas y pellets según la información real del registro.
-
-No inventar categorías ni valores.
-
-No utilizar los campos de `Supply` para este formulario.
-
-### 8.2. Suministros — Supply
-
-Crear un formulario independiente para registrar suministros.
-
-Utilizar los campos reales que correspondan, como:
-
-- Nombre.
-- Categoría.
-- Cantidad.
-- Unidad.
-- Stock mínimo.
-- Cualquier otro campo permitido.
-
-Las categorías deben provenir del backend si existe un catálogo o una operación para obtenerlas.
-
-Si la base de datos utiliza un campo de texto y no existe un catálogo, respetar el contrato y las validaciones reales del backend.
-
-No inventar categorías en el frontend.
-
-### 8.3. Guardado de inventario
-
-Cada formulario debe utilizar su propia operación de registro.
-
-Al guardar:
-
-1. Validar los datos.
-2. Construir el DTO correcto.
-3. Enviar la solicitud al backend.
-4. Esperar la respuesta.
-5. Mostrar confirmación.
-6. Actualizar la lista de inventario.
-7. Reflejar los datos reales.
-
-No registrar un alimento en el endpoint de suministros ni un suministro en el endpoint de alimentos.
-
-## 9. Tarjetas y visualización de registros
-
-Revisar y adaptar las tarjetas de las tres secciones.
-
-Mostrar información relevante obtenida del backend.
-
-### Ciclos
-- Estanque.
-- Especie.
-- Fecha de inicio.
-- Edad.
-- Cantidad actual de peces.
-- Peso promedio.
-- Estado.
-- Acción para finalizar si está activo.
-
-### Estanques
-- Código.
-- Nombre.
-- Forma.
-- Área.
-- Profundidad.
-- Transparencia.
-- Calidad del agua disponible.
-- Estado.
-
-### Inventario
-- Nombre.
-- Marca o categoría según corresponda.
-- Tipo de registro.
-- Stock actual.
-- Stock mínimo.
-- Unidad.
-- Estado del stock.
-
-No mostrar campos que no existan en la respuesta del backend.
-
-No reemplazar valores nulos por datos inventados.
-
-## 10. Estados de carga, errores y validaciones
-
-Implementar correctamente:
-
-### Carga
-Mostrar indicadores mientras se consultan los registros o se cargan los selectores.
-
-### Sin registros
-Mostrar mensajes claros cuando una sección no tenga datos.
-
-### Error
-Mostrar mensajes comprensibles cuando falle una consulta o actualización.
-
-### Guardado
-Deshabilitar temporalmente el botón mientras se procesa la solicitud.
-
-### Éxito
-Mostrar confirmación cuando el backend responda correctamente.
-
-### Validaciones
-Mostrar los errores de los campos correspondientes.
-
-### Sesión
-Manejar tokens inválidos y sesiones expiradas utilizando el mecanismo existente.
-
-Evitar que una solicitud fallida deje la pantalla en un estado inconsistente.
-
-## 11. Actualización y sincronización
-
-Después de registrar, modificar o finalizar un elemento:
-
-- Actualizar los datos de la sección correspondiente.
-- Consultar nuevamente al backend cuando sea necesario.
-- Mantener sincronizadas las tarjetas.
-- Evitar duplicados visuales.
-- No conservar registros que ya no existen.
-- No mostrar cambios que no se hayan guardado.
-- Respetar los estados devueltos por el backend.
-
-Los datos deben seguir siendo correctos al salir y volver a entrar a la pantalla.
-
-## 12. Pruebas
-
-Verificar los siguientes escenarios:
-
-### Ciclos
-- Abrir el formulario desde Ciclos activos.
-- Cargar estanques reales del usuario.
-- Cargar especies reales.
-- Registrar un ciclo correctamente.
-- Comprobar que no se solicita fecha final.
-- Verificar que el ciclo aparezca activo.
-- Finalizar un ciclo desde su tarjeta.
-- Comprobar que desaparezca de la lista de activos o cambie de sección según la respuesta del backend.
-- Verificar persistencia después de volver a consultar.
-
-### Estanques
-- Abrir el formulario desde Estanques.
-- Registrar un estanque.
-- Validar los campos.
-- Verificar que aparezca en la lista.
-- Comprobar que los datos provengan del backend.
-- Manejar ausencia de calidad del agua.
-
-### Inventario
-- Abrir el formulario desde Inventario.
-- Registrar un alimento.
-- Registrar un suministro.
-- Verificar que cada uno utilice su endpoint correspondiente.
-- Comprobar stock y stock mínimo.
-- Verificar el estado de disponibilidad.
-- Comprobar persistencia.
-
-### Integración
-- Probar errores de conexión.
-- Probar token inválido.
-- Probar respuestas de validación.
-- Comprobar que no se muestren datos de otro usuario.
-- Verificar que no existan datos hardcodeados.
+1. Validar el formulario.
+2. Enviar la información al endpoint real.
+3. Mostrar indicador de carga.
+4. Evitar envíos duplicados.
+5. Procesar correctamente la respuesta del backend.
+6. Mostrar mensaje de éxito si se guardó correctamente.
+7. Cerrar el formulario cuando corresponda.
+8. Actualizar la lista de mediciones.
+9. Actualizar los resúmenes y estados asociados.
+
+Si el backend devuelve un error, mostrarlo de manera comprensible y no simular que la medición fue registrada.
 
 ---
 
-## 13. Restricciones
+## 6. Detalles e historial de mediciones
 
-- No modificar el backend.
-- No modificar la base de datos.
-- No modificar pantallas ajenas a Base de Datos.
-- No inventar endpoints.
-- No inventar campos.
-- No utilizar datos hardcodeados.
-- No utilizar listas estáticas para estanques, especies, granjas o categorías cuando el backend deba proporcionarlas.
-- No simular registros ni actualizaciones.
-- No simular la finalización de ciclos.
-- No duplicar modelos o servicios existentes.
-- No cambiar reglas de negocio del backend desde el frontend.
+Implementa una vista de detalle o historial para consultar información completa de calidad del agua.
+
+Permite visualizar:
+
+- Información del estanque.
+- Información de la granja.
+- Fecha de medición.
+- Todos los parámetros registrados.
+- Valores de referencia disponibles.
+- Estado de cada parámetro.
+- Observaciones.
+- Mediciones anteriores, cuando corresponda.
+
+Si backend proporciona datos históricos para gráficos, implementa visualizaciones apropiadas para analizar la evolución de los parámetros a lo largo del tiempo.
+
+Los gráficos deben construirse utilizando registros reales y fechas reales.
+
+No generes series de datos ficticias ni inventes tendencias.
+
+---
+
+## 7. Filtros y navegación
+
+Implementa filtros que funcionen con datos reales, según las capacidades de backend:
+
+- Por granja.
+- Por estanque.
+- Por fecha o rango de fechas.
+- Por parámetros que requieran atención.
+- Por estado de medición, si corresponde.
+
+Permite que los filtros puedan combinarse coherentemente.
+
+Al cambiar la granja seleccionada, actualiza correctamente los registros y evita mostrar información de la granja anterior.
+
+---
+
+## 8. Referencias y rangos de parámetros
+
+Conecta la interfaz con los datos de referencia proporcionados por backend.
+
+Cuando existan rangos recomendados:
+
+- Mostrar el rango correspondiente.
+- Mostrar el valor medido.
+- Mostrar el estado de evaluación.
+- Permitir identificar si el parámetro se encuentra por debajo, dentro o por encima del rango.
+
+Cuando no exista referencia:
+
+- No inventar valores.
+- Mostrar claramente que no existe referencia disponible.
+- Evitar clasificar arbitrariamente el parámetro.
+
+Toda la evaluación debe ser coherente con las reglas implementadas en backend.
+
+---
+
+## 9. Edición y eliminación
+
+Si backend permite editar o eliminar mediciones, implementa las acciones correspondientes.
+
+- Mostrar botones o menús de acción apropiados.
+- Utilizar formularios de edición.
+- Cargar los valores actuales desde backend.
+- Validar los datos.
+- Enviar cambios mediante los endpoints correspondientes.
+- Solicitar confirmación cuando sea necesario.
+- Actualizar las listas y detalles después de una operación exitosa.
+
+Si backend no permite editar o eliminar determinados registros, no habilites acciones que no estén soportadas.
+
+---
+
+## 10. Estados de la interfaz
+
+Implementa todos los estados necesarios.
+
+### Cargando
+
+Mostrar indicadores visuales mientras se obtienen las mediciones.
+
+### Sin registros
+
+Mostrar un estado vacío profesional que indique que aún no existen mediciones de calidad del agua.
+
+Incluir un botón para registrar la primera medición, si corresponde.
+
+### Error
+
+Mostrar mensajes comprensibles cuando falle la comunicación con backend.
+
+Permitir reintentar.
+
+### Registro y edición
+
+Mostrar indicadores de carga y evitar operaciones duplicadas.
+
+### Datos actualizados
+
+Reflejar inmediatamente las operaciones exitosas utilizando los datos reales del backend.
+
+---
+
+## 11. Diseño visual y consistencia
+
+Mantén el estilo original de PisciData y la consistencia con las secciones existentes de Base de Datos.
+
+Mejora:
+
+- Distribución de tarjetas.
+- Espaciado.
+- Tipografía.
+- Iconos.
+- Botones.
+- Formularios.
+- Filtros.
+- Indicadores de estado.
+- Modales.
+- Gráficos, si existen.
+- Jerarquía visual.
+
+La pantalla debe ser profesional, limpia, intuitiva y fácil de utilizar.
+
+Evita saturarla con gráficos, colores o elementos decorativos innecesarios.
+
+---
+
+## 12. Integración con backend
+
+Utiliza exclusivamente los endpoints, DTOs y modelos reales implementados en backend.
+
+- Respeta los nombres de campos.
+- Respeta los tipos de datos.
+- Respeta los formatos de fechas.
+- Utiliza correctamente los tokens de autenticación.
+- Maneja errores HTTP.
+- No inventes endpoints.
+- No inventes parámetros.
+- No dupliques lógica de negocio.
+- No calcules estados de calidad del agua mediante rangos hardcodeados.
+- No utilices datos de demostración.
+- No sustituyas respuestas reales por valores ficticios.
+
+Toda la información debe provenir de backend.
+
+---
+
+## 13. Pruebas y verificación
+
+Verifica:
+
+- Acceso a la nueva sección.
+- Navegación dentro de Base de Datos.
+- Consulta de mediciones.
+- Selección de granja.
+- Selección de estanque.
+- Registro de mediciones.
+- Validación de campos.
+- Visualización de valores y referencias.
+- Estados de parámetros.
+- Historial.
+- Filtros.
+- Edición y eliminación, si corresponden.
+- Estados vacíos.
+- Estados de carga.
+- Errores de API.
+- Actualización de datos después de operaciones.
+- Autenticación.
+- Ausencia de hardcoding.
+- Correcta integración con todos los endpoints disponibles.
+
+---
 
 ## 14. Resultado esperado
 
-La pantalla Base de Datos debe funcionar completamente conectada al backend.
+La pantalla Base de Datos debe incluir una nueva sección funcional de Calidad del Agua, integrada con el resto de los módulos.
 
-Cada sección debe tener sus propios formularios, consultas y operaciones.
+El usuario debe poder consultar las mediciones de sus estanques, registrar nuevos datos, revisar su historial y reconocer los parámetros que requieren atención.
 
-Los registros deben guardarse correctamente en la base de datos y mostrarse con información real del usuario autenticado.
+Implementa directamente todos los cambios en el proyecto.
 
-Los ciclos deben crearse activos y poder finalizarse desde sus tarjetas, sin solicitar una fecha final durante el registro.
+Al finalizar, informa:
 
-Al finalizar, entregar:
+- Nuevas pantallas y componentes creados.
+- Modificaciones realizadas en Base de Datos.
+- Formularios implementados.
+- Endpoints conectados.
+- Funcionalidades implementadas.
+- Pruebas realizadas.
+- Funcionalidades pendientes, si las hubiera.
 
-1. Archivos revisados.
-2. Archivos modificados o creados.
-3. Formularios implementados.
-4. Endpoints consumidos.
-5. DTOs utilizados.
-6. Campos reales mostrados y enviados.
-7. Validaciones implementadas.
-8. Acciones de finalización de ciclos.
-9. Pruebas de integración realizadas.
-10. Confirmación de eliminación de datos hardcodeados.
-11. Problemas o endpoints pendientes del backend.
+**Prioridad: integración real con backend, visualización correcta de mediciones, registro funcional, referencias dinámicas y ausencia absoluta de datos hardcodeados.**

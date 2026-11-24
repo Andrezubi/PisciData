@@ -23,6 +23,7 @@ import ucb.piscidata.database.presentation.screen.estanques.PondFormScreen
 import ucb.piscidata.database.presentation.screen.inventario.FeedFormScreen
 import ucb.piscidata.database.presentation.screen.inventario.InventarioTab
 import ucb.piscidata.database.presentation.screen.inventario.SupplyFormScreen
+import ucb.piscidata.database.presentation.screen.waterquality.WaterQualityTab
 import ucb.piscidata.database.presentation.viewmodel.DatabaseEvent
 import ucb.piscidata.database.presentation.viewmodel.DatabaseViewModel
 import ucb.piscidata.database.presentation.viewmodel.DbTab
@@ -107,12 +108,13 @@ fun DatabaseScreen(
                                         DbTab.ESTANQUES -> "Administra los estanques e infraestructura"
                                         DbTab.INVENTARIO -> "Administra alimentos y suministros de tu granja"
                                         DbTab.ALIMENTACION -> "Administra los registros de alimentación"
+                                        DbTab.CALIDAD_AGUA -> "Monitorea y registra los parámetros de calidad del agua"
                                     },
                                     fontSize = 12.sp,
                                     color = Color(0xFF6B818B)
                                 )
                             }
-                            if (state.tab != DbTab.ALIMENTACION) {
+                            if (state.tab != DbTab.ALIMENTACION && state.tab != DbTab.CALIDAD_AGUA) {
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Button(
                                     onClick = { viewModel.emitEvent(DatabaseEvent.ClickNuevo) },
@@ -127,6 +129,7 @@ fun DatabaseScreen(
                                             DbTab.ESTANQUES -> "+ Nuevo Estanque"
                                             DbTab.INVENTARIO -> "+ Nuevo Registro"
                                             DbTab.ALIMENTACION -> ""
+                                            DbTab.CALIDAD_AGUA -> ""
                                         },
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
@@ -157,7 +160,8 @@ fun DatabaseScreen(
                                 DbTab.CICLOS to "Ciclos productivos",
                                 DbTab.ESTANQUES to "Estanques",
                                 DbTab.INVENTARIO to "Inventario",
-                                DbTab.ALIMENTACION to "Alimentación"
+                                DbTab.ALIMENTACION to "Alimentación",
+                                DbTab.CALIDAD_AGUA to "Calidad del agua"
                             ).forEach { (tab, label) ->
                                 val selected = state.tab == tab
                                 TextButton(onClick = { viewModel.emitEvent(DatabaseEvent.ChangeTab(tab)) }) {
@@ -185,6 +189,7 @@ fun DatabaseScreen(
                             DbTab.ESTANQUES -> EstanquesTab(state)
                             DbTab.INVENTARIO -> InventarioTab(state, viewModel)
                             DbTab.ALIMENTACION -> AlimentacionTab(state, viewModel)
+                            DbTab.CALIDAD_AGUA -> WaterQualityTab(state, viewModel)
                         }
                     }
                 }

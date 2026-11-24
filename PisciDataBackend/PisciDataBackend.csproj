@@ -22,10 +22,4 @@
     <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Application\DTOs\" />
-    <Folder Include="Application\Services\" />
-    <Folder Include="Domain\Validators\" />
-  </ItemGroup>
-
 </Project>

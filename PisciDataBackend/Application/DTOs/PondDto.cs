@@ -24,6 +24,13 @@ namespace PisciDataBackend.Application.DTOs
     {
         public int Id { get; set; }
         public int ProductionCycleId { get; set; }
+        public int PondId { get; set; }
+        public string PondCode { get; set; } = null!;
+        public string? PondName { get; set; }
+        public int FarmId { get; set; }
+        public string FarmName { get; set; } = null!;
+        public int SpeciesId { get; set; }
+        public string SpeciesName { get; set; } = null!;
         public DateOnly MeasurementDate { get; set; }
         public TimeOnly MeasurementTime { get; set; }
         public decimal? TransparencyCm { get; set; }
@@ -31,6 +38,9 @@ namespace PisciDataBackend.Application.DTOs
         public decimal? Ph { get; set; }
         public decimal? DissolvedOxygen { get; set; }
         public string? Observations { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
+        public bool? IsActive { get; set; }
         public List<WaterQualityParameterDto> Parameters { get; set; } = new();
     }
 

@@ -25,6 +25,7 @@ fun ProductionCycleResponseDto.toRecord(): CicloRecord {
         initialFishCount = initialFishCount?.toString() ?: "0",
         observations = observations ?: "",
         isExpanded = false,
-        numericId = id
+        numericId = id,
+        pondId = pondId
     )
 }

@@ -25,5 +25,6 @@ data class CicloRecord(
     val initialFishCount: String, // Cantidad Inicial
     val observations: String, // Observaciones
     val isExpanded: Boolean = false, // Desplegable
-    val numericId: Int = 0
+    val numericId: Int = 0,
+    val pondId: Int = 0
 )

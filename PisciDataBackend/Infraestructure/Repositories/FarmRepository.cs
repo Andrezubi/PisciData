@@ -30,6 +30,13 @@ namespace PisciDataBackend.Infraestructure.Repositories
                 && farm.OwnerUserId == userId);
         }
 
+        public async Task<bool> EnsureFarmOwnedByUser(int farmId, int userId)
+        {
+            return await _dbSet.AnyAsync(farm => farm.Id == farmId
+                && farm.IsActive != false
+                && farm.OwnerUserId == userId);
+        }
+
         public override async Task DeleteAsync(Farm entity)
         {
             entity.IsActive = false;
