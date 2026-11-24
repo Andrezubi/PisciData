@@ -24,8 +24,8 @@ data class CreateAiConversationDto(
 data class AiMessageDto(
     val id: Int? = null,
     val aiconversationId: Int? = null,
-    val role: String,
-    val content: String,
+    val role: String = "assistant",
+    val content: String? = "",
     val messageDate: String? = null
 )
 

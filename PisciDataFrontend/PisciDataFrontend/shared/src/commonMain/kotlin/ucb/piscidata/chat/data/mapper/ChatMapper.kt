@@ -25,7 +25,7 @@ fun AiMessageDto.toDomain(): ChatMessageModel {
     return ChatMessageModel(
         id = id?.toString() ?: "",
         sender = sender,
-        text = content,
+        text = content ?: "",
         isConfirmCard = false
     )
 }
