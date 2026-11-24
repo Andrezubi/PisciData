@@ -24,5 +24,6 @@ data class CicloRecord(
     val initialWeightGrams: String, // Peso Inicial
     val initialFishCount: String, // Cantidad Inicial
     val observations: String, // Observaciones
-    val isExpanded: Boolean = false // Desplegable
+    val isExpanded: Boolean = false, // Desplegable
+    val numericId: Int = 0
 )

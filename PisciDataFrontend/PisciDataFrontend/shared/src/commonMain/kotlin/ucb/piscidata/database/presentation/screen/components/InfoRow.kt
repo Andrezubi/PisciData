@@ -11,9 +11,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun InfoRow(label: String, value: String) {
+fun InfoRow(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier.fillMaxWidth()
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, fontSize = 12.sp, color = Color(0xFF6B818B))

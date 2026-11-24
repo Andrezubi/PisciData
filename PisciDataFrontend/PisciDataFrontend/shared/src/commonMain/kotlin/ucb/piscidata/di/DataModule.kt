@@ -14,6 +14,7 @@ import ucb.piscidata.database.data.repository.InventoryRepositoryImpl
 import ucb.piscidata.database.data.repository.PondRepositoryImpl
 import ucb.piscidata.database.data.repository.ProductionCycleRepositoryImpl
 import ucb.piscidata.database.data.service.FarmLookupService
+import ucb.piscidata.database.data.service.FeedingService
 import ucb.piscidata.database.data.service.InventoryService
 import ucb.piscidata.database.data.service.PondService
 import ucb.piscidata.database.data.service.ProductionCycleService
@@ -52,6 +53,8 @@ val dataModule = module {
 
     single { InventoryService() }
     single<InventoryRepository> { InventoryRepositoryImpl(get()) }
+
+    single { FeedingService() }
 
     single { FarmLookupService() }
     single<FarmLookupRepository> { FarmLookupRepositoryImpl(get()) }
