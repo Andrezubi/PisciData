@@ -283,7 +283,7 @@ fun LoginScreen(
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(
-                            "Pega tu URL de ngrok (ej. https://xxxx.ngrok-free.app) o déjalo vacío para usar 127.0.0.1:5007.",
+                            "Ingresa la URL del backend (ej. http://192.168.1.X:5007) o déjalo vacío para usar 127.0.0.1:5007 directo.",
                             fontSize = 12.sp,
                             color = Color(0xFF6B818B)
                         )

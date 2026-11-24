@@ -235,14 +235,14 @@ fun ProfileScreen(
                         }
                     }
                     Text(
-                        "Pega tu URL de ngrok o túnel HTTPS para usar PisciData sin cable USB. Los puertos locales quedan como respaldo automático.",
+                        "Ingresa la IP/URL del backend para conexión directa (ej. http://192.168.1.50:5007). Déjalo vacío para usar 127.0.0.1:5007.",
                         fontSize = 11.sp,
                         color = Color(0xFF6B818B)
                     )
                     OutlinedTextField(
                         value = remoteUrlInput,
                         onValueChange = { remoteUrlInput = it },
-                        label = { Text("URL remota (ej. https://xxxx.ngrok-free.app)") },
+                        label = { Text("URL del servidor (ej. http://192.168.1.50:5007)") },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)

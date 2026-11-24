@@ -16,12 +16,12 @@ import kotlinx.coroutines.flow.asStateFlow
  * siempre como respaldo automático si no hay URL remota configurada o si falla.
  */
 object RemoteBackendConfig {
-    // URL remota en Railway (producción 24/7). Si falla o se borra, cae automáticamente a 127.0.0.1:5007
-    const val DEFAULT_REMOTE_URL: String = "https://piscidatabackend-production.up.railway.app"
+    // URL remota directa (déjalo vacío para usar 127.0.0.1:5007 local directo)
+    const val DEFAULT_REMOTE_URL: String = ""
 
     val LOCAL_FALLBACK_URLS: List<String> = listOf(
-        "https://127.0.0.1:7190",
-        "http://127.0.0.1:5007"
+        "http://127.0.0.1:5007",
+        "https://127.0.0.1:7190"
     )
 
     private val _remoteBaseUrl = MutableStateFlow(normalizeUrl(DEFAULT_REMOTE_URL))

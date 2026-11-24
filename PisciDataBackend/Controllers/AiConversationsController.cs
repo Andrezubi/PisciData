@@ -49,7 +49,7 @@ namespace PisciDataBackend.Controllers
             if (userId == null) return Unauthorized(new { message = "No se pudo identificar al usuario." });
 
             var created = await _chatService.CreateConversationAsync(userId.Value, dto);
-            return CreatedAtAction(nameof(GetMyConversations), new { id = created.Id }, created);
+            return StatusCode(StatusCodes.Status201Created, created);
         }
 
         // GET: api/AiConversations/{id}/messages (obtiene el historial del chat)
